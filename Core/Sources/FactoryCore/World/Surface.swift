@@ -39,6 +39,9 @@ public final class Surface {
     public private(set) var chunks: [Chunk?]
     /// Called to generate a chunk on first access (installed by MapGenerator).
     public var generator: ((ChunkPos) -> Chunk)?
+    /// Called right after a freshly generated chunk is installed (spawn trees/rocks as entities here; the chunk is
+    /// already accessible so entity creation inside it does not recurse into generation).
+    public var postGenerate: ((Chunk) -> Void)?
     public let bounds: TileRect
 
     public init(width: Int, height: Int) {
@@ -64,6 +67,7 @@ public final class Surface {
         guard let gen = generator else { return nil }
         let ch = gen(c)
         chunks[slot] = ch
+        postGenerate?(ch)
         return ch
     }
 

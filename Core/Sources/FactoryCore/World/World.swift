@@ -147,6 +147,10 @@ public final class World {
         endpoint(inserters, [.inserter])         // burner inserter fuel slot
 
         surface.generator = { [unowned self] c in self.mapGen.generateChunk(c) }
+        surface.postGenerate = { [unowned self] ch in
+            self.mapGen.populateChunk(ch)
+            self.emit(.chunkGenerated(ch.pos))
+        }
         for s in systems { s.setUp() }
         research.setUp()
         player.setUp()

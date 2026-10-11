@@ -11,4 +11,7 @@ public final class MapGenerator {
         let ch = Chunk(pos: c, fillTile: UInt8(grass))
         return ch
     }
+
+    /// Spawns natural entities (trees, rocks) for a freshly installed chunk via world.createEntity(flags: []).
+    public func populateChunk(_ ch: Chunk) {}
 }

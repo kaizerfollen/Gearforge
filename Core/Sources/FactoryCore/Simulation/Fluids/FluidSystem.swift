@@ -26,6 +26,12 @@ public final class FluidSystem: EntitySystem {
     /// Sets the filter (fluid index or -1) of a machine box, e.g. when an assembler recipe changes.
     public func setFilter(_ e: Int32, box: Int, fluid: Int) {}
 
+    // MARK: Placement helpers (used by Commands)
+    /// True if placing `proto` at origin/direction would connect fluid boxes holding different fluids.
+    public func wouldMixFluids(proto: Int, origin: TilePos, direction: Direction) -> Bool { false }
+    /// For renderers: fill of the segment/box an entity belongs to (fluid index or -1, fraction 0...1).
+    public func fill(of e: Int32) -> (fluid: Int, fraction: Double) { (-1, 0) }
+
     // MARK: EntitySystem
     public func entityAdded(_ e: Int32) {}
     public func entityRemoved(_ e: Int32) {}

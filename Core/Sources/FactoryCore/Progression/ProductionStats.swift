@@ -10,6 +10,8 @@ public final class ProductionStats {
     /// Called by machines/handcrafting/mining when items are produced (crafted, mined, smelted).
     public func produced(item: Int, count: Int) {}
     /// Called when items are consumed as ingredients (crafting start, lab unit start, rocket part).
+    /// Items produced by the player's handcrafting / hand mining (excluded from "by machines" objectives).
+    public func producedByHand(item: Int, count: Int) {}
     public func consumed(item: Int, count: Int) {}
     public func producedFluid(_ fluid: Int, amount: Double) {}
     public func consumedFluid(_ fluid: Int, amount: Double) {}

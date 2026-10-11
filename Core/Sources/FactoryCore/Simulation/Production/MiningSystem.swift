@@ -16,6 +16,9 @@ public final class MiningSystem: EntitySystem, ItemEndpoint {
     /// Remaining resource amount in the drill's area (UI).
     public func remainingResources(of e: Int32) -> Int { 0 }
 
+    /// Placement helper: does the drill's mining area at this position contain a resource it can mine?
+    public func hasMinableResource(proto: Int, origin: TilePos, direction: Direction) -> Bool { true }
+
     public func entityAdded(_ e: Int32) {}
     public func entityRemoved(_ e: Int32) {}
     public func update() {}
