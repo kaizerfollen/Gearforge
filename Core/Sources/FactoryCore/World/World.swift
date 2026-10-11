@@ -80,6 +80,9 @@ public final class World {
     public private(set) var events: [WorldEvent] = []
     /// When false, events are not recorded (headless tests/benchmarks).
     public var recordsEvents = true
+    /// TEST/DEBUG ONLY: every electric consumer is fully satisfied without poles/generators (PowerSystem honours it).
+    /// Lets system tests run without building a power plant. Never set in real games.
+    public var cheatInfinitePower = false
 
     // MARK: Systems (update order = declaration order in step())
     public private(set) var power: PowerSystem!
