@@ -110,7 +110,8 @@ public final class ProductionStats {
         powerProducedTotal = Array(repeating: 0, count: entityCount)
         powerConsumedTotal = powerProducedTotal
         pending = Array(repeating: 0, count: seriesCount)
-        rings = StatsWindow.allCases.map { _ in Array(repeating: 0, count: seriesCount * Self.samplesPerWindow) }
+        let ringLen = seriesCount * ProductionStats.samplesPerWindow
+        rings = StatsWindow.allCases.map { _ in Array(repeating: 0, count: ringLen) }
         heads = Array(repeating: 0, count: StatsWindow.allCases.count)
         filled = heads
     }

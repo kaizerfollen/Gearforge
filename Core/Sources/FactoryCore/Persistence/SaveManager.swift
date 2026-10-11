@@ -16,6 +16,9 @@ public struct SaveMetadata: Codable, Equatable, Sendable, Identifiable {
     public var isAutosave: Bool
     public var formatVersion: Int
     public var thumbnailPNG: Data?
+    public var mapWidth: Int = 0
+    public var mapHeight: Int = 0
+    public var seed: UInt64 = 0
 }
 
 /// Optional compression hook supplied by the app (LZFSE on Apple platforms).

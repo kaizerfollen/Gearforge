@@ -137,12 +137,24 @@ public enum CRC32 {
             var i = 0
             let n = buf.count
             while i + 8 <= n {
-                let one = (UInt32(buf[i]) | UInt32(buf[i + 1]) << 8 | UInt32(buf[i + 2]) << 16 | UInt32(buf[i + 3]) << 24) ^ crc
-                let two = UInt32(buf[i + 4]) | UInt32(buf[i + 5]) << 8 | UInt32(buf[i + 6]) << 16 | UInt32(buf[i + 7]) << 24
-                crc = t[7 * 256 + Int(one & 0xFF)] ^ t[6 * 256 + Int((one >> 8) & 0xFF)]
-                    ^ t[5 * 256 + Int((one >> 16) & 0xFF)] ^ t[4 * 256 + Int(one >> 24)]
-                    ^ t[3 * 256 + Int(two & 0xFF)] ^ t[2 * 256 + Int((two >> 8) & 0xFF)]
-                    ^ t[1 * 256 + Int((two >> 16) & 0xFF)] ^ t[Int(two >> 24)]
+                var one: UInt32 = UInt32(buf[i])
+                one |= UInt32(buf[i + 1]) << 8
+                one |= UInt32(buf[i + 2]) << 16
+                one |= UInt32(buf[i + 3]) << 24
+                one ^= crc
+                var two: UInt32 = UInt32(buf[i + 4])
+                two |= UInt32(buf[i + 5]) << 8
+                two |= UInt32(buf[i + 6]) << 16
+                two |= UInt32(buf[i + 7]) << 24
+                var c: UInt32 = t[7 * 256 + Int(one & 0xFF)]
+                c ^= t[6 * 256 + Int((one >> 8) & 0xFF)]
+                c ^= t[5 * 256 + Int((one >> 16) & 0xFF)]
+                c ^= t[4 * 256 + Int(one >> 24)]
+                c ^= t[3 * 256 + Int(two & 0xFF)]
+                c ^= t[2 * 256 + Int((two >> 8) & 0xFF)]
+                c ^= t[1 * 256 + Int((two >> 16) & 0xFF)]
+                c ^= t[Int(two >> 24)]
+                crc = c
                 i += 8
             }
             while i < n {
