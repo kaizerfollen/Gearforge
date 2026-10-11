@@ -130,6 +130,8 @@ public struct Inventory: Equatable, Sendable {
 
     public init(from r: inout BinaryReader) throws {
         let n = try r.readVarInt()
+        // Each slot needs 8 bytes: reject corrupt counts before reserving memory.
+        if n > r.remaining / 8 { throw BinaryCodingError.invalidValue("inventory size \(n) exceeds data") }
         var s: [ItemStack] = []
         s.reserveCapacity(n)
         for _ in 0..<n { s.append(ItemStack(item: try r.read(Int32.self), count: try r.read(Int32.self))) }

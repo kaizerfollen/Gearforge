@@ -80,7 +80,8 @@ public struct BinaryReader {
     public var remaining: Int { bytes.count - offset }
 
     @inline(__always) mutating func need(_ n: Int) throws {
-        if offset + n > bytes.count { throw BinaryCodingError.unexpectedEnd(at: offset, need: n) }
+        // Written as a subtraction so a corrupt, huge `n` cannot overflow (which would trap).
+        if n < 0 || n > bytes.count - offset { throw BinaryCodingError.unexpectedEnd(at: offset, need: n) }
     }
 
     public mutating func read<T: FixedWidthInteger>(_: T.Type = T.self) throws -> T {
@@ -124,6 +125,8 @@ public struct BinaryReader {
             shift += 7
             if shift > 63 { throw BinaryCodingError.invalidValue("varint overflow") }
         }
+        // Corrupt data must throw, never trap in the Int conversion.
+        guard result <= UInt64(Int.max) else { throw BinaryCodingError.invalidValue("varint overflow") }
         return Int(result)
     }
     public mutating func readArray<T>(_ body: (inout BinaryReader) throws -> T) throws -> [T] {
