@@ -333,7 +333,7 @@ final class GameController {
 
     /// Background save — must be fast (called when the app leaves the foreground).
     func backgroundSave() {
-        try? saveManager.save(session, slot: SaveManager.backgroundSlot, displayName: "Last session")
+        _ = try? saveManager.save(session, slot: SaveManager.backgroundSlot, displayName: "Last session")
     }
 
     // MARK: Haptics

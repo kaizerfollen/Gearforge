@@ -11,6 +11,10 @@ All names/art/text are original. This file is the single source of truth for "wh
   - NOTE: device_commit_files caches by file name — always use a NEW timestamped name (tools/checkpoint.sh does).
 - Cloud container (ephemeral!): `/home/claude/Gearforge` (git repo, branch `master`).
 
+## How to build the iOS app (client)
+Open `project/App/Gearforge.xcodeproj` in Xcode 15+ → target Gearforge → Signing & Capabilities → pick your Team → choose an iPad/iPhone simulator (landscape) → Run. Details: `docs/team/platform.md`.
+Typecheck on Linux: `tools/ios-typecheck/run.sh --app-only`. Regenerate project after adding files: `python3 tools/ios/gen_xcodeproj.py`.
+
 ## How to resume in a new session
 1. If `/home/claude/Gearforge` is missing: stage `checkpoints/Gearforge.bundle` from the Mac
    (`device_stage_files`) and `git clone <staged bundle> /home/claude/Gearforge`.
@@ -39,8 +43,8 @@ All names/art/text are original. This file is the single source of truth for "wh
 | Power networks, fluids | **done** (11 tests; steam 1.8 MW verified) |
 | Character (movement, crafting queue, hand mining), Commands (build/remove/undo) | **done** (17 tests) |
 | GameSession fixed-step driver, SaveManager, levels/objectives, stats | **done** (10 tests; save→load→continue identical) |
-| iOS app: Xcode project, renderer, HUD, menus, screens | helpers only (TerrainBaker, BuildPlanner, gestures) |
-| Art: python sprite generators | WIP rescued (tools/art) |
+| iOS app: Xcode project, renderer, HUD, menus, screens | **first full pass** — passes Linux typecheck harness; NOT yet run on a device/simulator |
+| Art: python sprite generators | **done** — 852 sprites, 16.8 MB (`python3 tools/art/generate.py`) |
 
 ## Session log
 - **S1–S4 (earlier):** four separate attempts (FactoryForge, Forgeline, Forgeworks, Gearforge) — work never
@@ -52,7 +56,7 @@ All names/art/text are original. This file is the single source of truth for "wh
   **LESSON: run at most 2 agents at a time, give them narrow file-level tasks with the exact sections to read,
   and/or have the lead write code directly. Commit + checkpoint after every agent.**
 
-- **S6 (2026-10-14):** lead wrote logistics directly (belts/undergrounds/splitters/inserters/chests), 35 tests green. Then production (crafting/furnaces/silo/drills) — 48 tests green. Then energy (power/steam/solar/fluids) — 59 tests green. Then gameplay (character/crafting/mining/commands/undo) — 76 tests green. Then persistence/session/campaign — 86 tests green. **Core simulation complete.**
+- **S6 (2026-10-14):** lead wrote logistics directly (belts/undergrounds/splitters/inserters/chests), 35 tests green. Then production (crafting/furnaces/silo/drills) — 48 tests green. Then energy (power/steam/solar/fluids) — 59 tests green. Then gameplay (character/crafting/mining/commands/undo) — 76 tests green. Then persistence/session/campaign — 86 tests green. **Core simulation complete.** Then art (852 sprites, agent), platform (xcodeproj generator + Linux typecheck harness, agent), app layer (controller, SpriteKit renderer, HUD, panels, menus) written by lead — typecheck OK; integration test 'first minutes of freeplay' green (87 tests).
 
 ## Next steps (in order)
 1. ~~Logistics~~ → 2. ~~Production~~ (crafting/mining/labs) → 3. Energy (power/fluids)

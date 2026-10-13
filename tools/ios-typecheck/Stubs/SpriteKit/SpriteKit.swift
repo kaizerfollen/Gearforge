@@ -373,3 +373,87 @@ public struct SpriteView: View {
     public typealias Body = Never
     public var body: Never { _stub() }
 }
+
+// MARK: - Tile maps (iOS 10+). Signatures mirror the SDK.
+
+open class SKTileDefinition: NSObject, NSCopying, NSSecureCoding {
+    public static var supportsSecureCoding: Bool { true }
+    public override init() { _stub() }
+    public init(texture: SKTexture) { _stub() }
+    public init(texture: SKTexture, size: CGSize) { _stub() }
+    public init(texture: SKTexture, normalTexture: SKTexture, size: CGSize) { _stub() }
+    public init(textures: [SKTexture], size: CGSize, timePerFrame: CGFloat) { _stub() }
+    public required init?(coder aDecoder: NSCoder) { _stub() }
+    public func copy(with zone: NSZone? = nil) -> Any { _stub() }
+    public func encode(with coder: NSCoder) { _stub() }
+    open var textures: [SKTexture] { get { _stub() } set { _stub() } }
+    open var size: CGSize { get { _stub() } set { _stub() } }
+    open var timePerFrame: CGFloat { get { _stub() } set { _stub() } }
+    open var name: String? { get { _stub() } set { _stub() } }
+    open var rotation: SKTileDefinitionRotation { get { _stub() } set { _stub() } }
+    open var flipVertically: Bool { get { _stub() } set { _stub() } }
+    open var flipHorizontally: Bool { get { _stub() } set { _stub() } }
+}
+
+public enum SKTileDefinitionRotation: UInt, Sendable { case rotation0 = 0, rotation90, rotation180, rotation270 }
+
+open class SKTileGroup: NSObject, NSCopying, NSSecureCoding {
+    public static var supportsSecureCoding: Bool { true }
+    public override init() { _stub() }
+    public init(tileDefinition: SKTileDefinition) { _stub() }
+    public init(rules: [SKTileGroupRule]) { _stub() }
+    public required init?(coder aDecoder: NSCoder) { _stub() }
+    public func copy(with zone: NSZone? = nil) -> Any { _stub() }
+    public func encode(with coder: NSCoder) { _stub() }
+    open class func empty() -> Self { _stub() }
+    open var name: String? { get { _stub() } set { _stub() } }
+    open var rules: [SKTileGroupRule] { get { _stub() } set { _stub() } }
+}
+
+open class SKTileGroupRule: NSObject, NSCopying, NSSecureCoding {
+    public static var supportsSecureCoding: Bool { true }
+    public override init() { _stub() }
+    public required init?(coder aDecoder: NSCoder) { _stub() }
+    public func copy(with zone: NSZone? = nil) -> Any { _stub() }
+    public func encode(with coder: NSCoder) { _stub() }
+}
+
+public enum SKTileSetType: UInt, Sendable { case grid = 0, isometric, hexagonalFlat, hexagonalPointy }
+
+open class SKTileSet: NSObject, NSCopying, NSSecureCoding {
+    public static var supportsSecureCoding: Bool { true }
+    public override init() { _stub() }
+    public init(tileGroups: [SKTileGroup]) { _stub() }
+    public init(tileGroups: [SKTileGroup], tileSetType: SKTileSetType) { _stub() }
+    public required init?(coder aDecoder: NSCoder) { _stub() }
+    public func copy(with zone: NSZone? = nil) -> Any { _stub() }
+    public func encode(with coder: NSCoder) { _stub() }
+    open var tileGroups: [SKTileGroup] { get { _stub() } set { _stub() } }
+    open var defaultTileSize: CGSize { get { _stub() } set { _stub() } }
+    open var name: String? { get { _stub() } set { _stub() } }
+}
+
+open class SKTileMapNode: SKNode {
+    public override init() { _stub() }
+    public required init?(coder aDecoder: NSCoder) { _stub() }
+    public convenience init(tileSet: SKTileSet, columns: Int, rows: Int, tileSize: CGSize) { _stub() }
+    public convenience init(tileSet: SKTileSet, columns: Int, rows: Int, tileSize: CGSize, fillWith tileGroup: SKTileGroup) { _stub() }
+    open var numberOfColumns: Int { get { _stub() } set { _stub() } }
+    open var numberOfRows: Int { get { _stub() } set { _stub() } }
+    open var tileSize: CGSize { get { _stub() } set { _stub() } }
+    open var mapSize: CGSize { _stub() }
+    open var tileSet: SKTileSet { get { _stub() } set { _stub() } }
+    open var colorBlendFactor: CGFloat { get { _stub() } set { _stub() } }
+    open var color: UIColor { get { _stub() } set { _stub() } }
+    open var blendMode: SKBlendMode { get { _stub() } set { _stub() } }
+    open var anchorPoint: CGPoint { get { _stub() } set { _stub() } }
+    open var enableAutomapping: Bool { get { _stub() } set { _stub() } }
+    open func fill(with tileGroup: SKTileGroup?) { _stub() }
+    open func tileGroup(atColumn column: Int, row: Int) -> SKTileGroup? { _stub() }
+    open func setTileGroup(_ tileGroup: SKTileGroup?, forColumn column: Int, row: Int) { _stub() }
+    open func setTileGroup(_ tileGroup: SKTileGroup, andTileDefinition tileDefinition: SKTileDefinition, forColumn column: Int, row: Int) { _stub() }
+    open func tileDefinition(atColumn column: Int, row: Int) -> SKTileDefinition? { _stub() }
+    open func tileColumnIndex(fromPosition position: CGPoint) -> Int { _stub() }
+    open func tileRowIndex(fromPosition position: CGPoint) -> Int { _stub() }
+    open func centerOfTile(atColumn column: Int, row: Int) -> CGPoint { _stub() }
+}

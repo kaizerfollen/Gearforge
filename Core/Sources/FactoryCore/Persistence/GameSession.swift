@@ -164,6 +164,7 @@ public final class ObjectiveTracker {
         public var target: Double = 1
         public var sustained: Double = 0      // seconds the condition has held
         public var fraction: Double { target > 0 ? min(1, current / target) : (completed ? 1 : 0) }
+        public init() {}
     }
 
     public private(set) var states: [Int: State] = [:]

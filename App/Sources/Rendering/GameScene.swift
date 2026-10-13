@@ -341,7 +341,7 @@ final class GameScene: SKScene {
         guard rec.isAlive else { return }
         let p = w.db.entities[Int(rec.proto)]
         let names = spriteName(id, rec, p, w)
-        let key = names[0]
+        let key = names.first { SpriteCatalog.shared.has($0) } ?? names[names.count - 1]
         let node = v.node
         let r = rec.rect
         node.size = CGSize(width: CGFloat(r.w) * S, height: CGFloat(r.h) * S)
@@ -349,7 +349,7 @@ final class GameScene: SKScene {
         if force || key != v.spriteKey {
             v.spriteKey = key
             node.removeAllActions(); v.animating = false
-            node.texture = SpriteCatalog.shared.texture(firstOf: names)
+            node.texture = SpriteCatalog.shared.texture(key)
             if rec.kind == .transportBelt { startBeltAnimation(v, p, base: key) }
         }
         v.ghost = rec.flags.contains(.ghost)
