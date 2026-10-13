@@ -34,7 +34,7 @@ All names/art/text are original. This file is the single source of truth for "wh
 | Save format framework (sections, CRC, metadata) | WIP rescued, compiles |
 | Map generation (noise, layout) | WIP rescued |
 | Research/labs/beacons | WIP rescued |
-| Belts, inserters, containers | stub |
+| Belts, inserters, containers | **done** (21 tests, 0.1 ms/tick for 10k belts + 20k items) |
 | Crafting machines, furnaces, mining drills, silo | stub |
 | Power networks, fluids | stub |
 | Character (movement, crafting queue, hand mining), Commands (build/remove/undo) | stub |
@@ -52,7 +52,9 @@ All names/art/text are original. This file is the single source of truth for "wh
   **LESSON: run at most 2 agents at a time, give them narrow file-level tasks with the exact sections to read,
   and/or have the lead write code directly. Commit + checkpoint after every agent.**
 
+- **S6 (2026-10-14):** lead wrote logistics directly (belts/undergrounds/splitters/inserters/chests), 35 tests green.
+
 ## Next steps (in order)
-1. Logistics (belts/inserters/chests) → 2. Production (crafting/mining/labs) → 3. Energy (power/fluids)
+1. ~~Logistics~~ → 2. Production (crafting/mining/labs) → 3. Energy (power/fluids)
 → 4. Gameplay (character/commands/mapgen) → 5. Persistence orchestration → 6. Xcode project + iOS renderer/UI.
 Wave-1 agent briefs (full prompts) are reusable: see docs/team/PLAN.md roles; keep briefs narrow.

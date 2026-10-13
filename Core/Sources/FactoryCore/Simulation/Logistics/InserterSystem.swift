@@ -200,12 +200,18 @@ public final class InserterSystem: EntitySystem, ItemEndpoint {
         switch comps[i].phase {
         case .toDrop:
             comps[i].progress += speed
-            if comps[i].progress >= comps[i].halfTicks { comps[i].progress = 0; comps[i].phase = .drop; comps[i].wakeTick = 0 }
             comps[i].status = .working
+            if comps[i].progress >= comps[i].halfTicks {
+                comps[i].progress = 0; comps[i].phase = .drop; comps[i].wakeTick = 0
+                doDrop(i, tick: tick)          // arrive and act in the same tick (cycle = 2 half swings)
+            }
         case .toPickup:
             comps[i].progress += speed
-            if comps[i].progress >= comps[i].halfTicks { comps[i].progress = 0; comps[i].phase = .pickup; comps[i].wakeTick = 0 }
             comps[i].status = .working
+            if comps[i].progress >= comps[i].halfTicks {
+                comps[i].progress = 0; comps[i].phase = .pickup; comps[i].wakeTick = 0
+                doPickup(i, tick: tick)
+            }
         case .pickup:
             if tick < comps[i].wakeTick { return }
             doPickup(i, tick: tick)
