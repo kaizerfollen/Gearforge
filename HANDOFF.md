@@ -59,6 +59,8 @@ Typecheck on Linux: `tools/ios-typecheck/run.sh --app-only`. Regenerate project 
 
 - **S6 (2026-10-14):** lead wrote logistics directly (belts/undergrounds/splitters/inserters/chests), 35 tests green. Then production (crafting/furnaces/silo/drills) — 48 tests green. Then energy (power/steam/solar/fluids) — 59 tests green. Then gameplay (character/crafting/mining/commands/undo) — 76 tests green. Then persistence/session/campaign — 86 tests green. **Core simulation complete.** Audit (S6 end): +6 audit tests (oil chain, beacons, research queue/infinite, long-handed, fluid recipes) → 93 tests green; gaps recorded in docs/AUDIT.md. Then art (852 sprites, agent), platform (xcodeproj generator + Linux typecheck harness, agent), app layer (controller, SpriteKit renderer, HUD, panels, menus) written by lead — typecheck OK; integration test 'first minutes of freeplay' green (87 tests).
 
+- **S7 (2026-10-14 night):** closed core gaps: ground items, direct fluid links + refinery output order, charting/radar, pollution, copy/paste blueprints, tap-to-walk A* → 111 tests. Mac went offline at ~02:02 — checkpoints 0202+ only in container until re-synced.
+
 ## Honest audit
 See **docs/AUDIT.md** (what is done / partial / missing, saves, agents, priority backlog). Keep it updated.
 

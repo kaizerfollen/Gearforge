@@ -32,6 +32,8 @@ public final class Character {
     /// Last movement direction (for the sprite).
     public private(set) var facing: Direction = .south
     public private(set) var isMoving = false
+    /// Remaining tap-to-walk waypoints (not saved).
+    public internal(set) var walkPath: [TilePos] = []
     /// Quickbar: 2 pages × 10 item filters (-1 empty).
     public var quickbar: [Int32] = Array(repeating: -1, count: 20)
 
@@ -122,9 +124,11 @@ public final class Character {
     }
 
     private func move() {
-        let len = moveInput.length
+        var input = moveInput
+        if input.length > 1e-6 { walkPath = [] } else if let s = pathSteering() { input = s }
+        let len = input.length
         guard len > 1e-6 else { isMoving = false; return }
-        let dir = Vec2(moveInput.x / max(1, len), moveInput.y / max(1, len))
+        let dir = Vec2(input.x / max(1, len), input.y / max(1, len))
         let t = world.surface.tile(at: position.tile)
         let mod = t >= 0 ? world.db.tiles[t].walkingSpeedModifier : 1
         let step = dir * (Self.runSpeed * mod)

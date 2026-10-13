@@ -5,7 +5,7 @@ The iOS app has a full first pass of UI/rendering but has **never been compiled 
 
 Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
 
-## 1. Simulation core (FactoryCore) — 93 tests, all green
+## 1. Simulation core (FactoryCore) — 111 tests, all green (S7: core gaps closed)
 | Mechanic | Status | Evidence |
 |---|---|---|
 | Belts (3 tiers), curves, sideload, undergrounds, splitters (priority/filter), loops | ✅ | LogisticsTests (11 belt tests), 0.1 ms/tick @10k belts |
@@ -22,13 +22,14 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
 | Map generation: deterministic, starting patches, water, trees, rocks | ✅ | GameplayTests, IntegrationTests |
 | Saves: full world codec, identical continuation after load, slots, autosave, crash flag | ✅ | ProgressionTests |
 | Campaign L1–L8 data, objectives (all kinds), stars, progress store | ✅ data / 🟡 balance | ProgressionTests (validity, L1 objectives) |
-| Refinery output box order (Factorio puts petroleum on the right output) | 🟡 | results fill boxes in recipe order |
-| Items on the ground (drop/spill when inventory full) | ❌ | items lost with an alert |
-| Copy/paste area (GDD §4.6 MVP) | ❌ | only single ghosts |
-| Radar charting / fog of war | ❌ | radar only draws power |
-| Pollution statistic (GDD §15 MVP proposal) | ❌ | |
+| Refinery output box order (heavy left, light middle, petroleum right) | ✅ | CoreGapTests |
+| Items on the ground: spill when inventory full, inserter/drill drop & pickup, auto-loot, build-over pickup | ✅ | CoreGapTests |
+| Copy/paste area: blueprints with settings, rotation, ghost settings applied on build, saved | ✅ core / ❌ UI | CoreGapTests |
+| Charting / fog of war: character radius, radar nearby + sector scanning, map colours | ✅ core / ❌ map UI | CoreGapTests |
+| Pollution statistic (per minute, total, by source) | ✅ core / ❌ UI | CoreGapTests |
+| Direct machine→machine fluid links (no pipe) | ✅ | CoreGapTests |
 | Pre-built factories for L5–L8 ("designer blueprints") | ❌ | levels start empty with kits |
-| Tap-to-walk pathfinding | ❌ | |
+| Tap-to-walk A* pathfinding | ✅ core / ❌ UI hookup | CoreGapTests |
 | Later phases (blueprints, robots, trains, circuits, nuclear, enemies) | ❌ by plan | GDD §3 |
 
 ## 2. iOS app (App/) — typecheck OK against Linux stubs, 0 UI tests

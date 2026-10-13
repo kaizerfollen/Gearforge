@@ -55,6 +55,8 @@ public enum PlayerCommand: Sendable {
     case pickUpGround(TilePos)
     /// Copy/paste area: place ghosts of a blueprint with its top-left at `origin`.
     case pasteBlueprint(Blueprint, origin: TilePos)
+    /// Tap-to-walk.
+    case walkTo(TilePos)
     // Character
     case craft(recipe: Int, count: Int)
     case cancelCraft(queueIndex: Int)
@@ -317,6 +319,9 @@ public extension World {
 
         case .pasteBlueprint(let bp, let origin):
             return pasteBlueprint(bp, at: origin) > 0 ? .ok : .failed(.blocked)
+
+        case .walkTo(let p):
+            return pl.walk(to: p) ? .ok : .failed(.custom("Can't get there"))
 
         case .pickUpGround(let p):
             guard pl.canReach(TileRect(origin: p, w: 1, h: 1)) else { return .failed(.outOfReach) }

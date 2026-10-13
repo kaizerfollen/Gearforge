@@ -219,4 +219,43 @@ final class CoreGapTests: XCTestCase {
         let g = b.world.entity(at: TilePos(30, 30))!
         XCTAssertEqual(b.world.ghostSettingsPreview(g)?.recipe, "iron_gear_wheel")
     }
+
+    // MARK: Tap-to-walk
+
+    func testWalkAroundWall() {
+        let w = playerWorld()
+        w.player.position = Vec2(5.5, 10.5)
+        for y in 3...17 { w.place("wooden_chest", 10, y) }        // wall of chests between start and goal
+        XCTAssertTrue(w.execute(.walkTo(TilePos(15, 10))).isOK)
+        var t = 0
+        while w.player.isWalkingPath && t < 60 * 20 { w.step(); t += 1 }
+        XCTAssertEqual(w.player.position.tile, TilePos(15, 10), "arrived around the wall")
+    }
+
+    func testWalkToBuildingStopsNextToIt() {
+        let w = playerWorld()
+        w.player.position = Vec2(2.5, 2.5)
+        w.place("assembling_machine_1", 20, 20)
+        XCTAssertTrue(w.execute(.walkTo(TilePos(21, 21))).isOK)
+        w.step(60 * 10)
+        XCTAssertLessThan(w.player.distance(to: TileRect(x: 20, y: 20, w: 3, h: 3)), 1.5)
+    }
+
+    func testUnreachableTarget() {
+        let w = playerWorld()
+        let water = w.db.tile("water")
+        // island at (40,40) surrounded by water ring
+        for y in 36...44 { for x in 36...44 where max(abs(x - 40), abs(y - 40)) >= 2 { w.surface.setTile(at: TilePos(x, y), water) } }
+        XCTAssertEqual(w.execute(.walkTo(TilePos(40, 40))), .failed(.custom("Can't get there")))
+    }
+
+    func testJoystickCancelsPath() {
+        let w = playerWorld()
+        _ = w.execute(.walkTo(TilePos(40, 10)))
+        w.step(10)
+        w.player.moveInput = Vec2(0, 1)
+        w.step(1)
+        XCTAssertFalse(w.player.isWalkingPath)
+        w.player.moveInput = .zero
+    }
 }
