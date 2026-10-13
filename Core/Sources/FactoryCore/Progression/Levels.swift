@@ -45,13 +45,33 @@ public struct LevelDefinition: Codable, Equatable, Sendable, Identifiable {
     public var victoryObjectives: [Int]
     public var parSeconds: Int
     public var goldSeconds: Int
+    /// The level starts with a pre-built factory near spawn (PrebuiltFactory, GDD §7 "pre-built").
+    public var prebuilt: Bool = false
     public init(id: String, title: String, subtitle: String, teaches: String, settings: WorldSettings,
                 startingItems: [ItemAmount], researched: [String], availableTechs: [String]?, researchEnabled: Bool,
-                objectives: [Objective], victoryObjectives: [Int], parSeconds: Int, goldSeconds: Int) {
+                objectives: [Objective], victoryObjectives: [Int], parSeconds: Int, goldSeconds: Int, prebuilt: Bool = false) {
         self.id = id; self.title = title; self.subtitle = subtitle; self.teaches = teaches; self.settings = settings
         self.startingItems = startingItems; self.researched = researched; self.availableTechs = availableTechs
         self.researchEnabled = researchEnabled; self.objectives = objectives; self.victoryObjectives = victoryObjectives
-        self.parSeconds = parSeconds; self.goldSeconds = goldSeconds
+        self.parSeconds = parSeconds; self.goldSeconds = goldSeconds; self.prebuilt = prebuilt
+    }
+}
+
+extension LevelDefinition {
+    /// Custom decoding so saves written before `prebuilt` existed still load (missing key → false).
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(id: try c.decode(String.self, forKey: .id), title: try c.decode(String.self, forKey: .title),
+                  subtitle: try c.decode(String.self, forKey: .subtitle), teaches: try c.decode(String.self, forKey: .teaches),
+                  settings: try c.decode(WorldSettings.self, forKey: .settings),
+                  startingItems: try c.decode([ItemAmount].self, forKey: .startingItems),
+                  researched: try c.decode([String].self, forKey: .researched),
+                  availableTechs: try c.decodeIfPresent([String].self, forKey: .availableTechs),
+                  researchEnabled: try c.decode(Bool.self, forKey: .researchEnabled),
+                  objectives: try c.decode([Objective].self, forKey: .objectives),
+                  victoryObjectives: try c.decode([Int].self, forKey: .victoryObjectives),
+                  parSeconds: try c.decode(Int.self, forKey: .parSeconds), goldSeconds: try c.decode(Int.self, forKey: .goldSeconds),
+                  prebuilt: try c.decodeIfPresent(Bool.self, forKey: .prebuilt) ?? false)
     }
 }
 
@@ -204,7 +224,7 @@ public enum Campaign {
                 o(7, "Produce 300 Reaction cards", .produceItem(item: "reaction_card", count: 300, byMachinesOnly: true)),
                 o(8, "Produce 500 plastic bars", .produceItem(item: "plastic_bar", count: 500, byMachinesOnly: true)),
             ],
-            victoryObjectives: [7, 8], parSeconds: 90 * 60, goldSeconds: 60 * 60),
+            victoryObjectives: [7, 8], parSeconds: 90 * 60, goldSeconds: 60 * 60, prebuilt: true),
         LevelDefinition(
             id: "L6", title: "Refinement", subtitle: "Advanced oil, modules, solar",
             teaches: "Advanced oil processing, cracking, lubricant, electric engines, modules, solar + accumulators",
@@ -219,7 +239,7 @@ public enum Campaign {
                 o(5, "Produce 50 speed modules", .produceItem(item: "speed_module", count: 50, byMachinesOnly: true)),
                 o(6, "Produce 50 productivity modules", .produceItem(item: "productivity_module", count: 50, byMachinesOnly: true)),
             ],
-            victoryObjectives: [3, 4, 5, 6], parSeconds: 100 * 60, goldSeconds: 70 * 60),
+            victoryObjectives: [3, 4, 5, 6], parSeconds: 100 * 60, goldSeconds: 70 * 60, prebuilt: true),
         LevelDefinition(
             id: "L7", title: "Industrial Scale", subtitle: "Fabrication & Systems cards",
             teaches: "Electric furnaces, assembler 3, beacons, productivity, processing units, LDS, robot frames",
@@ -234,7 +254,7 @@ public enum Campaign {
                 o(6, "Produce 500 Systems cards", .produceItem(item: "systems_card", count: 500, byMachinesOnly: true)),
                 o(7, "Research Rocket control unit", .research(tech: "rocket_control_unit")),
             ],
-            victoryObjectives: [5, 6, 7], parSeconds: 150 * 60, goldSeconds: 100 * 60),
+            victoryObjectives: [5, 6, 7], parSeconds: 150 * 60, goldSeconds: 100 * 60, prebuilt: true),
         LevelDefinition(
             id: "L8", title: "Countdown", subtitle: "Rocket",
             teaches: "Rocket silo, rocket parts, satellite, launch",
@@ -247,7 +267,7 @@ public enum Campaign {
                 o(4, "Launch the rocket", .launchRocket(withSatellite: false)),
                 o(5, "Launch a satellite (★★★)", .launchRocket(withSatellite: true)),
             ],
-            victoryObjectives: [4], parSeconds: 180 * 60, goldSeconds: 120 * 60),
+            victoryObjectives: [4], parSeconds: 180 * 60, goldSeconds: 120 * 60, prebuilt: true),
     ]
 
     public static func level(_ id: String) -> LevelDefinition? { levels.first { $0.id == id } }

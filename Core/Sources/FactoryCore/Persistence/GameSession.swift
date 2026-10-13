@@ -53,6 +53,7 @@ public final class GameSession {
             w.research.allowedTechs = Set((avail + level.researched).map { w.db.tech($0) }.filter { $0 >= 0 })
         }
         w.research.researchEnabled = level.researchEnabled
+        if level.prebuilt { PrebuiltFactory.build(levelID: level.id, in: w, near: w.mapGen.spawnPosition) }
         return GameSession(world: w, mode: .campaign(levelID: level.id), level: level)
     }
 
