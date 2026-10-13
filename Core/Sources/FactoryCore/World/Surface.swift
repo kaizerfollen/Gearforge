@@ -85,6 +85,12 @@ public final class Surface {
 
     public var generatedChunks: [Chunk] { chunks.compactMap { $0 } }
 
+    /// Drops every generated chunk. Used by save loading to reset a freshly constructed World (whose setUp may have
+    /// generated chunks around spawn) before installing the saved chunks with `setChunk`. [Progression, additive]
+    public func removeAllChunks() {
+        for i in chunks.indices { chunks[i] = nil }
+    }
+
     @inlinable public func chunk(at p: TilePos) -> Chunk? { chunk(p.chunk) }
 
     // MARK: Tile accessors (generate on demand)
