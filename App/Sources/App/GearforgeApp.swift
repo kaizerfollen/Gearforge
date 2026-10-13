@@ -1,36 +1,61 @@
-// Gearforge — App
-// Placeholder entry point (platform bootstrap). Owner: Lead — replace ContentView with the real root view.
+// Gearforge — App entry point.
 
 import SwiftUI
-import SpriteKit
 import FactoryCore
 
 @main
 struct GearforgeApp: App {
+    @State private var model = AppModel()
+    @Environment(\.scenePhase) private var scenePhase
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView(model: model)
+                .preferredColorScheme(.dark)
+                .statusBarHidden(true)
+                .persistentSystemOverlays(.hidden)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            model.scenePhaseChanged(phase)
         }
     }
 }
 
-struct ContentView: View {
-    @State private var scene: SKScene = {
-        let scene = SKScene(size: CGSize(width: 1024, height: 768))
-        scene.scaleMode = .resizeFill
-        scene.backgroundColor = .black
-        return scene
-    }()
+struct RootView: View {
+    @Bindable var model: AppModel
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            SpriteView(scene: scene, options: [.ignoresSiblingOrder])
-                .ignoresSafeArea()
-            Text("FactoryCore items: \(PrototypeDB.shared.items.count)")
-                .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                .foregroundStyle(.white)
-                .padding(8)
+        ZStack {
+            Theme.background.ignoresSafeArea()
+            switch model.screen {
+            case .menu:
+                MainMenuView(model: model)
+            case .newGame:
+                NewGameView(model: model)
+            case .load:
+                LoadGameView(model: model)
+            case .settings:
+                SettingsView(model: model)
+            case .loading(let text):
+                LoadingView(text: text)
+            case .game:
+                if let c = model.controller { GameView(model: model, controller: c) }
+            }
         }
-        .statusBarHidden()
+        .alert("Gearforge", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
+            Button("OK", role: .cancel) { model.errorMessage = nil }
+        } message: {
+            Text(model.errorMessage ?? "")
+        }
+    }
+}
+
+struct LoadingView: View {
+    let text: String
+    var body: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+            Text(text).font(.headline).foregroundStyle(Theme.text)
+        }
     }
 }

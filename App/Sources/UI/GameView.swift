@@ -1,0 +1,235 @@
+// Gearforge — the in-game screen: SpriteView + touch layer + HUD + panels (GDD §4, §5).
+
+import SwiftUI
+import SpriteKit
+import FactoryCore
+
+struct GameView: View {
+    @Bindable var model: AppModel
+    @Bindable var controller: GameController
+
+    // touch state
+    @State private var touchStart: CGPoint? = nil
+    @State private var touchStartTime = Date()
+    @State private var lastTile: TilePos? = nil
+    @State private var dragging = false
+    @State private var holding = false
+    @State private var lastDrag: CGPoint = .zero
+    @State private var zoomStart: CGFloat = 1
+    @State private var contextMenu: ContextMenuState? = nil
+    @State private var touchID = 0
+
+    struct ContextMenuState: Equatable { var entity: Int32; var point: CGPoint }
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                if let scene = model.scene {
+                    SpriteView(scene: scene, preferredFramesPerSecond: model.settings.batterySaver ? 30 : model.settings.frameRateCap,
+                               options: [.ignoresSiblingOrder], debugOptions: model.settings.showFPS ? [.showsFPS, .showsNodeCount] : [])
+                        .ignoresSafeArea()
+                }
+                touchLayer
+                HUDView(model: model, controller: controller)
+                if let cm = contextMenu { contextMenuView(cm, in: geo.size) }
+                panelOverlay
+                if controller.showVictory { VictoryView(model: model, controller: controller) }
+            }
+        }
+        .ignoresSafeArea()
+    }
+
+    // MARK: Touch layer
+
+    private var touchLayer: some View {
+        Color.clear
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0, coordinateSpace: .local)
+                    .onChanged { v in touchChanged(v) }
+                    .onEnded { v in touchEnded(v) }
+            )
+            .simultaneousGesture(
+                MagnifyGesture()
+                    .onChanged { v in
+                        if !holding { model.scene?.zoom = zoomStart * v.magnification }
+                        dragging = true
+                    }
+                    .onEnded { _ in zoomStart = model.scene?.zoom ?? 1 }
+            )
+            .ignoresSafeArea()
+    }
+
+    private func tile(_ p: CGPoint) -> TilePos? { model.scene?.tile(atView: p) }
+
+    private func touchChanged(_ v: DragGesture.Value) {
+        guard let scene = model.scene else { return }
+        contextMenu = nil
+        if touchStart == nil {
+            touchStart = v.startLocation
+            touchStartTime = Date()
+            dragging = false
+            holding = false
+            lastDrag = v.startLocation
+            lastTile = tile(v.startLocation)
+            touchID += 1
+            let id = touchID
+            if controller.mode == .build { controller.previewTile = lastTile }
+            if controller.mode == .explore {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { longPressFired(id: id, at: v.startLocation) }
+            }
+            return
+        }
+        let moved = hypot(v.location.x - v.startLocation.x, v.location.y - v.startLocation.y)
+        if moved > 12 { dragging = true }
+        guard let t = tile(v.location) else { return }
+        switch controller.mode {
+        case .explore:
+            if holding { return }
+            if dragging {
+                // pan the camera
+                let dx = Double(v.location.x - lastDrag.x), dy = Double(v.location.y - lastDrag.y)
+                let k = Double(scene.S * scene.zoom)
+                controller.cameraFollowsPlayer = false
+                scene.cameraCenter = Vec2(scene.cameraCenter.x - dx / k, scene.cameraCenter.y - dy / k)
+            }
+        case .build:
+            controller.previewTile = t
+            if dragging, let lt = lastTile, lt != t {
+                for step in path(from: lt, to: t) { controller.buildLine(from: step.0, to: step.1) }
+            }
+        case .remove:
+            if dragging, lastTile != t { controller.remove(at: t, silent: true) }
+        }
+        lastTile = t
+        lastDrag = v.location
+    }
+
+    private func touchEnded(_ v: DragGesture.Value) {
+        defer { touchStart = nil; dragging = false; lastTile = nil; touchID += 1 }
+        if holding { holding = false; controller.stopMining(); return }
+        guard !dragging, let t = tile(v.location) else { return }
+        switch controller.mode {
+        case .explore:
+            if let e = controller.world.entity(at: t), controller.world.entities[e].kind != .character {
+                let rec = controller.world.entities[e]
+                if rec.kind == .tree || rec.kind == .rock {
+                    controller.show("Hold to chop")
+                } else {
+                    controller.tapEntity(e)
+                }
+            } else {
+                controller.selected = nil
+                if controller.world.surface.resource(at: t).1 > 0 { controller.show("Hold to mine") }
+            }
+        case .build:
+            controller.previewTile = t
+            controller.build(at: t)
+        case .remove:
+            controller.remove(at: t)
+        }
+    }
+
+    private func longPressFired(id: Int, at p: CGPoint) {
+        guard id == touchID, touchStart != nil, !dragging, controller.mode == .explore, let t = tile(p) else { return }
+        let w = controller.world
+        if let e = w.entity(at: t) {
+            let k = w.entities[e].kind
+            if k == .tree || k == .rock {
+                holding = controller.startMining(at: t)
+                if !holding { controller.show("Too far — walk closer") }
+            } else if w.entities[e].flags.contains(.playerBuilt) {
+                contextMenu = ContextMenuState(entity: e, point: p)
+                controller.haptic(.medium)
+                touchStart = nil
+            }
+        } else if w.surface.resource(at: t).1 > 0 {
+            holding = controller.startMining(at: t)
+            if !holding { controller.show("Too far — walk closer") }
+        }
+    }
+
+    /// 4-connected path between two tiles (so fast drags don't skip belt tiles).
+    private func path(from a: TilePos, to b: TilePos) -> [(TilePos, TilePos)] {
+        var out: [(TilePos, TilePos)] = []
+        var cur = a
+        var guardN = 0
+        while cur != b && guardN < 64 {
+            guardN += 1
+            var nx = cur
+            if abs(b.x - cur.x) >= abs(b.y - cur.y) { nx.x += b.x > cur.x ? 1 : -1 } else { nx.y += b.y > cur.y ? 1 : -1 }
+            out.append((cur, nx))
+            cur = nx
+        }
+        return out
+    }
+
+    // MARK: Context menu (long-press)
+
+    private func contextMenuView(_ cm: ContextMenuState, in size: CGSize) -> some View {
+        let w = controller.world
+        let alive = w.entities[cm.entity].isAlive
+        return VStack(spacing: 6) {
+            if alive {
+                Text(w.db.entities[Int(w.entities[cm.entity].proto)].name).font(.caption.bold()).foregroundStyle(Theme.text)
+                HStack(spacing: 8) {
+                    HUDButton(glyph: "ui_inventory", size: 46) { controller.openEntity(w.entities.handle(cm.entity)); contextMenu = nil }
+                    HUDButton(glyph: "ui_rotate", size: 46) { controller.execute(.rotate(entity: cm.entity, clockwise: true)); contextMenu = nil }
+                    HUDButton(glyph: "ui_pipette", size: 46) { controller.pipette(cm.entity); contextMenu = nil }
+                    HUDButton(glyph: "ui_remove", size: 46) { controller.execute(.remove(entity: cm.entity)); contextMenu = nil }
+                }
+            }
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color.black.opacity(0.75)))
+        .position(x: min(max(cm.point.x, 140), size.width - 140), y: max(cm.point.y - 70, 60))
+    }
+
+    // MARK: Panels
+
+    @ViewBuilder private var panelOverlay: some View {
+        if let p = controller.panel {
+            ZStack {
+                Color.black.opacity(p == .pause ? 0.55 : 0.25).ignoresSafeArea()
+                    .onTapGesture { if p != .pause { controller.panel = nil } }
+                switch p {
+                case .inventory: InventoryPanel(controller: controller)
+                case .entity(let h): EntityPanel(controller: controller, handle: h)
+                case .research: ResearchPanel(controller: controller)
+                case .stats: StatsPanel(controller: controller)
+                case .pause: PauseMenu(model: model, controller: controller)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Victory
+
+struct VictoryView: View {
+    @Bindable var model: AppModel
+    @Bindable var controller: GameController
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.6).ignoresSafeArea()
+            VStack(spacing: 16) {
+                Text(controller.session.mode == .freeplay ? "Rocket launched!" : "Level complete!")
+                    .font(.system(size: 40, weight: .heavy, design: .rounded)).foregroundStyle(Theme.accent)
+                if controller.session.mode != .freeplay {
+                    HStack(spacing: 6) {
+                        ForEach(0..<3, id: \.self) { i in
+                            Text("★").font(.system(size: 44)).foregroundStyle(i < controller.hud.stars ? Theme.accent : Color.white.opacity(0.2))
+                        }
+                    }
+                    Text("Time \(controller.hud.gameTime)").foregroundStyle(Theme.text)
+                }
+                HStack(spacing: 12) {
+                    MenuButton(title: "Keep playing") { controller.showVictory = false }
+                    MenuButton(title: "Main menu") { model.quitToMenu(save: true) }
+                }
+            }
+            .padding(30)
+            .background(RoundedRectangle(cornerRadius: 18).fill(Theme.panel))
+        }
+    }
+}

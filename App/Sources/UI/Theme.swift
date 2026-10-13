@@ -1,0 +1,188 @@
+// Gearforge — shared UI style: colours, panels, buttons, item icons.
+
+import SwiftUI
+import UIKit
+import FactoryCore
+
+enum Theme {
+    static let background = Color(red: 0.09, green: 0.10, blue: 0.11)
+    static let panel = Color(red: 0.16, green: 0.17, blue: 0.19)
+    static let panelLight = Color(red: 0.23, green: 0.24, blue: 0.27)
+    static let slot = Color(red: 0.11, green: 0.12, blue: 0.13)
+    static let accent = Color(red: 0.98, green: 0.62, blue: 0.20)
+    static let text = Color(white: 0.92)
+    static let textDim = Color(white: 0.6)
+    static let good = Color(red: 0.35, green: 0.85, blue: 0.4)
+    static let warn = Color(red: 0.98, green: 0.8, blue: 0.25)
+    static let bad = Color(red: 0.95, green: 0.3, blue: 0.25)
+
+    static func powerColor(_ s: Double) -> Color { s >= 0.999 ? good : (s >= 0.5 ? warn : bad) }
+}
+
+/// Sprite from the atlas as a SwiftUI image.
+struct SpriteImage: View {
+    let name: String
+    var size: CGFloat = 32
+    var body: some View {
+        Image(uiImage: SpriteCatalog.shared.image(name))
+            .resizable()
+            .interpolation(.medium)
+            .frame(width: size, height: size)
+    }
+}
+
+/// Item icon with an optional count badge.
+struct ItemIcon: View {
+    let item: Int
+    let db: PrototypeDB
+    var count: Int? = nil
+    var size: CGFloat = 40
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            Image(uiImage: SpriteCatalog.shared.itemIcon(item, db: db))
+                .resizable()
+                .interpolation(.medium)
+                .frame(width: size, height: size)
+            if let c = count {
+                Text(c >= 10_000 ? "\(c / 1000)k" : "\(c)")
+                    .font(.system(size: max(9, size * 0.28), weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.white)
+                    .shadow(color: .black, radius: 1, x: 1, y: 1)
+                    .offset(x: 2, y: 2)
+            }
+        }
+    }
+}
+
+/// Inventory-style slot background.
+struct SlotView<Content: View>: View {
+    var highlighted = false
+    var size: CGFloat = 52
+    @ViewBuilder var content: () -> Content
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 6).fill(Theme.slot)
+            RoundedRectangle(cornerRadius: 6).stroke(highlighted ? Theme.accent : Color(white: 0.3), lineWidth: highlighted ? 2 : 1)
+            content()
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+/// Round HUD button with a sprite glyph.
+struct HUDButton: View {
+    let glyph: String
+    var active = false
+    var size: CGFloat = 52
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                Circle().fill(active ? Theme.accent.opacity(0.9) : Color.black.opacity(0.55))
+                Circle().stroke(Color.white.opacity(0.25), lineWidth: 1)
+                SpriteImage(name: glyph, size: size * 0.55)
+            }
+            .frame(width: size, height: size)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Panel chrome with a title bar and close button.
+struct PanelChrome<Content: View>: View {
+    let title: String
+    let onClose: () -> Void
+    @ViewBuilder var content: () -> Content
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text(title).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(Theme.text)
+                Spacer()
+                Button(action: onClose) { SpriteImage(name: "ui_close", size: 26) }.buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16).padding(.vertical, 10)
+            .background(Theme.panelLight)
+            content()
+        }
+        .background(Theme.panel)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.white.opacity(0.12), lineWidth: 1))
+        .shadow(color: .black.opacity(0.5), radius: 18, x: 0, y: 6)
+    }
+}
+
+/// Wide menu button.
+struct MenuButton: View {
+    let title: String
+    var subtitle: String? = nil
+    var enabled = true
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 2) {
+                Text(title).font(.system(size: 20, weight: .semibold, design: .rounded))
+                if let s = subtitle { Text(s).font(.caption).foregroundStyle(Theme.textDim) }
+            }
+            .frame(width: 300, height: subtitle == nil ? 50 : 60)
+            .foregroundStyle(enabled ? Theme.text : Theme.textDim)
+            .background(RoundedRectangle(cornerRadius: 12).fill(enabled ? Theme.panelLight : Theme.panel))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.accent.opacity(enabled ? 0.6 : 0.2), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+    }
+}
+
+/// Thin progress bar.
+struct BarView: View {
+    let fraction: Double
+    var color: Color = Theme.accent
+    var height: CGFloat = 6
+    var body: some View {
+        GeometryReader { g in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.white.opacity(0.12))
+                Capsule().fill(color).frame(width: g.size.width * CGFloat(max(0, min(1, fraction))))
+            }
+        }
+        .frame(height: height)
+    }
+}
+
+extension EntityStatus {
+    var label: String {
+        switch self {
+        case .working: return "Working"
+        case .idle: return "Idle"
+        case .noInput: return "Waiting for ingredients"
+        case .outputFull: return "Output full"
+        case .noPower: return "No power"
+        case .lowPower: return "Low power"
+        case .noFuel: return "No fuel"
+        case .noRecipe: return "No recipe"
+        case .noResources: return "No resources"
+        case .noResearch: return "No research"
+        case .waitingForSource: return "Waiting for source"
+        case .waitingForTarget: return "Waiting for target"
+        case .disabled: return "Disabled"
+        case .noFluid: return "No fluid"
+        case .fluidFull: return "Fluid output full"
+        case .noModules: return "No modules"
+        }
+    }
+    var color: Color {
+        switch self {
+        case .working: return Theme.good
+        case .lowPower, .noInput, .waitingForSource, .waitingForTarget, .idle: return Theme.warn
+        default: return Theme.bad
+        }
+    }
+}
+
+func formatWatts(_ w: Double) -> String {
+    if w >= 1e9 { return String(format: "%.1f GW", w / 1e9) }
+    if w >= 1e6 { return String(format: "%.1f MW", w / 1e6) }
+    if w >= 1e3 { return String(format: "%.0f kW", w / 1e3) }
+    return String(format: "%.0f W", w)
+}
