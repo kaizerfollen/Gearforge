@@ -23,6 +23,29 @@ public final class PowerSystem: EntitySystem, ItemEndpoint {
         var nextRequest: Double = 0       // accumulated during this tick for the next
         var stored: Double = 0            // accumulators
         var produced: Double = 0          // last tick (J), generators/solar/accumulator discharge
+        // cached prototype data
+        var proto: Int32 = -1
+        var solarJ: Double = 0            // per tick at full daylight
+        var accCap: Double = 0
+        var accIn: Double = 0             // per tick
+        var accOut: Double = 0
+        var genMaxJ: Double = 0
+        var genUsage: Double = 0
+        var genMaxT: Double = 165
+        var genEff: Double = 1
+    }
+
+    private func cache(_ ep: inout Endpoint) {
+        let p = world.db.entities[Int(world.entities[ep.entity].proto)]
+        ep.proto = world.entities[ep.entity].proto
+        ep.solarJ = (p.solar?.production ?? 0) / 60
+        ep.accCap = p.accumulator?.capacity ?? 5e6
+        ep.accIn = (p.accumulator?.inputFlowLimit ?? 3e5) / 60
+        ep.accOut = (p.accumulator?.outputFlowLimit ?? 3e5) / 60
+        if let g = p.generator {
+            ep.genMaxJ = g.maxPowerOutput / 60; ep.genUsage = g.fluidUsagePerTick
+            ep.genMaxT = g.maximumTemperature; ep.genEff = g.effectivity
+        }
     }
 
     struct Pole {
@@ -79,6 +102,7 @@ public final class PowerSystem: EntitySystem, ItemEndpoint {
         case "primary-input": ep.cls = .consumerPrimary
         default: ep.cls = .consumerSecondary
         }
+        cache(&ep)
         let slot: Int32
         if let f = freeEndpoints.popLast() { slot = f; endpoints[Int(f)] = ep } else { slot = Int32(endpoints.count); endpoints.append(ep) }
         world.entities.setPowerSlot(e, slot)
@@ -318,7 +342,6 @@ public final class PowerSystem: EntitySystem, ItemEndpoint {
         }
         var d1 = [Double](repeating: 0, count: nc), d2 = d1, solar = d1, steam = d1, accOut = d1, accIn = d1, accStored = d1, accCap = d1
         let daylight = world.daylight
-        let db = world.db
         // Gather
         for k in endpoints.indices where endpoints[k].entity >= 0 {
             endpoints[k].request = endpoints[k].nextRequest
@@ -326,20 +349,16 @@ public final class PowerSystem: EntitySystem, ItemEndpoint {
             endpoints[k].produced = 0
             let n = Int(endpoints[k].network)
             guard n >= 0 else { continue }
-            let e = endpoints[k].entity
-            let p = db.entities[Int(world.entities[e].proto)]
             switch endpoints[k].cls {
             case .consumerSecondary: d2[n] += endpoints[k].request
             case .consumerPrimary: d1[n] += endpoints[k].request
-            case .solar: solar[n] += (p.solar?.production ?? 0) * daylight / 60
-            case .steam: steam[n] += steamAvailable(e, p)
+            case .solar: solar[n] += endpoints[k].solarJ * daylight
+            case .steam: steam[n] += steamAvailable(k)
             case .accumulator:
-                let cap = p.accumulator?.capacity ?? 5e6
-                let outL = (p.accumulator?.outputFlowLimit ?? 3e5) / 60, inL = (p.accumulator?.inputFlowLimit ?? 3e5) / 60
-                accOut[n] += min(outL, endpoints[k].stored)
-                accIn[n] += min(inL, cap - endpoints[k].stored)
+                accOut[n] += min(endpoints[k].accOut, endpoints[k].stored)
+                accIn[n] += min(endpoints[k].accIn, endpoints[k].accCap - endpoints[k].stored)
                 accStored[n] += endpoints[k].stored
-                accCap[n] += cap
+                accCap[n] += endpoints[k].accCap
             }
         }
         // Solve
@@ -378,27 +397,22 @@ public final class PowerSystem: EntitySystem, ItemEndpoint {
         let stats = world.stats!
         for k in endpoints.indices where endpoints[k].entity >= 0 {
             let n = Int(endpoints[k].network)
-            let e = endpoints[k].entity
-            let proto = Int(world.entities[e].proto)
             guard n >= 0 else { continue }
-            let p = db.entities[proto]
+            let proto = Int(endpoints[k].proto)
             switch endpoints[k].cls {
             case .solar:
-                let j = (p.solar?.production ?? 0) * daylight / 60 * fSolar[n]
+                let j = endpoints[k].solarJ * daylight * fSolar[n]
                 endpoints[k].produced = j
                 if j > 0 { stats.producedPower(entityProto: proto, joules: j) }
             case .steam:
-                let avail = steamAvailable(e, p)
-                let j = avail * fSteam[n]
-                if j > 0 { consumeSteam(e, p, joules: j); endpoints[k].produced = j; stats.producedPower(entityProto: proto, joules: j) }
+                let j = steamAvailable(k) * fSteam[n]
+                if j > 0 { consumeSteam(k, joules: j); endpoints[k].produced = j; stats.producedPower(entityProto: proto, joules: j) }
             case .accumulator:
-                let cap = p.accumulator?.capacity ?? 5e6
-                let outL = (p.accumulator?.outputFlowLimit ?? 3e5) / 60, inL = (p.accumulator?.inputFlowLimit ?? 3e5) / 60
                 if fAccOut[n] > 0 {
-                    let j = min(outL, endpoints[k].stored) * fAccOut[n]
+                    let j = min(endpoints[k].accOut, endpoints[k].stored) * fAccOut[n]
                     endpoints[k].stored -= j; endpoints[k].produced = j
                 } else if fAccIn[n] > 0 {
-                    endpoints[k].stored += min(inL, cap - endpoints[k].stored) * fAccIn[n]
+                    endpoints[k].stored += min(endpoints[k].accIn, endpoints[k].accCap - endpoints[k].stored) * fAccIn[n]
                 }
             case .consumerSecondary, .consumerPrimary:
                 let s = endpoints[k].cls == .consumerPrimary ? networkSatisfactionPrimary[n] : networkSatisfaction[n]
@@ -409,22 +423,21 @@ public final class PowerSystem: EntitySystem, ItemEndpoint {
     }
 
     /// Energy (J) a steam generator can deliver this tick from the steam in its box.
-    private func steamAvailable(_ e: Int32, _ p: EntityProto) -> Double {
-        guard let g = p.generator else { return 0 }
+    private func steamAvailable(_ k: Int) -> Double {
+        let e = endpoints[k].entity
         let fluids = world.fluids!
         let amt = fluids.amount(e, box: 0)
         guard amt > 0 else { return 0 }
-        let t = min(fluids.temperature(e, box: 0), g.maximumTemperature)
-        let perUnit = max(0, t - 15) * 200 * g.effectivity
-        let maxJ = g.maxPowerOutput / 60
-        return min(maxJ, min(amt, g.fluidUsagePerTick) * perUnit)
+        let t = min(fluids.temperature(e, box: 0), endpoints[k].genMaxT)
+        let perUnit = max(0, t - 15) * 200 * endpoints[k].genEff
+        return min(endpoints[k].genMaxJ, min(amt, endpoints[k].genUsage) * perUnit)
     }
 
-    private func consumeSteam(_ e: Int32, _ p: EntityProto, joules: Double) {
-        guard let g = p.generator else { return }
+    private func consumeSteam(_ k: Int, joules: Double) {
+        let e = endpoints[k].entity
         let fluids = world.fluids!
-        let t = min(fluids.temperature(e, box: 0), g.maximumTemperature)
-        let perUnit = max(1e-9, (t - 15) * 200 * g.effectivity)
+        let t = min(fluids.temperature(e, box: 0), endpoints[k].genMaxT)
+        let perUnit = max(1e-9, (t - 15) * 200 * endpoints[k].genEff)
         fluids.remove(e, box: 0, amount: joules / perUnit)
     }
 
@@ -497,6 +510,7 @@ public final class PowerSystem: EntitySystem, ItemEndpoint {
     }
 
     public func didLoad() {
+        for k in endpoints.indices where endpoints[k].entity >= 0 { cache(&endpoints[k]) }
         for i in poles.indices where poles[i].entity >= 0 {
             let rec = world.entities[poles[i].entity]
             if let pp = world.db.entities[Int(rec.proto)].pole {

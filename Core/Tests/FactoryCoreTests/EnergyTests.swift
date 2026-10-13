@@ -31,11 +31,11 @@ final class EnergyTests: XCTestCase {
         let lab = w.place("lab", 8, 10)
         w.research.setCurrent(w.db.tech("automation"))
         _ = w.labs.insert(lab, item: w.item("mechanics_card"), count: 10, source: .player)
-        w.step(600)
+        w.step(1500)
         XCTAssertTrue(w.power.isBoilerWorking(plant.boiler) || w.fluids.amount(plant.engines[0], box: 0) > 0)
         XCTAssertEqual(w.power.satisfaction(of: lab), 1, accuracy: 1e-9)
         XCTAssertEqual(w.power.networkID(of: lab), w.power.networkID(of: plant.engines[0]))
-        XCTAssertGreaterThan(w.research.progress(of: w.db.tech("automation")), 0.03)
+        XCTAssertGreaterThanOrEqual(w.research.progress(of: w.db.tech("automation")), 0.1)
     }
 
     func testSteamPlantDelivers1_8MWAndBrownsOutWhenOverloaded() {
@@ -45,13 +45,13 @@ final class EnergyTests: XCTestCase {
         let r = w.db.recipe("iron_gear_wheel")
         var asms: [Int32] = []
         for i in 0..<12 {
-            let a = w.place("assembling_machine_3", 9 + (i % 4) * 3, 2 + (i / 4) * 3)
+            let a = w.place("assembling_machine_3", 9 + (i % 4) * 4, 2 + (i / 4) * 4)
             _ = w.crafting.setRecipe(a, r)
             _ = w.crafting.insert(a, item: w.item("iron_plate"), count: 100, source: .player)
             asms.append(a)
         }
         // poles to connect the assembler block
-        for (x, y) in [(12, 5), (18, 5), (12, 9), (18, 9), (24, 5)] { w.place("medium_electric_pole", x, y) }
+        for (x, y) in [(12, 5), (16, 5), (20, 5), (12, 9), (16, 9), (20, 9), (24, 5), (24, 9)] { w.place("medium_electric_pole", x, y) }
         w.step(600)
         let net = w.power.networkID(of: asms[0])
         XCTAssertGreaterThanOrEqual(net, 0)
@@ -145,24 +145,16 @@ final class EnergyTests: XCTestCase {
 
     func testFluidMixingIsPrevented() {
         let w = TestWorld.make()
-        let plant = steamPlant(w)
-        _ = plant
-        w.step(300)
-        // a pipe at (3,13) would touch nothing; one bridging the water pipe (3,15) and the steam engine side is checked:
-        // steam segment touches tile (7,11) east of engine 1? engines connect only at their ends, so test via the water pipe:
-        w.place("pipe", 3, 14)                    // joins the water segment
-        XCTAssertFalse(w.fluids.wouldMixFluids(proto: w.proto("pipe"), origin: TilePos(3, 13), direction: .north))
-        // pipe next to boiler steam output tile (5,13) is inside engine 1; a pipe between the water pipe (3,14) and a steam
-        // pipe: build a steam pipe from engine 2's top end (5,3) and test a pipe that would touch both segments.
-        w.place("pipe", 5, 3)
-        w.place("pipe", 4, 3)
-        w.place("pipe", 3, 3)
-        for y in 4...12 { if w.canPlace(proto: w.proto("pipe"), origin: TilePos(2, y), direction: .north) == nil { w.place("pipe", 2, y) } }
-        // (2,13) would connect water (3,13)? no — (3,13) is empty. Check pipe at (3,13): neighbours (3,14) water, (2,13) none.
-        w.place("pipe", 2, 13)                    // steam column down to (2,13)
-        w.step(60)
-        XCTAssertTrue(w.fluids.wouldMixFluids(proto: w.proto("pipe"), origin: TilePos(3, 13), direction: .north),
-                      "a pipe joining the water and steam segments must be rejected")
+        addWater(w)
+        w.place("offshore_pump", 2, 15, .west)
+        w.place("pipe", 3, 15); w.place("pipe", 4, 15)
+        let steamPipe = w.place("pipe", 6, 15)
+        w.step(30)
+        XCTAssertGreaterThan(w.fluids.add(steamPipe, box: 0, fluid: w.db.fluid("steam"), amount: 50, temperature: 165), 0)
+        XCTAssertTrue(w.fluids.wouldMixFluids(proto: w.proto("pipe"), origin: TilePos(5, 15), direction: .north),
+                      "a pipe joining water and steam must be rejected")
+        XCTAssertFalse(w.fluids.wouldMixFluids(proto: w.proto("pipe"), origin: TilePos(5, 17), direction: .north))
+        XCTAssertFalse(w.fluids.wouldMixFluids(proto: w.proto("pipe"), origin: TilePos(4, 16), direction: .north))
     }
 
     func testEnergySaveRoundTrip() throws {
