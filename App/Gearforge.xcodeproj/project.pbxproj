@@ -1,0 +1,432 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0F2C3A1A2125259513111590 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D2EF0B49EA01824F4EDA3250 /* Assets.xcassets */; };
+		327569D41A0FC8B902E10EB7 /* SceneMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = DADD4EA3147A7EA24C9AEF65 /* SceneMath.swift */; };
+		41B5FEAD5881868AB0081536 /* GestureInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0B9C8DD449DD0774321B571 /* GestureInterpreter.swift */; };
+		424FE322D86C3082B00B0AB1 /* CoreAdapters.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90442582C82ABE8E053865E /* CoreAdapters.swift */; };
+		630B2BA91194F9944500E4A0 /* Sprites.atlas in Resources */ = {isa = PBXBuildFile; fileRef = 7551B2D381E4C1228326DB74 /* Sprites.atlas */; };
+		78E899A1AE86A5F547ED035A /* TerrainBaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E25C6749C9CC5AF759014015 /* TerrainBaker.swift */; };
+		85C4829E9D27BB2D6E0A84CD /* BuildPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 826548AC4E49953F3AE0FA6C /* BuildPlanner.swift */; };
+		8B0D33EEDD20AE0750D4E790 /* FactoryCore in Frameworks */ = {isa = PBXBuildFile; productRef = E747426F531CAABC3CD62DC7 /* FactoryCore */; };
+		A5E4CC0013CF3B1455C0D324 /* GameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B7EB56E528E1A51D10A3C7 /* GameController.swift */; };
+		D3C0943AEA9A60A55F3BEFBE /* SpriteCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 087261AC6A1D95AA2D904CF2 /* SpriteCatalog.swift */; };
+		D9C8D639C34682BDE1151915 /* GameControllerTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16464656D54515A95DA3FBD /* GameControllerTypes.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		087261AC6A1D95AA2D904CF2 /* SpriteCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteCatalog.swift; sourceTree = "<group>"; };
+		338534F74D12A4AB190B1BB8 /* Gearforge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gearforge.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7551B2D381E4C1228326DB74 /* Sprites.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; path = Sprites.atlas; sourceTree = "<group>"; };
+		826548AC4E49953F3AE0FA6C /* BuildPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildPlanner.swift; sourceTree = "<group>"; };
+		A8B7EB56E528E1A51D10A3C7 /* GameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameController.swift; sourceTree = "<group>"; };
+		B16464656D54515A95DA3FBD /* GameControllerTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameControllerTypes.swift; sourceTree = "<group>"; };
+		D2EF0B49EA01824F4EDA3250 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D90442582C82ABE8E053865E /* CoreAdapters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAdapters.swift; sourceTree = "<group>"; };
+		DADD4EA3147A7EA24C9AEF65 /* SceneMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneMath.swift; sourceTree = "<group>"; };
+		E25C6749C9CC5AF759014015 /* TerrainBaker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerrainBaker.swift; sourceTree = "<group>"; };
+		F0B9C8DD449DD0774321B571 /* GestureInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GestureInterpreter.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4388DAE2384DA1265B6D2DCC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8B0D33EEDD20AE0750D4E790 /* FactoryCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		09C85856807DCB098D20B64A /* Rendering */ = {
+			isa = PBXGroup;
+			children = (
+				826548AC4E49953F3AE0FA6C /* BuildPlanner.swift */,
+				F0B9C8DD449DD0774321B571 /* GestureInterpreter.swift */,
+				DADD4EA3147A7EA24C9AEF65 /* SceneMath.swift */,
+				E25C6749C9CC5AF759014015 /* TerrainBaker.swift */,
+			);
+			path = Rendering;
+			sourceTree = "<group>";
+		};
+		16C3FEB892B57738DCA31EB7 /* Art */ = {
+			isa = PBXGroup;
+			children = (
+				087261AC6A1D95AA2D904CF2 /* SpriteCatalog.swift */,
+			);
+			path = Art;
+			sourceTree = "<group>";
+		};
+		20503E6017627EF1BAFFB42A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				338534F74D12A4AB190B1BB8 /* Gearforge.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		88D14B4F47A8307FF14872E6 = {
+			isa = PBXGroup;
+			children = (
+				EB0BEBABB0AB95E8EA6DA2BB /* Sources */,
+				BF19A5B674B195968F2F4F08 /* Resources */,
+				20503E6017627EF1BAFFB42A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B8A0DFDD9AA37A1BFE4CAA11 /* Bridge */ = {
+			isa = PBXGroup;
+			children = (
+				D90442582C82ABE8E053865E /* CoreAdapters.swift */,
+				A8B7EB56E528E1A51D10A3C7 /* GameController.swift */,
+				B16464656D54515A95DA3FBD /* GameControllerTypes.swift */,
+			);
+			path = Bridge;
+			sourceTree = "<group>";
+		};
+		BF19A5B674B195968F2F4F08 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D2EF0B49EA01824F4EDA3250 /* Assets.xcassets */,
+				7551B2D381E4C1228326DB74 /* Sprites.atlas */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		EB0BEBABB0AB95E8EA6DA2BB /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				16C3FEB892B57738DCA31EB7 /* Art */,
+				B8A0DFDD9AA37A1BFE4CAA11 /* Bridge */,
+				09C85856807DCB098D20B64A /* Rendering */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1432618C73892853CC5FACF4 /* Gearforge */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EDBF9EDEC765954486E3AC0D /* Build configuration list for PBXNativeTarget "Gearforge" */;
+			buildPhases = (
+				E514591440C65F9B7900C6D9 /* Sources */,
+				4388DAE2384DA1265B6D2DCC /* Frameworks */,
+				5EF4B22D5802922D000A6EBE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Gearforge;
+			packageProductDependencies = (
+				E747426F531CAABC3CD62DC7 /* FactoryCore */,
+			);
+			productName = Gearforge;
+			productReference = 338534F74D12A4AB190B1BB8 /* Gearforge.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A428DCE026F373543497B644 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					1432618C73892853CC5FACF4 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 8903878A2FDE0C0BAFB86F41 /* Build configuration list for PBXProject "Gearforge" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 88D14B4F47A8307FF14872E6;
+			packageReferences = (
+				BEC23159E18C8CBB24FF6AD3 /* XCLocalSwiftPackageReference "../Core" */,
+			);
+			productRefGroup = 20503E6017627EF1BAFFB42A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1432618C73892853CC5FACF4 /* Gearforge */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		5EF4B22D5802922D000A6EBE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0F2C3A1A2125259513111590 /* Assets.xcassets in Resources */,
+				630B2BA91194F9944500E4A0 /* Sprites.atlas in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E514591440C65F9B7900C6D9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				85C4829E9D27BB2D6E0A84CD /* BuildPlanner.swift in Sources */,
+				424FE322D86C3082B00B0AB1 /* CoreAdapters.swift in Sources */,
+				A5E4CC0013CF3B1455C0D324 /* GameController.swift in Sources */,
+				D9C8D639C34682BDE1151915 /* GameControllerTypes.swift in Sources */,
+				41B5FEAD5881868AB0081536 /* GestureInterpreter.swift in Sources */,
+				327569D41A0FC8B902E10EB7 /* SceneMath.swift in Sources */,
+				D3C0943AEA9A60A55F3BEFBE /* SpriteCatalog.swift in Sources */,
+				78E899A1AE86A5F547ED035A /* TerrainBaker.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		94E103798157E586A0E57046 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Gearforge;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gearforge.game;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C09F6EC58D04F0E3C3960BCE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		E3EDB71BCED3F966589CC5DF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Gearforge;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gearforge.game;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		FC922CAD1B382B71DFCA408C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		8903878A2FDE0C0BAFB86F41 /* Build configuration list for PBXProject "Gearforge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FC922CAD1B382B71DFCA408C /* Debug */,
+				C09F6EC58D04F0E3C3960BCE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EDBF9EDEC765954486E3AC0D /* Build configuration list for PBXNativeTarget "Gearforge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				94E103798157E586A0E57046 /* Debug */,
+				E3EDB71BCED3F966589CC5DF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		BEC23159E18C8CBB24FF6AD3 /* XCLocalSwiftPackageReference "../Core" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../Core;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E747426F531CAABC3CD62DC7 /* FactoryCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BEC23159E18C8CBB24FF6AD3 /* XCLocalSwiftPackageReference "../Core" */;
+			productName = FactoryCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = A428DCE026F373543497B644 /* Project object */;
+}

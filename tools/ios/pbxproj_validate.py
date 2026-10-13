@@ -12,12 +12,21 @@ Checks:
   5. Reachability: every object is reachable from rootObject (no orphans), and every PBXBuildFile is listed in
      exactly one build phase.
   6. Per-isa required keys for the isas the Gearforge generator emits.
+  7. Groups: every PBXFileReference is the child of exactly one group; every group except mainGroup has exactly
+     one parent; no group cycles.
+  8. Build phases: every PBXBuildFile's fileRef/productRef resolves; Sources phases only hold source files; every
+     packageProductDependency of a target is linked by a PBXBuildFile in that target's Frameworks phase; every
+     XCSwiftPackageProductDependency.package is listed in the project's packageReferences.
+  9. Disk (when the app dir is known): every <group>-relative file reference resolves to an existing path, and
+     every .swift file under <app>/Sources is in a Sources build phase.
 
-Usage: pbxproj_validate.py path/to/project.pbxproj   (exit status 0 = valid)
-Importable: `validate(text) -> list[str]` returns the list of errors (empty = valid), `parse(text)` returns dicts.
+Usage: pbxproj_validate.py path/to/project.pbxproj [--app-dir DIR]   (exit status 0 = valid)
+       DIR defaults to the directory containing the .xcodeproj.
+Importable: `validate(text, app_dir=None) -> list[str]` returns the errors (empty = valid), `parse(text)` the dicts.
 """
 from __future__ import annotations
 
+import os
 import re
 import sys
 
@@ -213,7 +222,7 @@ def _walk_ids(v, out: list):
             _walk_ids(x, out)
 
 
-def validate(text: str) -> list[str]:
+def validate(text: str, app_dir: str | None = None) -> list[str]:
     errors: list[str] = []
     try:
         root = parse(text)
@@ -295,23 +304,137 @@ def validate(text: str) -> list[str]:
                 if ch in parent:
                     errors.append(f"{ch}: child of two groups ({parent[ch]}, {oid})")
                 parent[ch] = oid
+    errors += _check_groups(objs, objs[rid], parent)
+    errors += _check_phases(objs, objs[rid])
+    if app_dir is not None:
+        errors += _check_disk(objs, objs[rid], parent, app_dir)
+    return errors
+
+
+def _isa(objs: dict, i: str) -> str | None:
+    o = objs.get(i)
+    return o.get("isa") if isinstance(o, dict) else None
+
+
+def _check_groups(objs: dict, proj: dict, parent: dict) -> list[str]:
+    errors = []
+    main = proj.get("mainGroup")
+    for oid, o in objs.items():
+        isa = o.get("isa")
+        if isa == "PBXFileReference" and oid not in parent:
+            errors.append(f"{oid} (PBXFileReference {o.get('path')}): not in any group")
+        if isa in ("PBXGroup", "PBXVariantGroup") and oid != main and oid not in parent:
+            errors.append(f"{oid} (PBXGroup {o.get('name') or o.get('path')}): no parent group")
+    if main in parent:
+        errors.append(f"mainGroup {main} is a child of another group")
+    for start in parent:
+        seen, cur = set(), start
+        while cur in parent:
+            if cur in seen:
+                errors.append(f"{start}: group cycle")
+                break
+            seen.add(cur)
+            cur = parent[cur]
+    return errors
+
+
+def _check_phases(objs: dict, proj: dict) -> list[str]:
+    errors = []
+    for oid, o in objs.items():
+        if o.get("isa") != "PBXBuildFile":
+            continue
+        if "fileRef" in o and _isa(objs, o["fileRef"]) is None:
+            errors.append(f"{oid} (PBXBuildFile): fileRef {o['fileRef']} does not exist")
+        if "productRef" in o and _isa(objs, o["productRef"]) is None:
+            errors.append(f"{oid} (PBXBuildFile): productRef {o['productRef']} does not exist")
+    pkgs = set(proj.get("packageReferences", []))
+    for oid, o in objs.items():
+        if o.get("isa") == "XCSwiftPackageProductDependency" and "package" in o and o["package"] not in pkgs:
+            errors.append(f"{oid} (XCSwiftPackageProductDependency): package {o['package']} not in "
+                          f"PBXProject.packageReferences")
+    for tid in proj.get("targets", []):
+        t = objs.get(tid, {})
+        linked = set()
+        for ph in t.get("buildPhases", []):
+            p = objs.get(ph, {})
+            for bf in p.get("files", []):
+                b = objs.get(bf, {})
+                if p.get("isa") == "PBXSourcesBuildPhase":
+                    ref = objs.get(b.get("fileRef"), {})
+                    if not str(ref.get("lastKnownFileType", ref.get("explicitFileType", ""))).startswith("sourcecode"):
+                        errors.append(f"{bf}: non-source file {ref.get('path')} in Sources phase")
+                if p.get("isa") == "PBXFrameworksBuildPhase" and "productRef" in b:
+                    linked.add(b["productRef"])
+        for dep in t.get("packageProductDependencies", []):
+            if dep not in linked:
+                errors.append(f"target {t.get('name')}: package product {dep} "
+                              f"({objs.get(dep, {}).get('productName')}) not linked in a Frameworks phase")
+    return errors
+
+
+def _check_disk(objs: dict, proj: dict, parent: dict, app_dir: str) -> list[str]:
+    errors = []
+
+    def resolve(i: str) -> str | None:
+        o = objs[i]
+        tree = o.get("sourceTree")
+        if tree == "SOURCE_ROOT":
+            return os.path.join(app_dir, o.get("path", ""))
+        if tree != "<group>":
+            return None
+        base = app_dir if i not in parent else resolve(parent[i])
+        if base is None:
+            return None
+        return os.path.join(base, o["path"]) if "path" in o else base
+
+    for oid, o in objs.items():
+        if o.get("isa") == "PBXFileReference" and o.get("sourceTree") in ("<group>", "SOURCE_ROOT"):
+            path = resolve(oid)
+            if path is not None and not os.path.exists(path):
+                errors.append(f"{oid}: file reference '{o.get('path')}' -> {path} does not exist")
+    in_sources = set()
+    for o in objs.values():
+        if o.get("isa") == "PBXSourcesBuildPhase":
+            for bf in o.get("files", []):
+                ref = objs.get(bf, {}).get("fileRef")
+                if ref in objs:
+                    p = resolve(ref)
+                    if p:
+                        in_sources.add(os.path.normpath(p))
+    src_root = os.path.join(app_dir, "Sources")
+    for dirpath, _, names in os.walk(src_root):
+        for n in names:
+            if n.endswith(".swift") and os.path.normpath(os.path.join(dirpath, n)) not in in_sources:
+                errors.append(f"{os.path.relpath(os.path.join(dirpath, n), app_dir)}: Swift file on disk is not in "
+                              f"any Sources phase (re-run tools/ios/gen_xcodeproj.py)")
     return errors
 
 
 def main(argv: list[str]) -> int:
-    if len(argv) != 2:
+    args = argv[1:]
+    app_dir = None
+    if "--app-dir" in args:
+        k = args.index("--app-dir")
+        app_dir = args[k + 1]
+        del args[k:k + 2]
+    if len(args) != 1:
         print(__doc__)
         return 2
-    with open(argv[1], encoding="utf-8") as f:
+    path = args[0]
+    if app_dir is None:
+        xcodeproj = os.path.dirname(os.path.abspath(path))
+        if xcodeproj.endswith(".xcodeproj"):
+            app_dir = os.path.dirname(xcodeproj)
+    with open(path, encoding="utf-8") as f:
         text = f.read()
-    errs = validate(text)
+    errs = validate(text, app_dir)
     if errs:
         for e in errs:
             print(f"error: {e}")
-        print(f"{argv[1]}: INVALID ({len(errs)} error(s))")
+        print(f"{path}: INVALID ({len(errs)} error(s))")
         return 1
     root = parse(text)
-    print(f"{argv[1]}: OK ({len(root['objects'])} objects)")
+    print(f"{path}: OK ({len(root['objects'])} objects)")
     return 0
 
 
