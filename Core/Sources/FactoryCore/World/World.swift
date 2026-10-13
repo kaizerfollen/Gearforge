@@ -106,6 +106,8 @@ public final class World {
     public private(set) var ground: GroundItems!
     /// Pollution statistic (no diffusion in MVP).
     public private(set) var pollution: PollutionStats!
+    /// Settings waiting on ghosts (entity index → (generation, settings)); applied when the ghost is built.
+    internal var ghostSettings: [Int32: (UInt32, GhostSettings)] = [:]
 
     /// All entity systems in update order.
     public private(set) var systems: [EntitySystem] = []

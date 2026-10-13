@@ -58,6 +58,15 @@ public enum WorldCodec {
         w.writeSection(tag: fourCC("STAT")) { s in world.stats.serialize(to: &s) }
         w.writeSection(tag: fourCC("GRND")) { s in world.ground.serialize(to: &s) }
         w.writeSection(tag: fourCC("POLL")) { s in world.pollution.serialize(to: &s) }
+        w.writeSection(tag: fourCC("GHST")) { s in
+            let keys = world.ghostSettings.keys.sorted()
+            s.writeVarInt(keys.count)
+            for k in keys {
+                let (gen, gs) = world.ghostSettings[k]!
+                s.write(k); s.write(gen)
+                s.writeBytes([UInt8]((try? JSONEncoder().encode(gs)) ?? Data()))
+            }
+        }
         for (tag, bytes) in extra { w.writeSection(tag: tag) { $0.writeRaw(bytes) } }
         return w.bytes
     }
@@ -154,9 +163,17 @@ public enum WorldCodec {
         var st = try section("STAT"); try world.stats.deserialize(from: &st)
         if var g = sections[fourCC("GRND")] { try world.ground.deserialize(from: &g) }
         if var pl = sections[fourCC("POLL")] { try world.pollution.deserialize(from: &pl) }
+        if var gh = sections[fourCC("GHST")] {
+            let n = try gh.readVarInt()
+            for _ in 0..<n {
+                let k = try gh.read(Int32.self), gen = try gh.read(UInt32.self)
+                let gs = try JSONDecoder().decode(GhostSettings.self, from: Data(try gh.readBytes()))
+                world.ghostSettings[k] = (gen, gs)
+            }
+        }
         for sys in world.systems { sys.didLoad() }
         world.recordsEvents = recordEvents
-        let known: Set<UInt32> = Set(["SETT", "CORE", "SURF", "ENTS", "RSCH", "CHAR", "STAT", "GRND", "POLL"].map { fourCCDynamic($0) })
+        let known: Set<UInt32> = Set(["SETT", "CORE", "SURF", "ENTS", "RSCH", "CHAR", "STAT", "GRND", "POLL", "GHST"].map { fourCCDynamic($0) })
             .union((0..<world.systems.count).map { fourCC("SYS0") &+ UInt32($0) << 24 })
         var extra: [UInt32: BinaryReader] = [:]
         for t in order where !known.contains(t) { extra[t] = sections[t] }

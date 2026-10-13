@@ -159,4 +159,64 @@ final class CoreGapTests: XCTestCase {
         let b = try? GameSession.decode(payload: GameSession(world: w, mode: .freeplay).encodePayload())
         XCTAssertEqual(b?.world.pollution.total ?? 0, w.pollution.total, accuracy: 1e-9)
     }
+
+    // MARK: Copy / paste area
+
+    private func buildSample(_ w: World) {
+        let a = w.place("assembling_machine_2", 2, 2)
+        _ = w.crafting.setRecipe(a, w.db.recipe("iron_gear_wheel"))
+        let ins = w.place("filter_inserter", 5, 3, .east)
+        w.inserters.setFilter(ins, slot: 0, item: w.item("iron_plate"))
+        let chest = w.place("iron_chest", 6, 3)
+        w.containers.setBar(chest, 4)
+        w.place("transport_belt", 2, 6, .east)
+        w.place("underground_belt", 3, 6, .east)
+        w.place("underground_belt", 6, 6, .east)
+    }
+
+    func testCopyPasteAreaKeepsSettings() {
+        let w = TestWorld.make()
+        buildSample(w)
+        let bp = w.captureBlueprint(TileRect(x: 0, y: 0, w: 10, h: 10))
+        XCTAssertEqual(bp.entries.count, 6)
+        XCTAssertEqual(bp.width, 5); XCTAssertEqual(bp.height, 5)
+        let req = bp.requiredItems(db: w.db)
+        XCTAssertEqual(req[w.item("underground_belt")], 2)
+        // paste at (20, 20); give the player the items and stand nearby
+        w.player.position = Vec2(22.5, 22.5)
+        for (item, n) in req { w.player.give(item, n) }
+        XCTAssertTrue(w.execute(.pasteBlueprint(bp, origin: TilePos(20, 20))).isOK)
+        w.step(31)
+        let a = w.entity(at: TilePos(20, 20))!
+        XCTAssertFalse(w.entities[a].flags.contains(.ghost), "ghost auto-built")
+        XCTAssertEqual(w.crafting.recipe(of: a), w.db.recipe("iron_gear_wheel"))
+        let ins = w.entity(at: TilePos(23, 21))!
+        XCTAssertEqual(w.inserters.filters(of: ins).first, w.item("iron_plate"))
+        XCTAssertEqual(w.containers.bar(of: w.entity(at: TilePos(24, 21))!), 4)
+        XCTAssertTrue(w.belts.isUndergroundEntrance(w.entity(at: TilePos(21, 24))!))
+        XCTAssertFalse(w.belts.isUndergroundEntrance(w.entity(at: TilePos(24, 24))!))
+    }
+
+    func testRotatedBlueprint() {
+        let w = TestWorld.make()
+        w.place("transport_belt", 0, 0, .east)
+        w.place("transport_belt", 1, 0, .east)
+        w.place("transport_belt", 2, 0, .east)
+        let bp = w.captureBlueprint(TileRect(x: 0, y: 0, w: 3, h: 1)).rotated(1, db: w.db)
+        XCTAssertEqual(bp.width, 1); XCTAssertEqual(bp.height, 3)
+        XCTAssertTrue(bp.entries.allSatisfy { $0.direction == .south })
+        XCTAssertEqual(Set(bp.entries.map { $0.dy }), [0, 1, 2])
+        XCTAssertEqual(w.pasteBlueprint(bp, at: TilePos(10, 10)), 3)
+        XCTAssertEqual(w.entities[w.entity(at: TilePos(10, 12))!].direction, .south)
+    }
+
+    func testGhostSettingsSurviveSaveLoad() throws {
+        let w = TestWorld.make()
+        buildSample(w)
+        let bp = w.captureBlueprint(TileRect(x: 0, y: 0, w: 10, h: 10))
+        w.pasteBlueprint(bp, at: TilePos(30, 30))
+        let b = try GameSession.decode(payload: GameSession(world: w, mode: .freeplay).encodePayload())
+        let g = b.world.entity(at: TilePos(30, 30))!
+        XCTAssertEqual(b.world.ghostSettingsPreview(g)?.recipe, "iron_gear_wheel")
+    }
 }

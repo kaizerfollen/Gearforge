@@ -53,6 +53,8 @@ public enum PlayerCommand: Sendable {
     case pickUpBeltItems(entity: Int32)
     /// Pick up the items lying on a tile (within reach).
     case pickUpGround(TilePos)
+    /// Copy/paste area: place ghosts of a blueprint with its top-left at `origin`.
+    case pasteBlueprint(Blueprint, origin: TilePos)
     // Character
     case craft(recipe: Int, count: Int)
     case cancelCraft(queueIndex: Int)
@@ -313,6 +315,9 @@ public extension World {
             for s in items { giveOrAlert(s) }
             return .ok
 
+        case .pasteBlueprint(let bp, let origin):
+            return pasteBlueprint(bp, at: origin) > 0 ? .ok : .failed(.blocked)
+
         case .pickUpGround(let p):
             guard pl.canReach(TileRect(origin: p, w: 1, h: 1)) else { return .failed(.outOfReach) }
             return pl.pickUpGround(p) > 0 ? .ok : .failed(.nothingThere)
@@ -473,8 +478,11 @@ public extension World {
         if let e = placementError(proto: proto, origin: origin, direction: dir) {
             // building over a ghost of the same entity replaces the ghost
             if e == .blocked, let g = entity(at: origin), entities[g].flags.contains(.ghost), Int(entities[g].proto) == proto {
+                let gs = takeGhostSettings(g)
                 removeEntity(g)
-                return build(item: item, origin: origin, direction: dir, recordUndo: recordUndo)
+                let r = build(item: item, origin: origin, direction: dir, recordUndo: recordUndo)
+                if r.isOK, let s = gs, let n = entity(at: origin) { for st in apply(s, to: n) { giveOrAlert(st) } }
+                return r
             }
             return .failed(e)
         }

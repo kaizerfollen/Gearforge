@@ -385,10 +385,13 @@ public final class Character {
             let item = world.db.entityItem[Int(rec.proto)]
             guard item >= 0, count(of: item) > 0 else { continue }
             let proto = Int(rec.proto), origin = rec.origin, dir = rec.direction
+            let gs = world.takeGhostSettings(e)
             world.removeEntity(e)
             if world.canPlace(proto: proto, origin: origin, direction: dir) == nil {
                 inventory.remove(item: item, count: 1)
-                world.createEntity(proto: proto, origin: origin, direction: dir)
+                let n = world.createEntity(proto: proto, origin: origin, direction: dir)
+                world.ground.clear(world.entities[n].rect)
+                if let s = gs { for st in world.apply(s, to: n) { give(Int(st.item), Int(st.count)) } }
             }
         }
     }
