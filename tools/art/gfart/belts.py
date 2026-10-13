@@ -1,14 +1,13 @@
 """Transport belts, undergrounds and splitters.
 
-Belts are rendered per-pixel in a *path space* (u = distance along travel 0..64, v = distance across, 0 = left
-side of travel) so straights and curves share one shading function and join seamlessly; lighting is computed in
-screen space from a height field, so every rotation is lit from the top-left.
+Belts are rendered per pixel in *path space* (u = distance along travel 0..64, v = across, 0 = left side) so
+straights and curves share one shading function and join seamlessly; lighting is computed in screen space from a
+height field, so every rotation is lit from the top-left.
 
-Sprites
-  belt_<tier>_<shape>_<dir>_f<n>   64x64, shape in straight|curve_left|curve_right, dir = facing (output side),
-                                   n = 0..BELT_FRAMES-1. curve_left = input from the belt's left side.
-  entity_<tier-id>_underground_belt_in|out_<dir>   static, includes the belt stub
-  entity_<tier-id>_splitter_<dir>                  housing overlay; draw belt straights under both tiles
+  belt_<id>_<shape>_<dir>_f<k>   64x64, shape straight|curve_l|curve_r, dir = output direction, k = 0..7
+                                 (tread scrolls 8 px = 1/8 tile per frame in the travel direction)
+  e_<id>_in_<dir> / e_<id>_out_<dir>   underground entrance / exit (belt half + hood)
+  e_<id>_<dir>                   splitter, 128x64 (n/s) or 64x128 (e/w), belts included
 """
 from __future__ import annotations
 
@@ -17,18 +16,26 @@ import math
 import numpy as np
 from PIL import Image
 
-from .common import (T, DIRS, ECanvas, P, TIERS, add_grit, alpha, block, bolt, fill, fill_grad, hexc, lin, plate,
-                     rrect, shade, stroke, with_shadow, rot_vec, circle)
+from .base import OUT, Fr, bevel_box, finish, inset_box
+from .common import (T, Canvas, P, add_grit, alpha, bolt, fill, fill_grad, hexc, lin, rrect, shade, stroke,
+                     with_shadow)
 
-BELT_FRAMES = 16
-PERIOD = 32          # tread pattern period (px); 64 % PERIOD == 0 so neighbours line up
-SS = 3               # supersampling
-TIER_IDS = {'basic': '', 'fast': 'fast_', 'express': 'express_'}
+FRAMES = 8
+PERIOD = 32          # tread pattern period (px); frames shift 8 px, so the pattern loops and reads unambiguously
+SS = 3
+DIRS = ['n', 'e', 's', 'w']
 
-RUBBER = np.array(hexc('#2a2c2f')[:3])
-RIB = np.array(hexc('#4a4e53')[:3])
-STEEL_D = np.array(hexc('#24282c')[:3])
-STEEL = np.array(hexc('#6b747c')[:3])
+BELTS = {  # id -> (tier colour, underground id, splitter id)
+    'transport_belt': (hexc('#e0a526'), 'underground_belt', 'splitter'),
+    'fast_transport_belt': (hexc('#d2402e'), 'fast_underground_belt', 'fast_splitter'),
+    'express_transport_belt': (hexc('#2f86d6'), 'express_underground_belt', 'express_splitter'),
+}
+
+RUBBER = np.array(hexc('#2b2d31')[:3])
+SLAT = np.array(hexc('#3e4247')[:3])
+STEEL_D = np.array(hexc('#1c1f22')[:3])
+STEEL = np.array(hexc('#7a838b')[:3])
+RAIL_W = 7
 
 
 def _grid(n=T * SS):
@@ -37,24 +44,21 @@ def _grid(n=T * SS):
 
 
 def path_coords(shape: str, d: int):
-    """Return (u, v, inside) arrays in path space for a belt facing direction d (0=n,1=e,2=s,3=w)."""
     x, y = _grid()
-    # rotate the screen coordinates into the north-facing frame (counter-rotate by d quarter turns)
     cx, cy = x - 32, y - 32
     for _ in range(d % 4):
-        cx, cy = cy, -cx          # rotate counter-clockwise
+        cx, cy = cy, -cx          # counter-rotate into the north-facing frame
     xn, yn = cx + 32, cy + 32
     if shape == 'straight':
-        u = 64 - yn
-        v = xn
+        u, v = 64 - yn, xn
         inside = np.ones_like(u, bool)
-    elif shape == 'curve_left':          # input from west, output north, corner at (0, 0)
+    elif shape == 'curve_l':      # enters from the west travelling east, turns left, exits north
         r = np.hypot(xn, yn)
         th = np.arctan2(yn, xn)
         u = 64 * (1 - th / (math.pi / 2))
         v = r
         inside = r <= 64
-    elif shape == 'curve_right':         # input from east, output north, corner at (64, 0)
+    elif shape == 'curve_r':      # enters from the east travelling west, turns right, exits north
         r = np.hypot(64 - xn, yn)
         th = np.arctan2(yn, 64 - xn)
         u = 64 * (1 - th / (math.pi / 2))
@@ -65,44 +69,44 @@ def path_coords(shape: str, d: int):
     return u, v, inside
 
 
-def shade_belt(u, v, inside, tier: str, shift: float):
-    tc = np.array(TIERS[tier][:3])
+def shade_belt(u, v, tc, shift):
+    tc = np.array(tc[:3])
     h = np.zeros_like(u)
     col = np.zeros(u.shape + (3,), np.float32)
-    rail = (v < 7) | (v > 57)
+    rail = (v < RAIL_W) | (v > 64 - RAIL_W)
     tread = ~rail
-    # --- tread
     ut = (u - shift) % PERIOD
-    rib = ((ut % 8) < 2.2)
     col[tread] = RUBBER
-    col[tread & rib] = RIB
-    h[tread] = 0.0
-    h[tread & rib] = 0.7
-    # chevrons pointing along travel
-    p = (ut + np.abs(v - 32) * 0.55) % PERIOD
-    chev = tread & (p > 12) & (p < 17) & (np.abs(v - 32) < 18)
-    col[chev] = col[chev] * 0.5 + tc * 0.5
-    h[chev] += 0.25
-    # lane groove in the middle
-    groove = tread & (np.abs(v - 32) < 0.7)
-    col[groove] *= 0.75
-    # --- rails (static)
-    vr = np.where(v < 32, v, 64 - v)          # distance from the outer edge
-    lip = rail & ((vr < 1.6) | (vr > 5.6))
+    # slats across the tread (uneven spacing so motion direction stays readable)
+    slat = tread & (((ut % 16) < 2.0))
+    col[slat] = SLAT
+    h[slat] = 0.6
+    # one chevron per lane per period, pointing forward
+    for vc in (19.5, 44.5):
+        dv = np.abs(v - vc)
+        p = (ut + dv * 0.75) % PERIOD
+        chev = tread & (p > 7) & (p < 12) & (dv < 9.5)
+        col[chev] = RUBBER * 0.35 + tc * 0.65
+        h[chev] = 0.5
+    # centre divider (two lanes)
+    div = tread & (np.abs(v - 32) < 1.3)
+    col[div] = STEEL * 0.8
+    h[div] = 1.0
+    # rails
+    vr = np.where(v < 32, v, 64 - v)
+    lip = rail & (vr < 1.8)
     band = rail & ~lip
     col[lip] = STEEL
-    col[band] = tc
+    col[band] = tc * 0.92
     h[rail] = 3.0
-    h[lip & (vr > 5.6)] = 2.2
-    # rivets along the rails every 16 px
-    rv = rail & (np.hypot(((u % 16) - 8), vr - 3.6) < 1.25)
-    col[rv] = np.array(hexc('#dcdcdc')[:3]) * 0.6 + tc * 0.4
-    h[rv] += 0.6
-    # dark gap between rail and tread
-    gap = (np.abs(v - 7) < 0.9) | (np.abs(v - 57) < 0.9)
+    h[lip] = 2.4
+    rv = rail & (np.hypot(((u % 16) - 8), vr - 4.0) < 1.35)
+    col[rv] = np.array([0.86, 0.86, 0.86]) * 0.55 + tc * 0.45
+    h[rv] += 0.7
+    gap = (np.abs(v - RAIL_W) < 0.9) | (np.abs(v - (64 - RAIL_W)) < 0.9)
     col[gap] = STEEL_D
-    h[gap] = -0.3
-    return col, h, inside
+    h[gap] = -0.4
+    return col, h
 
 
 def light(col, h, strength=0.55):
@@ -116,117 +120,98 @@ def light(col, h, strength=0.55):
     return np.clip(col * f[..., None], 0, 1)
 
 
-def belt_image(tier: str, shape: str, d: int, frame: int) -> Image.Image:
+_cache = {}
+
+
+def belt_image(bid: str, shape: str, d: int, frame: int) -> Image.Image:
+    key = (bid, shape, d, frame)
+    if key in _cache:
+        return _cache[key]
     u, v, inside = path_coords(shape, d)
-    col, h, inside = shade_belt(u, v, inside, tier, frame * PERIOD / BELT_FRAMES)
+    col, h = shade_belt(u, v, BELTS[bid][0], frame * (T / FRAMES))
     rgb = light(col, h)
-    a = inside.astype(np.float32)
-    big = np.dstack([rgb, a])
+    big = np.dstack([rgb, inside.astype(np.float32)])
     img = Image.fromarray((big * 255 + 0.5).astype(np.uint8), 'RGBA').resize((T, T), Image.BOX)
-    return add_grit(img, 0.03, f'belt{tier}')
+    img = add_grit(img, 0.025, 'belt' + bid)
+    _cache[key] = img
+    return img
 
 
 # ------------------------------------------------------------------------------------------- undergrounds
 
-def underground_image(tier: str, mode: str, d: int) -> tuple[Image.Image, tuple]:
-    """mode 'in': items enter from the back and dive under at the front; 'out': emerge at the back."""
-    base = belt_image(tier, 'straight', d, 0)
-    tc = TIERS[tier]
-    cv = ECanvas(1, 1, (4, 10, 8, 8))
+def underground_image(bid: str, mode: str, d: int) -> Image.Image:
+    """'in': items arrive from behind and dive under at the front; 'out': emerge from the hood at the back."""
+    tc = BELTS[bid][0]
+    base = belt_image(bid, 'straight', d, 0)
+    fr = Fr(64, 64, d)
+    cv = Canvas(64, 64)
     ctx = cv.ctx
-    # draw in the north-facing frame, rotated about the tile centre
-    ctx.save()
-    ctx.translate(32, 32)
-    ctx.rotate(d * math.pi / 2)
-    ctx.translate(-32, -32)
-    # hood covers the front half for 'in' (the tunnel is ahead), the back half for 'out'
-    hy = -4 if mode == 'in' else 30
-    hh = 38
-    # side walls + hood (rounded arch)
-    rrect(ctx, 1, hy, 62, hh, 7)
-    fill_grad(ctx, lin(0, hy, 0, hy + hh, [(0, shade(P['steel_m'], 1.15)), (1, shade(P['steel'], 0.75))]))
-    rrect(ctx, 1.5, hy + 0.5, 61, hh - 1, 7)
-    stroke(ctx, P['outline'], 1.0)
-    # tier colour band
-    rrect(ctx, 5, hy + 5, 54, hh - 10, 5)
-    fill_grad(ctx, lin(5, hy, 59, hy + hh, [(0, shade(tc, 1.2)), (1, shade(tc, 0.75))]))
-    rrect(ctx, 5.5, hy + 5.5, 53, hh - 11, 5)
-    stroke(ctx, alpha(P['outline'], 0.7), 1.0)
-    # tunnel mouth: dark opening facing the open belt half
-    my = hy + hh - 12 if mode == 'in' else hy + 2
-    rrect(ctx, 10, my, 44, 10, 3)
-    fill_grad(ctx, lin(0, my, 0, my + 10, [(0, hexc('#0c0d0f')), (1, hexc('#22262a'))]))
-    # chevron on the hood pointing in travel direction (north in this frame)
-    cy = hy + hh / 2 - (3 if mode == 'in' else -3)
-    ctx.move_to(22, cy + 5); ctx.line_to(32, cy - 5); ctx.line_to(42, cy + 5)
-    stroke(ctx, alpha(P['outline'], 0.8), 4.0)
-    ctx.move_to(22, cy + 5); ctx.line_to(32, cy - 5); ctx.line_to(42, cy + 5)
-    stroke(ctx, shade(tc, 1.45), 2.2)
-    for bx in (4.5, 59.5):
-        bolt(ctx, bx, hy + 4, 1.3)
-        bolt(ctx, bx, hy + hh - 4, 1.3)
-    ctx.restore()
-    hood, anchor = cv.finish(shadow=True, dx=3, dy=4, blur=2, strength=0.5)
-    out = Image.new('RGBA', hood.size, (0, 0, 0, 0))
-    out.alpha_composite(base, (cv.pad[0], cv.pad[1]))
+    hy = 1 if mode == 'in' else 27
+    hx, hw, hh = 1, 60, 36
+    x, y, w, h = fr.rect(hx, hy, hw, hh)
+    # side cheeks + hood body
+    bevel_box(ctx, x, y, w, h, shade(P['steel_m'], 0.9), r=6, bev=2.5)
+    ix, iy, iw, ih = fr.rect(hx + 6, hy + 6, hw - 12, hh - 12)
+    bevel_box(ctx, ix, iy, iw, ih, tc, r=4, bev=2, hi=1.35, lo=0.55)
+    # tunnel mouth: dark slot on the side facing the open belt half
+    my = hy + hh - 6 if mode == 'in' else hy + 1
+    mx, myy, mw, mh = fr.rect(hx + 8, my, hw - 16, 5)
+    rrect(ctx, mx, myy, mw, mh, 2)
+    fill(ctx, hexc('#0b0c0e'))
+    # direction chevrons on the hood
+    from .base import arrow
+    cy = hy + hh / 2
+    arrow(ctx, fr, 31, cy + (1 if mode == 'in' else -1), 8, shade(tc, 1.7), 2.6)
+    for (bx, by) in ((hx + 3.5, hy + 3.5), (hx + hw - 3.5, hy + 3.5), (hx + 3.5, hy + hh - 3.5), (hx + hw - 3.5, hy + hh - 3.5)):
+        bolt(ctx, *fr.pt(bx, by), 1.3)
+    hood = finish(cv, dx=2.5, dy=3, strength=0.55)
+    out = base.copy()
     out.alpha_composite(hood)
-    return out, anchor
+    return out
 
 
 # ------------------------------------------------------------------------------------------- splitters
 
-def splitter_image(tier: str, d: int) -> tuple[Image.Image, tuple]:
-    """Housing overlay; footprint 2x1 when facing n/s, 1x2 when facing e/w."""
-    tc = TIERS[tier]
-    fw, fh = (2, 1) if d % 2 == 0 else (1, 2)
-    cv = ECanvas(fw, fh, (4, 14, 10, 10))
+def splitter_image(bid: str, d: int) -> Image.Image:
+    tc = BELTS[bid][0]
+    fr = Fr(128, 64, d)
+    W, H = fr.size
+    out = Image.new('RGBA', (W, H))
+    # belts under both tiles
+    for i in range(2):
+        px, py = fr.pt(i * 64 + 32, 32)
+        out.alpha_composite(belt_image(bid, 'straight', d, 0), (int(px - 32), int(py - 32)))
+    cv = Canvas(W, H)
     ctx = cv.ctx
-    ctx.save()
-    # north-facing frame is 128 x 64; rotate about footprint centre
-    ctx.translate(cv.pw / 2, cv.ph / 2)
-    ctx.rotate(d * math.pi / 2)
-    ctx.translate(-64, -32)
-    # side posts
-    for x0 in (-2, 120):
-        block(ctx, x0, 6, 10, 56, P['steel'], depth=5, r=3)
-    # cross beam (the splitter body) across both lanes, raised
-    by, bh = 14, 34
-    block(ctx, 2, by, 124, bh, shade(P['steel_m'], 0.95), depth=7, r=5)
-    plate(ctx, 8, by + 4, 112, bh - 15, tc, r=3)
-    # divider in the middle
-    rrect(ctx, 61, by - 4, 6, bh + 6, 2)
-    fill_grad(ctx, lin(61, 0, 67, 0, [(0, shade(P['steel_l'], 1.1)), (1, shade(P['steel'], 0.7))]))
-    rrect(ctx, 61.5, by - 3.5, 5, bh + 5, 2)
-    stroke(ctx, P['outline'], 1.0)
-    # two arrows (one per lane)
-    for cx in (34, 94):
-        ctx.move_to(cx - 9, by + 16); ctx.line_to(cx, by + 8); ctx.line_to(cx + 9, by + 16)
-        stroke(ctx, alpha(P['outline'], 0.8), 4.2)
-        ctx.move_to(cx - 9, by + 16); ctx.line_to(cx, by + 8); ctx.line_to(cx + 9, by + 16)
-        stroke(ctx, shade(tc, 1.6), 2.2)
-    for bx in (12, 56, 72, 116):
-        bolt(ctx, bx, by + 23, 1.4)
-    ctx.restore()
-    return cv.finish(shadow=True, dx=4, dy=5)
+    by, bh = 17, 30
+    # end posts
+    for x0 in (0, 116):
+        bevel_box(ctx, *fr.rect(x0 + 1, 8, 11, 48), shade(P['steel'], 1.0), r=3, bev=2)
+    # body bar across both belts
+    bevel_box(ctx, *fr.rect(4, by, 120, bh), shade(P['steel_m'], 0.9), r=6, bev=2.5)
+    bevel_box(ctx, *fr.rect(9, by + 5, 110, bh - 10), tc, r=4, bev=2, hi=1.35, lo=0.55)
+    # central divider block
+    bevel_box(ctx, *fr.rect(58, by - 5, 12, bh + 10), P['steel_l'], r=3, bev=2)
+    from .base import arrow
+    for cx in (33, 95):
+        arrow(ctx, fr, cx, by + bh / 2, 9, shade(tc, 1.8), 2.8)
+    for bx in (14, 52, 76, 114):
+        bolt(ctx, *fr.pt(bx, by + bh / 2), 1.4)
+    out.alpha_composite(finish(cv, dx=3, dy=3.5, strength=0.55))
+    return out
 
-
-# ------------------------------------------------------------------------------------------- generate
 
 def generate(reg, data):
-    meta = {}
-    for tier in TIERS:
-        for shape in ('straight', 'curve_left', 'curve_right'):
+    for bid, (tc, ug, sp) in BELTS.items():
+        for shape in ('straight', 'curve_l', 'curve_r'):
             for d, dn in enumerate(DIRS):
-                for f in range(BELT_FRAMES):
-                    reg.add(f'belt_{tier}_{shape}_{dn}_f{f}', belt_image(tier, shape, d, f), 'belts')
-        tid = TIER_IDS[tier]
+                for f in range(FRAMES):
+                    reg.add(f'belt_{bid}_{shape}_{dn}_f{f}', belt_image(bid, shape, d, f), 'belts')
+        reg.add(f'e_{bid}', belt_image(bid, 'straight', 0, 0), 'belts', keep=True)
         for mode in ('in', 'out'):
             for d, dn in enumerate(DIRS):
-                img, anc = underground_image(tier, mode, d)
-                reg.add(f'entity_{tid}underground_belt_{mode}_{dn}', img, 'belts', anc)
+                reg.add(f'e_{ug}_{mode}_{dn}', underground_image(bid, mode, d), 'belts', keep=(mode == 'in' and d == 0))
+        reg.add(f'e_{ug}', reg.get(f'e_{ug}_in_n'), 'belts', keep=True)
         for d, dn in enumerate(DIRS):
-            img, anc = splitter_image(tier, d)
-            reg.add(f'entity_{tid}splitter_{dn}', img, 'belts', anc, composite='belt_straight_under')
-    meta['beltFrames'] = BELT_FRAMES
-    meta['beltPatternPeriodPx'] = PERIOD
-    return meta
+            reg.add(f'e_{sp}_{dn}', splitter_image(bid, d), 'belts', keep=(d == 0))
+        reg.add(f'e_{sp}', reg.get(f'e_{sp}_n'), 'belts', keep=True)

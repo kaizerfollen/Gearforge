@@ -1,2 +1,2 @@
-def generate(reg, data):
-    return None
+def generate(path):
+    pass

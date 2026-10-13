@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Gearforge sprite generator — regenerates every sprite, the manifest and the app icon.
 
-    pip install --break-system-packages pycairo      # once (Pillow + numpy are also required)
-    python3 tools/art/generate.py                     # everything
-    python3 tools/art/generate.py --only terrain,belts   # a subset (manifest is only written for full runs)
+    pip install --break-system-packages pillow numpy pycairo     # once
+    python3 tools/art/generate.py                                # everything (cleans the atlas first)
+    python3 tools/art/generate.py --only belts,items             # a subset (manifest not rewritten)
 
-Deterministic: same inputs -> byte-identical PNGs (for the same Pillow/cairo versions).
-Reads Core/Sources/FactoryCore/Resources/GameData.json for ids and sizes.
+Deterministic: same inputs -> identical PNGs (for the same Pillow/cairo versions).
+Reads Core/Sources/FactoryCore/Resources/GameData.json for ids and sizes (phase == "mvp" only).
 """
 from __future__ import annotations
 
@@ -22,12 +22,14 @@ sys.path.insert(0, HERE)
 ROOT = os.path.normpath(os.path.join(HERE, '..', '..'))
 DATA = os.path.join(ROOT, 'Core', 'Sources', 'FactoryCore', 'Resources', 'GameData.json')
 ATLAS = os.path.join(ROOT, 'App', 'Resources', 'Sprites.atlas')
-MANIFEST = os.path.join(ROOT, 'App', 'Resources', 'sprites_manifest.json')
+MANIFEST = os.path.join(ROOT, 'App', 'Resources', 'sprite_manifest.json')
 XCASSETS = os.path.join(ROOT, 'App', 'Resources', 'Assets.xcassets')
 
 from gfart.registry import Registry  # noqa: E402
-from gfart import terrain, ores, natural, belts, inserters, pipes, poles, entities, character, items, ui, appicon  # noqa: E402
+from gfart import (terrain, ores, natural, belts, inserters, pipes, poles, entities, character, items, ui,  # noqa: E402
+                   appicon)
 
+# order matters: items reuse entity sprites (miniatures), so entities come first
 CATEGORIES = [
     ('terrain', terrain.generate),
     ('ores', ores.generate),
@@ -43,36 +45,39 @@ CATEGORIES = [
 ]
 
 
+def mvp(data):
+    d = dict(data)
+    for k in ('entities', 'items', 'fluids', 'recipes', 'technologies'):
+        d[k] = [x for x in data.get(k, []) if x.get('phase', 'mvp') == 'mvp']
+    return d
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--only', default=None, help='comma separated categories: ' + ','.join(c for c, _ in CATEGORIES) + ',appicon')
-    ap.add_argument('--clean', action='store_true', help='delete existing PNGs in the atlas first (implied by full run)')
+    ap.add_argument('--only', default=None,
+                    help='comma separated categories: ' + ','.join(c for c, _ in CATEGORIES) + ',appicon')
     a = ap.parse_args()
-    data = json.load(open(DATA))
+    data = mvp(json.load(open(DATA)))
     only = set(a.only.split(',')) if a.only else None
     full = only is None
-    if full or a.clean:
+    if full:
         for f in glob.glob(os.path.join(ATLAS, '*.png')):
             os.remove(f)
     reg = Registry(ATLAS)
-    extra = {}
     t0 = time.time()
     for name, fn in CATEGORIES:
         if only and name not in only:
             continue
         t = time.time()
-        r = fn(reg, data)
-        if isinstance(r, dict):
-            extra.update(r)
+        fn(reg, data)
         print(f'{name:10s} {len(reg.groups.get(name, [])):5d} sprites  {time.time() - t:6.1f}s', flush=True)
-    if full or (only and 'appicon' in only):
+    if full or 'appicon' in only:
         appicon.generate(XCASSETS)
         print('appicon written')
     if full:
-        extra['groups'] = {k: len(v) for k, v in reg.groups.items()}
-        reg.write_manifest(MANIFEST, extra)
+        reg.write_manifest(MANIFEST)
         total = sum(os.path.getsize(f) for f in glob.glob(os.path.join(ATLAS, '*.png')))
-        print(f'total {len(reg.sprites)} entries, {total / 1e6:.2f} MB PNG, {time.time() - t0:.1f}s')
+        print(f'total {len(reg.sprites)} sprites, {total / 1e6:.2f} MB PNG, {time.time() - t0:.1f}s')
 
 
 if __name__ == '__main__':

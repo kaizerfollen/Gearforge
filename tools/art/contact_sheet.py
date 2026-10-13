@@ -2,10 +2,10 @@
 """Contact sheets for reviewing generated sprites.
 
 Examples
-  python3 tools/art/contact_sheet.py 'item_*' --out /tmp/items.png --cell 72
-  python3 tools/art/contact_sheet.py 'entity_*' --scale 0.5 --bg grass
+  python3 tools/art/contact_sheet.py 'i_*' --out docs/art/contact_items.png --cell 72
+  python3 tools/art/contact_sheet.py 'e_*' --scale 0.5 --bg grass
   python3 tools/art/contact_sheet.py --mosaic grass_1,dirt --out /tmp/mosaic.png      # seam check
-  python3 tools/art/contact_sheet.py --belt basic --out /tmp/belts.png                 # belt layout check
+  python3 tools/art/contact_sheet.py --belt transport_belt --out /tmp/belts.png                 # belt layout check
 """
 from __future__ import annotations
 
@@ -68,7 +68,7 @@ def sheet(names, out, scale=1.0, bg='checker', cols=None, cell=None, label=True)
         y = 4 + (k // cols) * (ch + 4 + lab)
         img.alpha_composite(im, (x + (cw - im.size[0]) // 2, y + (ch - im.size[1]) // 2))
         if label:
-            t = n.replace('entity_', 'e_').replace('item_', '')
+            t = n
             d.text((x, y + ch + 1), t[: max(4, cw // 5)], fill=(235, 235, 235, 255), font=font)
     img.save(out)
     print(out, img.size, len(names))
@@ -86,22 +86,28 @@ def mosaic(tids, out, n=8):
     print(out, img.size)
 
 
-def belt_layout(tier, out, frame=0):
-    # a little loop: straight runs and both curve types, rotated as the renderer would
-    rot = {'n': 0, 'e': -90, 's': 180, 'w': 90}
+def belt_layout(bid, out, frame=0, scale=1.0):
+    """A loop with both curve kinds plus an underground pair and a splitter, as the renderer would place them."""
     g = [
-        # (x, y, shape, dir)
-        (1, 4, 'curve_right', 'n'), (1, 3, 'straight', 'n'), (1, 2, 'straight', 'n'), (1, 1, 'curve_right', 'e'),
-        (2, 1, 'straight', 'e'), (3, 1, 'straight', 'e'), (4, 1, 'curve_right', 's'), (4, 2, 'straight', 's'),
-        (4, 3, 'straight', 's'), (4, 4, 'curve_right', 'w'), (3, 4, 'straight', 'w'), (2, 4, 'straight', 'w'),
-        (6, 4, 'straight', 'n'), (6, 3, 'curve_left', 'w'), (5, 3, 'straight', 'w'),
-        (6, 1, 'straight', 'n'), (6, 2, 'straight', 'n'),
+        (1, 4, 'curve_r', 'n'), (1, 3, 'straight', 'n'), (1, 2, 'straight', 'n'), (1, 1, 'curve_r', 'e'),
+        (2, 1, 'straight', 'e'), (3, 1, 'straight', 'e'), (4, 1, 'curve_r', 's'), (4, 2, 'straight', 's'),
+        (4, 3, 'straight', 's'), (4, 4, 'curve_r', 'w'), (3, 4, 'straight', 'w'), (2, 4, 'straight', 'w'),
+        (6, 4, 'straight', 'n'), (6, 3, 'curve_l', 'w'), (5, 3, 'straight', 'w'),
+        (6, 1, 'straight', 'n'), (6, 2, 'straight', 'n'), (7, 1, 'curve_l', 's'), (7, 0, 'curve_r', 'e'),
     ]
-    img = background(8 * 64, 6 * 64, 'grass')
+    img = background(10 * 64, 7 * 64, 'grass')
     for (x, y, shape, d) in g:
-        s = load(f'belt_{tier}_{shape}_f{frame}')
-        s = s.rotate(rot[d], expand=False)
-        img.alpha_composite(s, (x * 64, y * 64))
+        img.alpha_composite(load(f'belt_{bid}_{shape}_{d}_f{frame}'), (x * 64, y * 64))
+    ug = {'transport_belt': 'underground_belt', 'fast_transport_belt': 'fast_underground_belt',
+          'express_transport_belt': 'express_underground_belt'}[bid]
+    sp = ug.replace('underground_belt', 'splitter')
+    img.alpha_composite(load(f'e_{ug}_in_e'), (1 * 64, 6 * 64))
+    img.alpha_composite(load(f'e_{ug}_out_e'), (4 * 64, 6 * 64))
+    img.alpha_composite(load(f'belt_{bid}_straight_e_f{frame}'), (0, 6 * 64))
+    img.alpha_composite(load(f'e_{sp}_n'), (8 * 64, 4 * 64))
+    img.alpha_composite(load(f'e_{sp}_e'), (8 * 64, 1 * 64))
+    if scale != 1.0:
+        img = img.resize((int(img.size[0] * scale), int(img.size[1] * scale)), Image.LANCZOS)
     img.save(out)
     print(out)
 
@@ -123,7 +129,7 @@ def main():
         mosaic(a.mosaic.split(','), a.out)
         return
     if a.belt:
-        belt_layout(a.belt, a.out, a.frame)
+        belt_layout(a.belt, a.out, a.frame, a.scale)
         return
     pats = a.pattern.split(',')
     names = sorted(f[:-4] for f in os.listdir(ATLAS) if f.endswith('.png') and any(fnmatch.fnmatch(f[:-4], p) for p in pats))
