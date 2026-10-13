@@ -6,8 +6,9 @@ All names/art/text are original. This file is the single source of truth for "wh
 ## Where the project lives
 - **User's Mac (persistent, survives sessions):** `/Users/new_ivan/Claude/Gearforge/`
   - `project/` — latest working tree (open `project/App/Gearforge.xcodeproj` in Xcode once generated)
-  - `checkpoints/Gearforge.bundle` — full git history (`git clone Gearforge.bundle Gearforge` restores the repo)
-  - `checkpoints/Gearforge-src.tar.gz` — working tree snapshot
+  - `checkpoints/Gearforge-<YYYYMMDD-HHMM>.bundle` — full git history (`git clone <bundle> Gearforge`); use the newest
+  - `checkpoints/Gearforge-src-<YYYYMMDD-HHMM>.tar.gz` — working tree snapshot
+  - NOTE: device_commit_files caches by file name — always use a NEW timestamped name (tools/checkpoint.sh does).
 - Cloud container (ephemeral!): `/home/claude/Gearforge` (git repo, branch `master`).
 
 ## How to resume in a new session
@@ -17,7 +18,7 @@ All names/art/text are original. This file is the single source of truth for "wh
 3. `cd Core && swift build && swift test` must be green before starting new work.
 4. Checkpoint after every merged milestone: `tools/checkpoint.sh`, then `device_commit_files` the two files in
    `/mnt/user-data/outputs/gearforge/` to `/Users/new_ivan/Claude/Gearforge/checkpoints/`, then on the device:
-   `cd $HOME/mnt/Claude/Gearforge && tar --overwrite -xzf checkpoints/Gearforge-src.tar.gz -C project`.
+   `cd $HOME/mnt/Claude/Gearforge && tar --overwrite -xzf checkpoints/Gearforge-src-<TS>.tar.gz -C project`.
 
 ## Team process (agents)
 - Specialists run as agents in isolated git worktrees, each owning a set of files (ARCHITECTURE §1 table).
@@ -45,7 +46,13 @@ All names/art/text are original. This file is the single source of truth for "wh
 - **S1–S4 (earlier):** four separate attempts (FactoryForge, Forgeline, Forgeworks, Gearforge) — work never
   merged or saved off-container. Gearforge chosen as the base (best design docs + architecture).
 - **S5 (2026-10-11):** rescued uncommitted agent worktrees into master, fixed build (14 tests green),
-  established Mac checkpoints + this handoff file. Next: wave 1 implementation agents (see below).
+  established Mac checkpoints + this handoff file. Launched 7 wave-1 agents in parallel → **weekly usage limit hit
+  after ~6 min** (each agent spent ~200k tokens just reading docs). Rescued fragments: pbxproj validator
+  (tools/ios), belt/inserter sprite work (tools/art), Surface +6 lines.
+  **LESSON: run at most 2 agents at a time, give them narrow file-level tasks with the exact sections to read,
+  and/or have the lead write code directly. Commit + checkpoint after every agent.**
 
-## Next steps
-See "Session log" last entry and the open waves in `docs/team/PLAN.md`.
+## Next steps (in order)
+1. Logistics (belts/inserters/chests) → 2. Production (crafting/mining/labs) → 3. Energy (power/fluids)
+→ 4. Gameplay (character/commands/mapgen) → 5. Persistence orchestration → 6. Xcode project + iOS renderer/UI.
+Wave-1 agent briefs (full prompts) are reusable: see docs/team/PLAN.md roles; keep briefs narrow.

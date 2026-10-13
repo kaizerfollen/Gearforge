@@ -6,6 +6,7 @@ set -e
 cd /home/claude/Gearforge
 OUT=/mnt/user-data/outputs/gearforge
 mkdir -p $OUT
-git bundle create $OUT/Gearforge.bundle --all >/dev/null 2>&1
-tar --exclude=.git --exclude='.build*' --exclude=.claude --exclude='*.xcuserdata' -czf $OUT/Gearforge-src.tar.gz .
+TS=$(date +%Y%m%d-%H%M)
+git bundle create $OUT/Gearforge-$TS.bundle --all >/dev/null 2>&1
+tar --exclude=.git --exclude='.build*' --exclude=.claude --exclude='*.xcuserdata' -czf $OUT/Gearforge-src-$TS.tar.gz .
 ls -la $OUT
