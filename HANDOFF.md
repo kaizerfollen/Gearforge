@@ -57,7 +57,10 @@ Typecheck on Linux: `tools/ios-typecheck/run.sh --app-only`. Regenerate project 
   **LESSON: run at most 2 agents at a time, give them narrow file-level tasks with the exact sections to read,
   and/or have the lead write code directly. Commit + checkpoint after every agent.**
 
-- **S6 (2026-10-14):** lead wrote logistics directly (belts/undergrounds/splitters/inserters/chests), 35 tests green. Then production (crafting/furnaces/silo/drills) — 48 tests green. Then energy (power/steam/solar/fluids) — 59 tests green. Then gameplay (character/crafting/mining/commands/undo) — 76 tests green. Then persistence/session/campaign — 86 tests green. **Core simulation complete.** Then art (852 sprites, agent), platform (xcodeproj generator + Linux typecheck harness, agent), app layer (controller, SpriteKit renderer, HUD, panels, menus) written by lead — typecheck OK; integration test 'first minutes of freeplay' green (87 tests).
+- **S6 (2026-10-14):** lead wrote logistics directly (belts/undergrounds/splitters/inserters/chests), 35 tests green. Then production (crafting/furnaces/silo/drills) — 48 tests green. Then energy (power/steam/solar/fluids) — 59 tests green. Then gameplay (character/crafting/mining/commands/undo) — 76 tests green. Then persistence/session/campaign — 86 tests green. **Core simulation complete.** Audit (S6 end): +6 audit tests (oil chain, beacons, research queue/infinite, long-handed, fluid recipes) → 93 tests green; gaps recorded in docs/AUDIT.md. Then art (852 sprites, agent), platform (xcodeproj generator + Linux typecheck harness, agent), app layer (controller, SpriteKit renderer, HUD, panels, menus) written by lead — typecheck OK; integration test 'first minutes of freeplay' green (87 tests).
+
+## Honest audit
+See **docs/AUDIT.md** (what is done / partial / missing, saves, agents, priority backlog). Keep it updated.
 
 ## Next steps (in order)
 1. ~~Logistics~~ → 2. ~~Production~~ (crafting/mining/labs) → 3. Energy (power/fluids)
