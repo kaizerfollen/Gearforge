@@ -33,6 +33,6 @@ class Registry:
         return Image.open(os.path.join(self.out_dir, name + '.png')).convert('RGBA')
 
     def write_manifest(self, path: str):
+        rows = [f'  {json.dumps(k)}: {{"w": {v["w"]}, "h": {v["h"]}}}' for k, v in sorted(self.sprites.items())]
         with open(path, 'w') as f:
-            json.dump(dict(sorted(self.sprites.items())), f, indent=0, separators=(',', ':'))
-            f.write('\n')
+            f.write('{\n' + ',\n'.join(rows) + '\n}\n')
