@@ -112,6 +112,107 @@ def belt_layout(bid, out, frame=0, scale=1.0):
     print(out)
 
 
+def scene(out, scale=0.5, frame=0):
+    """A small mock factory composed like the renderer would, for judging readability at phone scale."""
+    W, H = 24, 14
+    img = background(W * 64, H * 64, 'grass')
+    r = random.Random(5)
+    f = frame
+
+    def put(name, x, y):
+        img.alpha_composite(load(name), (int(x * 64), int(y * 64)))
+    for y in range(8, 14):
+        for x in range(0, 6):
+            put(f'ore_iron_ore_{max(0, 7 - abs(x - 2) * 2 - abs(y - 11) * 2)}', x, y)
+    for y in range(0, 4):
+        for x in range(19, 24):
+            put(f'ore_copper_ore_{max(0, 7 - abs(x - 21) * 2 - abs(y - 1) * 2)}', x, y)
+    for y in range(11, 14):
+        for x in range(19, 24):
+            put(f'tile_water_v{r.randint(0, 3)}', x, y)
+    for x in range(6, 18):
+        for y in range(0, 3):
+            put(f'tile_concrete_v{r.randint(0, 3)}', x, y)
+    # mining -> belt -> furnaces
+    put(f'e_electric_mining_drill_n_w{f % 4}', 0, 10)
+    put(f'e_electric_mining_drill_n_w{(f + 1) % 4}', 3, 10)
+    for x in range(0, 6):
+        put(f'belt_transport_belt_straight_e_f{f}', x, 9)
+    put(f'belt_transport_belt_curve_l_n_f{f}', 6, 9)
+    for y in range(4, 9):
+        put(f'belt_transport_belt_straight_n_f{f}', 6, y)
+    put(f'e_burner_mining_drill_e_w{f % 4}', 1, 6)
+    put(f'e_stone_furnace_w{f % 4}', 8, 4)
+    put('e_steel_furnace', 8, 6)
+    put('e_inserter', 7, 5)
+    put('e_burner_inserter', 7, 7)
+    put('e_iron_chest', 10, 5)
+    put('e_wooden_chest', 10, 7)
+    # assembly row on a fast belt
+    put(f'e_assembling_machine_1_w{f % 4}', 11, 3)
+    put('e_assembling_machine_2', 14, 3)
+    put(f'e_assembling_machine_3_w{f % 4}', 17, 3)
+    for x in (12, 15, 18):
+        put('e_fast_inserter', x, 6)
+    for x in range(11, 21):
+        put(f'belt_fast_transport_belt_straight_e_f{f}', x, 7)
+    put('e_fast_splitter_e', 21, 7)
+    put('e_small_electric_pole', 13, 6)
+    put('e_medium_electric_pole', 16, 6)
+    put('e_lab', 6, 0)
+    put(f'e_lab_w{f % 4}', 9, 0)
+    put('e_solar_panel', 12, 0)
+    put(f'e_radar_w{f % 4}', 15, 0)
+    # power + fluids
+    put('e_offshore_pump_n', 21, 10)
+    put('pipe_5', 21, 9)
+    put(f'e_steam_engine_e_w{f % 4}', 7, 11)
+    put(f'e_boiler_e_w{f % 4}', 12, 11)
+    put(f'e_chemical_plant_n_w{f % 4}', 15, 9)
+    put('e_storage_tank_n', 18, 9)
+    put('e_tree_01', 4, 3)
+    put('e_tree_02', 3, 4)
+    put('e_tree_03', 2, 2)
+    put('e_dead_tree', 4, 1)
+    put('e_big_rock', 0, 0)
+    img.alpha_composite(load('char_e_f1'), (int(4.9 * 64), int(6.6 * 64)))
+    if scale != 1.0:
+        img = img.resize((int(img.size[0] * scale), int(img.size[1] * scale)), Image.LANCZOS)
+    img.save(out)
+    print(out, img.size)
+
+
+def select(pattern, exclude=None):
+    import re
+    pats = pattern.split(',')
+    names = sorted(f[:-4] for f in os.listdir(ATLAS) if f.endswith('.png') and any(fnmatch.fnmatch(f[:-4], p) for p in pats))
+    if exclude:
+        names = [n for n in names if not re.search(exclude, n)]
+    return names
+
+
+def all_sheets():
+    """Writes every review sheet into docs/art/."""
+    out = os.path.normpath(os.path.join(HERE, '..', '..', 'docs', 'art'))
+    os.makedirs(out, exist_ok=True)
+    j = lambda n: os.path.join(out, n)
+    scene(j('contact_scene.png'), 0.5, 0)
+    belt_layout('transport_belt', j('contact_belts.png'))
+    belt_layout('express_transport_belt', j('contact_belts_express.png'), 3)
+    sheet(select('e_*', r'_[nesw]$|_w[0-3]$|_in_|_out_|inserter|belt$|splitter|pipe|pole|substation|tree|_rock|rocket'),
+          j('contact_entities.png'), 0.5, 'grass', 8)
+    sheet(select('e_assembling_machine_1*,e_lab_w*,e_radar_w*,e_boiler_n*,e_electric_mining_drill_n*,e_chemical_plant_n*'),
+          j('contact_working.png'), 0.5, 'grass', 5)
+    sheet(select('e_*_[nesw],e_*_[nesw]_w0', r'_in_|_out_|splitter'), j('contact_directions.png'), 0.35, 'grass', 8)
+    sheet(select('i_*,f_*'), j('contact_items.png'), 1.0, 'ui', 14)
+    sheet(select('ui_*,status_*'), j('contact_ui.png'), 1.0, 'ui', 13, 64)
+    sheet(select('ore_*'), j('contact_ores.png'), 1.0, 'dirt', 8)
+    sheet(select('char_*'), j('contact_character.png'), 1.0, 'grass', 10, 64)
+    sheet(select('e_*inserter,ins_*,pipe_*,e_pipe*,e_*pole,e_substation,e_*tree*,e_*_rock,wire'),
+          j('contact_small.png'), 1.0, 'grass', 12)
+    sheet(select('e_rocket_silo'), j('contact_silo.png'), 0.5, 'grass', 1)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('pattern', nargs='?', default=None)
@@ -124,10 +225,18 @@ def main():
     ap.add_argument('--mosaic', default=None)
     ap.add_argument('--belt', default=None)
     ap.add_argument('--frame', type=int, default=0)
+    ap.add_argument('--scene', action='store_true')
+    ap.add_argument('--all', action='store_true', help='write every review sheet to docs/art/')
     ap.add_argument('--exclude', default=None, help='regex; names matching it are skipped')
     a = ap.parse_args()
     if a.mosaic:
         mosaic(a.mosaic.split(','), a.out)
+        return
+    if a.all:
+        all_sheets()
+        return
+    if a.scene:
+        scene(a.out, a.scale, a.frame)
         return
     if a.belt:
         belt_layout(a.belt, a.out, a.frame, a.scale)
