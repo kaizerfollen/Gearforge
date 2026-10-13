@@ -22,7 +22,8 @@ Typecheck on Linux: `tools/ios-typecheck/run.sh --app-only`. Regenerate project 
 3. `cd Core && swift build && swift test` must be green before starting new work.
 4. Checkpoint after every merged milestone: `tools/checkpoint.sh`, then `device_commit_files` the two files in
    `/mnt/user-data/outputs/gearforge/` to `/Users/new_ivan/Claude/Gearforge/checkpoints/`, then on the device:
-   `cd $HOME/mnt/Claude/Gearforge && tar --overwrite -xzf checkpoints/Gearforge-src-<TS>.tar.gz -C project`.
+   `cd $HOME/mnt/Claude/Gearforge && rm -rf .unpack && mkdir .unpack && tar -xzf checkpoints/Gearforge-src-<TS>.tar.gz -C .unpack && rsync -a --delete .unpack/ project/ && rm -rf .unpack`
+   (needs delete permission: device_request_delete_permission on /Users/new_ivan/Claude).
 
 ## Team process (agents)
 - Specialists run as agents in isolated git worktrees, each owning a set of files (ARCHITECTURE §1 table).
