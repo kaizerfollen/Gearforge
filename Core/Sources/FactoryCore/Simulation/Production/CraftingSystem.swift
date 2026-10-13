@@ -233,6 +233,18 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
         return out
     }
 
+    /// Output box (index into the prototype's fluid boxes) for the j-th fluid result. Oil refineries keep the
+    /// 1.1 layout: heavy oil left, light oil middle, petroleum gas right — whatever the recipe's result order.
+    private func outBox(_ c: Int, _ j: Int, fluid: Int) -> Int? {
+        let outs = kindOutBoxes[Int(machines[c].kind)]
+        guard !outs.isEmpty else { return nil }
+        if outs.count == 3 {
+            let order = ["heavy_oil", "light_oil", "petroleum_gas"]
+            if let k = order.firstIndex(of: world.db.fluids[fluid].id) { return outs[k] }
+        }
+        return j < outs.count ? outs[j] : nil
+    }
+
     private func configureFluidFilters(_ c: Int) {
         let inBoxes = kindInBoxes[Int(machines[c].kind)], outBoxes = kindOutBoxes[Int(machines[c].kind)]
         guard !inBoxes.isEmpty || !outBoxes.isEmpty else { return }
@@ -242,9 +254,11 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
             let f = r.flatMap { j < $0.fluidIngredients.count ? $0.fluidIngredients[j].index : nil } ?? -1
             world.fluids.setFilter(e, box: b, fluid: f)
         }
-        for (j, b) in outBoxes.enumerated() {
-            let f = r.flatMap { j < $0.fluidResults.count ? $0.fluidResults[j].index : nil } ?? -1
-            world.fluids.setFilter(e, box: b, fluid: f)
+        for b in outBoxes { world.fluids.setFilter(e, box: b, fluid: -1) }
+        if let r = r {
+            for (j, res) in r.fluidResults.enumerated() {
+                if let b = outBox(c, j, fluid: res.index) { world.fluids.setFilter(e, box: b, fluid: res.index) }
+            }
         }
     }
 
@@ -387,7 +401,6 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
         machines[c].progress += k.speed * machines[c].speedMult * sigma * machines[c].craftTicksInv
         guard machines[c].progress >= 1 else { return }
         let r = world.db.resolvedRecipes[Int(machines[c].recipe)]
-        let outBoxes = kindOutBoxes[Int(machines[c].kind)]
 
         // finish
         let leftover = machines[c].progress - 1
@@ -411,9 +424,10 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
                 machines[c].outCount[i] += Int32(n)
                 world.stats.produced(item: res.index, count: n)
             }
-            for (j, res) in r.fluidResults.enumerated() where j < outBoxes.count {
+            for (j, res) in r.fluidResults.enumerated() {
+                guard let ob = outBox(c, j, fluid: res.index) else { continue }
                 let amt = res.amount * Double(times)
-                world.fluids.add(e, box: outBoxes[j], fluid: res.index, amount: amt, temperature: world.db.fluids[res.index].defaultTemperature)
+                world.fluids.add(e, box: ob, fluid: res.index, amount: amt, temperature: world.db.fluids[res.index].defaultTemperature)
                 world.stats.producedFluid(res.index, amount: amt)
             }
         }
@@ -423,7 +437,7 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
 
     /// Why a craft cannot start now (nil = can start).
     private func startBlocker(_ c: Int, _ k: Kind, _ r: ResolvedRecipe) -> EntityStatus? {
-        let inBoxes = kindInBoxes[Int(machines[c].kind)], outBoxes = kindOutBoxes[Int(machines[c].kind)]
+        let inBoxes = kindInBoxes[Int(machines[c].kind)]
         for (i, ing) in r.itemIngredients.enumerated() where machines[c].inCount[i] < Int32(ing.amount) { return .noInput }
         for (j, ing) in r.fluidIngredients.enumerated() {
             guard j < inBoxes.count else { return .noFluid }
@@ -434,10 +448,11 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
                 let limit = max(world.stackSize(res.index), Int(res.amount) * 2)
                 if Int(machines[c].outCount[i]) + Int(res.amount) > limit { return .outputFull }
             }
-            for (j, res) in r.fluidResults.enumerated() where j < outBoxes.count {
+            for (j, res) in r.fluidResults.enumerated() {
+                guard let ob = outBox(c, j, fluid: res.index) else { continue }
                 let e = machines[c].entity
-                if world.fluids.capacity(e, box: outBoxes[j]) > 0 &&
-                    world.fluids.amount(e, box: outBoxes[j]) + res.amount > world.fluids.capacity(e, box: outBoxes[j]) + 1e-9 {
+                if world.fluids.capacity(e, box: ob) > 0 &&
+                    world.fluids.amount(e, box: ob) + res.amount > world.fluids.capacity(e, box: ob) + 1e-9 {
                     return .fluidFull
                 }
             }

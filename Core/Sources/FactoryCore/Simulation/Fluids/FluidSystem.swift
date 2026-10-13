@@ -56,6 +56,8 @@ public final class FluidSystem: EntitySystem {
     var segments: [Segment] = []
     private var endpointLinks: [EndpointLink] = []
     private var pumpLinks: [PumpLink] = []
+    /// Direct endpoint→endpoint connections (machine output box straight into another machine's input box).
+    private var directLinks: [(from: Int32, to: Int32)] = []
     private var segmentOfBoxCache: [Int32] = []
     private var dirty = true
 
@@ -258,6 +260,7 @@ public final class FluidSystem: EntitySystem {
         segments.removeAll(keepingCapacity: true)
         endpointLinks.removeAll(keepingCapacity: true)
         pumpLinks.removeAll(keepingCapacity: true)
+        directLinks.removeAll(keepingCapacity: true)
         let n = boxes.count
         var parent = Array(0..<n)
         func find(_ x: Int) -> Int { var x = x; while parent[x] != x { parent[x] = parent[parent[x]]; x = parent[x] }; return x }
@@ -325,6 +328,13 @@ public final class FluidSystem: EntitySystem {
             if seen.insert(key).inserted { endpointLinks.append(EndpointLink(box: Int32(ep), segment: boxes[mem].segment)) }
         }
         endpointLinks.sort { $0.box < $1.box }
+        var seenDirect = Set<Int64>()
+        for (a, b) in links where !boxes[a].isMember && !boxes[b].isMember {
+            let (o, i) = boxes[a].type == .output ? (a, b) : (b, a)
+            guard boxes[o].type == .output, boxes[i].type == .input else { continue }
+            if seenDirect.insert(Int64(o) << 32 | Int64(i)).inserted { directLinks.append((Int32(o), Int32(i))) }
+        }
+        directLinks.sort { ($0.from, $0.to) < ($1.from, $1.to) }
         // 5. Pumps
         for (pb, sides) in pumpSides.sorted(by: { $0.key < $1.key }) {
             let from = sides.from >= 0 && boxes[sides.from].isMember ? boxes[sides.from].segment : -1
@@ -441,6 +451,19 @@ public final class FluidSystem: EntitySystem {
             guard boxes[b].amount > 1e-9 else { continue }
             let a = addToSegment(Int(l.segment), fluid: boxes[b].fluid, amount: min(boxes[b].amount, Self.connectionFlowPerTick), temperature: boxes[b].temperature)
             boxes[b].amount -= a
+        }
+        // Direct machine → machine transfers
+        for l in directLinks {
+            let o = Int(l.from), i = Int(l.to)
+            guard boxes[o].amount > 1e-9 else { continue }
+            let f = boxes[o].fluid
+            if boxes[i].filter >= 0 && boxes[i].filter != f { continue }
+            if boxes[i].amount > 1e-9 && boxes[i].fluid != f { continue }
+            let a = min(Self.connectionFlowPerTick, boxes[o].amount, boxes[i].volume - boxes[i].amount)
+            guard a > 0 else { continue }
+            boxes[i].temperature = mix(boxes[i].amount, boxes[i].temperature, a, boxes[o].temperature)
+            boxes[i].amount += a; boxes[i].fluid = f
+            boxes[o].amount -= a
         }
         // Pumps
         let power = world.power!

@@ -77,4 +77,36 @@ final class CoreGapTests: XCTestCase {
         let b = try GameSession.decode(payload: s.encodePayload())
         XCTAssertEqual(b.world.ground.count(at: TilePos(30, 30)), 3)
     }
+
+    // MARK: Fluids
+
+    func testPumpjackDirectlyIntoRefineryAndPetroleumOnRightOutput() {
+        let w = TestWorld.make()
+        w.cheatInfinitePower = true
+        w.surface.setResource(at: TilePos(11, 21), w.db.resource("crude_oil"), amount: 300_000)
+        w.place("pumpjack", 10, 20, .north)                 // output neighbour (12,19)
+        let ref = w.place("oil_refinery", 11, 15, .north)    // input (-1,3) → (12,20) inside the pumpjack
+        _ = w.crafting.setRecipe(ref, w.db.recipe("basic_oil_processing"))
+        w.step(60 * 30)
+        let gas = w.db.fluid("petroleum_gas")
+        XCTAssertGreaterThan(w.stats.totalProduced(fluid: gas), 0, "crude flows pumpjack → refinery without a pipe")
+        // boxes 2,3,4 are the outputs (left, middle, right): petroleum must be in the right one (4)
+        XCTAssertEqual(w.fluids.fluid(ref, box: 4), gas)
+        XCTAssertEqual(w.fluids.fluid(ref, box: 2), -1)
+    }
+
+    func testAdvancedOilProcessingOutputsInOrder() {
+        let w = TestWorld.make()
+        w.cheatInfinitePower = true
+        let ref = w.place("oil_refinery", 11, 15, .north)
+        guard w.db.recipe("advanced_oil_processing") >= 0 else { return }
+        _ = w.crafting.setRecipe(ref, w.db.recipe("advanced_oil_processing"))
+        for (j, ing) in w.db.resolvedRecipes[w.db.recipe("advanced_oil_processing")].fluidIngredients.enumerated() {
+            XCTAssertGreaterThan(w.fluids.add(ref, box: j, fluid: ing.index, amount: 1000, temperature: 15), 0)
+        }
+        w.step(60 * 10)
+        XCTAssertEqual(w.fluids.fluid(ref, box: 2), w.db.fluid("heavy_oil"))
+        XCTAssertEqual(w.fluids.fluid(ref, box: 3), w.db.fluid("light_oil"))
+        XCTAssertEqual(w.fluids.fluid(ref, box: 4), w.db.fluid("petroleum_gas"))
+    }
 }
