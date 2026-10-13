@@ -29,7 +29,7 @@ final class ProgressionTests: XCTestCase {
         let furnace = w.place("stone_furnace", 20, 17)
         _ = w.crafting.insert(furnace, item: w.item("coal"), count: 20, source: .player)
         // poles
-        for (x, y) in [(7, 10), (12, 12), (17, 17), (22, 19)] { w.place("small_electric_pole", x, y) }
+        for (x, y) in [(7, 10), (12, 12), (17, 17), (22, 19), (18, 22)] { w.place("small_electric_pole", x, y) }
         // assembler making gears from a chest
         let a = w.place("assembling_machine_1", 26, 10)
         _ = w.crafting.setRecipe(a, w.db.recipe("iron_gear_wheel"))
@@ -188,7 +188,7 @@ final class ProgressionTests: XCTestCase {
 
     func testCampaignTechRestrictions() {
         let s = GameSession.newCampaign(level: Campaign.level("L3")!)
-        let r = s.world.research
+        let r = s.world.research!
         XCTAssertTrue(r.isResearched(s.world.db.tech("automation")))
         XCTAssertTrue(r.isAvailable(s.world.db.tech("steel_processing")))
         XCTAssertFalse(r.isAvailable(s.world.db.tech("automation_2")), "T2 tech not offered in L3")
