@@ -32,12 +32,12 @@ All names/art/text are original. This file is the single source of truth for "wh
 | Design: GDD, research data (items/recipes/entities/techs/mechanics), GameData.json | done (v0.1) |
 | Core contracts (World, EntityStore, protocols, PrototypeDB, Surface, Inventory, BinaryCoding) | done |
 | Save format framework (sections, CRC, metadata) | WIP rescued, compiles |
-| Map generation (noise, layout) | WIP rescued |
+| Map generation (noise, layout) | rescued, determinism + starting patches tested |
 | Research/labs/beacons | rescued, research test passes |
 | Belts, inserters, containers | **done** (21 tests, 0.1 ms/tick for 10k belts + 20k items) |
 | Crafting machines, furnaces, mining drills, silo | **done** (13 tests, 0.26 ms/tick for 3000 assemblers) |
 | Power networks, fluids | **done** (11 tests; steam 1.8 MW verified) |
-| Character (movement, crafting queue, hand mining), Commands (build/remove/undo) | stub |
+| Character (movement, crafting queue, hand mining), Commands (build/remove/undo) | **done** (17 tests) |
 | GameSession fixed-step driver, SaveManager, levels/objectives, stats | partial |
 | iOS app: Xcode project, renderer, HUD, menus, screens | helpers only (TerrainBaker, BuildPlanner, gestures) |
 | Art: python sprite generators | WIP rescued (tools/art) |
@@ -52,7 +52,7 @@ All names/art/text are original. This file is the single source of truth for "wh
   **LESSON: run at most 2 agents at a time, give them narrow file-level tasks with the exact sections to read,
   and/or have the lead write code directly. Commit + checkpoint after every agent.**
 
-- **S6 (2026-10-14):** lead wrote logistics directly (belts/undergrounds/splitters/inserters/chests), 35 tests green. Then production (crafting/furnaces/silo/drills) — 48 tests green. Then energy (power/steam/solar/fluids) — 59 tests green.
+- **S6 (2026-10-14):** lead wrote logistics directly (belts/undergrounds/splitters/inserters/chests), 35 tests green. Then production (crafting/furnaces/silo/drills) — 48 tests green. Then energy (power/steam/solar/fluids) — 59 tests green. Then gameplay (character/crafting/mining/commands/undo) — 76 tests green.
 
 ## Next steps (in order)
 1. ~~Logistics~~ → 2. ~~Production~~ (crafting/mining/labs) → 3. Energy (power/fluids)
