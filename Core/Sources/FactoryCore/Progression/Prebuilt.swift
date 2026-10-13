@@ -93,7 +93,7 @@ public enum PrebuiltFactory {
         let speed = world.db.entities[world.db.entity(p.assembler)].crafting?.speed ?? 0.75
         // science cells above the belt
         var i = 0
-        func cells(_ n: Int, a: String?, b: String) {
+        func cells(_ n: Int, a: String, b: String) {
             for _ in 0..<n {
                 scienceCell(s, x: sx + cellWidth * i, y: cellY, machine: p.assembler, speed: speed, recipeA: a, recipeB: b, minutes: p.minutes)
                 i += 1
@@ -163,8 +163,8 @@ public enum PrebuiltFactory {
     ///     y 3  P . . . . . P . . .        P = medium pole
     ///     y 4  . . . E E E E E E . .      E = steam engine (3×5, two per column)
     ///     y14  ~ ~ o - B B B B B B P      ~ water, o offshore pump, - pipe, B boiler (3×2)
-    ///     y16  . . . . . i . . i .        i = inserter (north, into boiler)
-    ///     y17  P . . . . C . . C .        C = coal chest
+    ///     y16  P . . . . i . . i . P      i = inserter (north, into boiler)
+    ///     y17  . . . . . C . . C .        C = coal chest
     static func steamBlock(_ s: Stamper, boilers n: Int, coal: Int) -> [Int32] {
         s.water(x: 0, y: 10, w: 2, h: 10)
         s.place("offshore_pump", 2, 15, .west)
@@ -181,8 +181,8 @@ public enum PrebuiltFactory {
         }
         let right = 4 + 3 * n
         for x in stride(from: 5, through: right - 1, by: 6) { s.pole(x, 3) }
-        for x in stride(from: 4, through: right - 1, by: 6) { s.pole(x, 17) }
-        for y in [3, 10, 17] { s.pole(right, y) }
+        for x in stride(from: 4, through: right - 1, by: 6) { s.pole(x, 16) }   // covers lower engines, inserters, chests
+        for y in [3, 10, 16] { s.pole(right, y) }
         return engines
     }
 
@@ -190,22 +190,22 @@ public enum PrebuiltFactory {
     ///
     ///     y0   . A . . .      A = supply chest for stage A (plates / intermediates)
     ///     y1   . i . . .      i = fast inserter (south)
-    ///     y2  [ asm A ] . .   intermediate assembler (gears, inserters, rails, robot frames)
+    ///     y2  [ asm A ] i A2  intermediate assembler (gears, inserters, rails, robot frames); A2 = overflow chest
     ///     y3  [ asm A ] P .
     ///     y4  [ asm A ] . .
     ///     y5   . i . . .
-    ///     y6  [ asm B ] . .   science assembler
+    ///     y6  [ asm B ] j T3  (T2/T3 only when T overflows one chest)
     ///     y7  [ asm B ] j T   j = fast inserter (west) from supply chest T
-    ///     y8  [ asm B ] . .
+    ///     y8  [ asm B ] j T2
     ///     y9   . o . P .      o = inserter (south) onto the belt
     ///     y10  = = = = =      science belt (east)
     static func scienceCell(_ s: Stamper, x: Int, y: Int, machine: String, speed: Double,
-                            recipeA: String?, recipeB: String, minutes: Double) {
+                            recipeA: String, recipeB: String, minutes: Double) {
         let db = s.world.db
         let rb = db.resolvedRecipes[db.recipe(recipeB)]
         let bCrafts = minutes * 60 * speed / rb.time
         var stockA: [(Int, Int)] = [], stockT: [(Int, Int)] = []
-        let ra = recipeA.map { db.resolvedRecipes[db.recipe($0)] }
+        let ra: ResolvedRecipe? = db.resolvedRecipes[db.recipe(recipeA)]
         for ing in rb.itemIngredients {
             let need = ing.amount * bCrafts
             if let ra = ra, ra.itemResults.first?.index == ing.index {
@@ -215,18 +215,20 @@ public enum PrebuiltFactory {
                 stockT.append((ing.index, Int(need.rounded(.up))))
             }
         }
-        if let a = recipeA {
-            s.chest("steel_chest", x + 1, y, stockA)
-            s.place("fast_inserter", x + 1, y + 1, .south)
-            s.machine(machine, x, y + 2, recipe: a)
-        } else {
-            s.chest("steel_chest", x + 1, y + 4, stockA)
+        // stage A: main chest above, overflow chest east of the assembler
+        let packsA = s.pack(stockA, maxChests: 2)
+        for (j, items) in packsA.enumerated() {
+            if j == 0 { s.chest("steel_chest", x + 1, y, items); s.place("fast_inserter", x + 1, y + 1, .south) }
+            else { s.chest("steel_chest", x + 4, y + 2, items); s.place("fast_inserter", x + 3, y + 2, .west) }
         }
+        s.machine(machine, x, y + 2, recipe: recipeA)
         s.place("fast_inserter", x + 1, y + 5, .south)
         s.machine(machine, x, y + 6, recipe: recipeB)
-        if !stockT.isEmpty {
-            s.place("fast_inserter", x + 3, y + 7, .west)
-            s.chest("steel_chest", x + 4, y + 7, stockT)
+        // stage B extras: up to three chests east of the science assembler
+        let slotsT = [(y + 7), (y + 8), (y + 6)]
+        for (j, items) in s.pack(stockT, maxChests: 3).enumerated() {
+            s.place("fast_inserter", x + 3, slotsT[j], .west)
+            s.chest("steel_chest", x + 4, slotsT[j], items)
         }
         s.place("fast_inserter", x + 1, y + 9, .south)
         s.pole(x + 3, y + 3)
@@ -368,6 +370,37 @@ public enum PrebuiltFactory {
         }
 
         func pole(_ x: Int, _ y: Int) { place("medium_electric_pole", x, y) }
+
+        /// Splits a stock list over at most `maxChests` steel chests (48 slots each), scaling everything down
+        /// proportionally when it would not fit (so a supply line simply runs for fewer minutes).
+        func pack(_ items: [(Int, Int)], maxChests: Int, slotsPerChest: Int = 48) -> [[(Int, Int)]] {
+            let items = items.filter { $0.0 >= 0 && $0.1 > 0 }
+            guard !items.isEmpty else { return [] }
+            func slots(_ l: [(Int, Int)]) -> Int { l.reduce(0) { $0 + ($1.1 + world.stackSize($1.0) - 1) / world.stackSize($1.0) } }
+            var list = items
+            let cap = maxChests * slotsPerChest
+            if slots(list) > cap {
+                var f = Double(cap) / Double(slots(list))
+                repeat {
+                    list = items.map { ($0.0, max(1, Int(Double($0.1) * f))) }
+                    f *= 0.97
+                } while slots(list) > cap
+            }
+            var out: [[(Int, Int)]] = [[]]
+            var free = slotsPerChest
+            for (item, count) in list {
+                var left = count
+                let stack = world.stackSize(item)
+                while left > 0 {
+                    if free == 0 { out.append([]); free = slotsPerChest }
+                    let n = min(left, free * stack)
+                    out[out.count - 1].append((item, n))
+                    free -= (n + stack - 1) / stack
+                    left -= n
+                }
+            }
+            return out
+        }
 
         @discardableResult
         func machine(_ id: String, _ x: Int, _ y: Int, dir: Direction = .north, recipe: String) -> Int32? {
