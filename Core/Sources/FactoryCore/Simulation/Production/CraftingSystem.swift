@@ -22,9 +22,9 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
         var isSilo: Bool
         var fixedRecipe: Int
         var siloParts: Int
-        var inBoxes: [Int]
-        var outBoxes: [Int]
     }
+    private var kindInBoxes: [[Int]] = []
+    private var kindOutBoxes: [[Int]] = []
 
     struct Machine {
         var entity: Int32 = -1
@@ -50,6 +50,7 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
         var extraOut = Inventory(size: 0)       // launch products (orbital cards)
         var working = false
         var carry: Double = 0
+        var craftTicksInv: Double = 0
     }
 
     var machines: [Machine] = []
@@ -78,7 +79,8 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
                               drainPerTick: drain / 60, usagePerTick: usage / 60,
                               mask: EffectMask(p.allowedEffects), moduleSlots: p.moduleSlots ?? 0,
                               isFurnace: p.kind == .furnace, isSilo: p.kind == .rocketSilo, fixedRecipe: fixed,
-                              siloParts: p.rocketSilo?.rocketPartsRequired ?? 100, inBoxes: inB, outBoxes: outB))
+                              siloParts: p.rocketSilo?.rocketPartsRequired ?? 100))
+            kindInBoxes.append(inB); kindOutBoxes.append(outB)
         }
     }
 
@@ -232,15 +234,15 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
     }
 
     private func configureFluidFilters(_ c: Int) {
-        let k = kinds[Int(machines[c].kind)]
-        guard !k.inBoxes.isEmpty || !k.outBoxes.isEmpty else { return }
+        let inBoxes = kindInBoxes[Int(machines[c].kind)], outBoxes = kindOutBoxes[Int(machines[c].kind)]
+        guard !inBoxes.isEmpty || !outBoxes.isEmpty else { return }
         let e = machines[c].entity
         let r: ResolvedRecipe? = machines[c].recipe >= 0 ? world.db.resolvedRecipes[Int(machines[c].recipe)] : nil
-        for (j, b) in k.inBoxes.enumerated() {
+        for (j, b) in inBoxes.enumerated() {
             let f = r.flatMap { j < $0.fluidIngredients.count ? $0.fluidIngredients[j].index : nil } ?? -1
             world.fluids.setFilter(e, box: b, fluid: f)
         }
-        for (j, b) in k.outBoxes.enumerated() {
+        for (j, b) in outBoxes.enumerated() {
             let f = r.flatMap { j < $0.fluidResults.count ? $0.fluidResults[j].index : nil } ?? -1
             world.fluids.setFilter(e, box: b, fluid: f)
         }
@@ -346,9 +348,10 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
             sleep(c, .noRecipe, tick: tick); return
         }
         refreshEffects(c)
-        let r = world.db.resolvedRecipes[Int(machines[c].recipe)]
 
         if !machines[c].crafting {
+            let r = world.db.resolvedRecipes[Int(machines[c].recipe)]
+            let inBoxes = kindInBoxes[Int(machines[c].kind)]
             if k.electric { power.request(e, joules: k.drainPerTick) }
             if k.isSilo && Int(machines[c].rocketParts) >= k.siloParts { sleep(c, .idle, tick: tick); return }
             if let st = startBlocker(c, k, r) { sleep(c, st, tick: tick); return }
@@ -357,14 +360,15 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
                 machines[c].inCount[i] -= Int32(ing.amount)
                 world.stats.consumed(item: ing.index, count: Int(ing.amount))
             }
-            for (j, ing) in r.fluidIngredients.enumerated() where j < k.inBoxes.count {
-                world.fluids.remove(e, box: k.inBoxes[j], amount: ing.amount)
+            for (j, ing) in r.fluidIngredients.enumerated() where j < inBoxes.count {
+                world.fluids.remove(e, box: inBoxes[j], amount: ing.amount)
                 world.stats.consumedFluid(ing.index, amount: ing.amount)
             }
             machines[c].crafting = true
             machines[c].sleeping = false
             machines[c].progress = machines[c].carry
             machines[c].carry = 0
+            machines[c].craftTicksInv = 1 / (r.time * Double(ticksPerSecond))
         }
 
         // energy
@@ -380,8 +384,10 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
 
         machines[c].working = true
         machines[c].status = sigma < 1 && k.electric ? .lowPower : .working
-        machines[c].progress += k.speed * machines[c].speedMult * sigma / (r.time * Double(ticksPerSecond))
+        machines[c].progress += k.speed * machines[c].speedMult * sigma * machines[c].craftTicksInv
         guard machines[c].progress >= 1 else { return }
+        let r = world.db.resolvedRecipes[Int(machines[c].recipe)]
+        let outBoxes = kindOutBoxes[Int(machines[c].kind)]
 
         // finish
         let leftover = machines[c].progress - 1
@@ -405,9 +411,9 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
                 machines[c].outCount[i] += Int32(n)
                 world.stats.produced(item: res.index, count: n)
             }
-            for (j, res) in r.fluidResults.enumerated() where j < k.outBoxes.count {
+            for (j, res) in r.fluidResults.enumerated() where j < outBoxes.count {
                 let amt = res.amount * Double(times)
-                world.fluids.add(e, box: k.outBoxes[j], fluid: res.index, amount: amt, temperature: world.db.fluids[res.index].defaultTemperature)
+                world.fluids.add(e, box: outBoxes[j], fluid: res.index, amount: amt, temperature: world.db.fluids[res.index].defaultTemperature)
                 world.stats.producedFluid(res.index, amount: amt)
             }
         }
@@ -417,20 +423,21 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
 
     /// Why a craft cannot start now (nil = can start).
     private func startBlocker(_ c: Int, _ k: Kind, _ r: ResolvedRecipe) -> EntityStatus? {
+        let inBoxes = kindInBoxes[Int(machines[c].kind)], outBoxes = kindOutBoxes[Int(machines[c].kind)]
         for (i, ing) in r.itemIngredients.enumerated() where machines[c].inCount[i] < Int32(ing.amount) { return .noInput }
         for (j, ing) in r.fluidIngredients.enumerated() {
-            guard j < k.inBoxes.count else { return .noFluid }
-            if world.fluids.amount(machines[c].entity, box: k.inBoxes[j]) + 1e-9 < ing.amount { return .noFluid }
+            guard j < inBoxes.count else { return .noFluid }
+            if world.fluids.amount(machines[c].entity, box: inBoxes[j]) + 1e-9 < ing.amount { return .noFluid }
         }
         if !k.isSilo {
             for (i, res) in r.itemResults.enumerated() {
                 let limit = max(world.stackSize(res.index), Int(res.amount) * 2)
                 if Int(machines[c].outCount[i]) + Int(res.amount) > limit { return .outputFull }
             }
-            for (j, res) in r.fluidResults.enumerated() where j < k.outBoxes.count {
+            for (j, res) in r.fluidResults.enumerated() where j < outBoxes.count {
                 let e = machines[c].entity
-                if world.fluids.capacity(e, box: k.outBoxes[j]) > 0 &&
-                    world.fluids.amount(e, box: k.outBoxes[j]) + res.amount > world.fluids.capacity(e, box: k.outBoxes[j]) + 1e-9 {
+                if world.fluids.capacity(e, box: outBoxes[j]) > 0 &&
+                    world.fluids.amount(e, box: outBoxes[j]) + res.amount > world.fluids.capacity(e, box: outBoxes[j]) + 1e-9 {
                     return .fluidFull
                 }
             }
@@ -484,7 +491,12 @@ public final class CraftingSystem: EntitySystem, ItemEndpoint {
     }
 
     public func didLoad() {
-        for c in machines.indices where machines[c].entity >= 0 { configureFluidFilters(c) }
+        for c in machines.indices where machines[c].entity >= 0 {
+            configureFluidFilters(c)
+            if machines[c].recipe >= 0 {
+                machines[c].craftTicksInv = 1 / (world.db.recipes[Int(machines[c].recipe)].time * Double(ticksPerSecond))
+            }
+        }
     }
 
     // MARK: ItemEndpoint

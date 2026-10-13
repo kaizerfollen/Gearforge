@@ -8,7 +8,8 @@ enum TestWorld {
     static func make(size: Int = 64, seed: UInt64 = 7) -> World {
         var s = WorldSettings()
         s.seed = seed
-        s.width = max(size * 2, 64); s.height = max(size * 2, 64)   // surface is centred on (0,0)
+        let side = max(64, ((size * 2) + 31) / 32 * 32)
+        s.width = side; s.height = side   // surface is centred on (0,0); multiple of 32
         s.treeCoverage = 0
         s.rocks = false
         let w = World(settings: s)
