@@ -5,7 +5,7 @@ The iOS app has a full first pass of UI/rendering but has **never been compiled 
 
 Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
 
-## 1. Simulation core (FactoryCore) — 111 tests, all green (S7: core gaps closed)
+## 1. Simulation core (FactoryCore) — 118 tests, all green (S7: core gaps closed)
 | Mechanic | Status | Evidence |
 |---|---|---|
 | Belts (3 tiers), curves, sideload, undergrounds, splitters (priority/filter), loops | ✅ | LogisticsTests (11 belt tests), 0.1 ms/tick @10k belts |
@@ -28,7 +28,7 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
 | Charting / fog of war: character radius, radar nearby + sector scanning, map colours | ✅ core / ❌ map UI | CoreGapTests |
 | Pollution statistic (per minute, total, by source) | ✅ core / ❌ UI | CoreGapTests |
 | Direct machine→machine fluid links (no pipe) | ✅ | CoreGapTests |
-| Pre-built factories for L5–L8 ("designer blueprints") | ❌ | levels start empty with kits |
+| Pre-built factories for L5–L8 (designer agent; R/G/B/P/Y lines, oil on L6–L8; plates from supply chests) | ✅ | PrebuiltTests (rates measured) |
 | Tap-to-walk A* pathfinding | ✅ core / ❌ UI hookup | CoreGapTests |
 | Later phases (blueprints, robots, trains, circuits, nuclear, enemies) | ❌ by plan | GDD §3 |
 
