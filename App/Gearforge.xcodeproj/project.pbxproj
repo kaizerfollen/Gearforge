@@ -16,6 +16,7 @@
 		85C4829E9D27BB2D6E0A84CD /* BuildPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 826548AC4E49953F3AE0FA6C /* BuildPlanner.swift */; };
 		8B0D33EEDD20AE0750D4E790 /* FactoryCore in Frameworks */ = {isa = PBXBuildFile; productRef = E747426F531CAABC3CD62DC7 /* FactoryCore */; };
 		A5E4CC0013CF3B1455C0D324 /* GameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B7EB56E528E1A51D10A3C7 /* GameController.swift */; };
+		AE076C695F20F4C934664FF6 /* sprite_manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 67B011019FF0374ED0CAA576 /* sprite_manifest.json */; };
 		D3C0943AEA9A60A55F3BEFBE /* SpriteCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 087261AC6A1D95AA2D904CF2 /* SpriteCatalog.swift */; };
 		D9C8D639C34682BDE1151915 /* GameControllerTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16464656D54515A95DA3FBD /* GameControllerTypes.swift */; };
 		FA4DC36481094E81064A2213 /* GearforgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6292FE1CDC4C36DA4A10FFEF /* GearforgeApp.swift */; };
@@ -25,6 +26,7 @@
 		087261AC6A1D95AA2D904CF2 /* SpriteCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteCatalog.swift; sourceTree = "<group>"; };
 		338534F74D12A4AB190B1BB8 /* Gearforge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gearforge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6292FE1CDC4C36DA4A10FFEF /* GearforgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GearforgeApp.swift; sourceTree = "<group>"; };
+		67B011019FF0374ED0CAA576 /* sprite_manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sprite_manifest.json; sourceTree = "<group>"; };
 		7551B2D381E4C1228326DB74 /* Sprites.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; path = Sprites.atlas; sourceTree = "<group>"; };
 		826548AC4E49953F3AE0FA6C /* BuildPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildPlanner.swift; sourceTree = "<group>"; };
 		A8B7EB56E528E1A51D10A3C7 /* GameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameController.swift; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				D2EF0B49EA01824F4EDA3250 /* Assets.xcassets */,
+				67B011019FF0374ED0CAA576 /* sprite_manifest.json */,
 				7551B2D381E4C1228326DB74 /* Sprites.atlas */,
 			);
 			path = Resources;
@@ -187,6 +190,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0F2C3A1A2125259513111590 /* Assets.xcassets in Resources */,
+				AE076C695F20F4C934664FF6 /* sprite_manifest.json in Resources */,
 				630B2BA91194F9944500E4A0 /* Sprites.atlas in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
