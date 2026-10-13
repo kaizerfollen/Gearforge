@@ -240,3 +240,16 @@ def hazard_band(ctx, x, y, w, h, period=8, c1=None, c2=None):
     ctx.restore()
     rrect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, 1.5)
     stroke(ctx, alpha(OUT, 0.8), 1.0)
+
+
+def vents_box(ctx, x, y, w, h, n, horizontal_slots):
+    """A recessed vent panel with n slots (slots run along the long side)."""
+    inset_box(ctx, x, y, w, h, BODY_D, r=2)
+    for i in range(n):
+        if horizontal_slots:
+            sx = x + 3 + i * (w - 6) / n
+            rrect(ctx, sx + 1, y + 2, (w - 6) / n - 2, h - 4, 1)
+        else:
+            sy = y + 3 + i * (h - 6) / n
+            rrect(ctx, x + 2, sy + 1, w - 4, (h - 6) / n - 2, 1)
+        fill(ctx, hexc('#101214'))

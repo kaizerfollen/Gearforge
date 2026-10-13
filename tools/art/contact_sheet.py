@@ -124,6 +124,7 @@ def main():
     ap.add_argument('--mosaic', default=None)
     ap.add_argument('--belt', default=None)
     ap.add_argument('--frame', type=int, default=0)
+    ap.add_argument('--exclude', default=None, help='regex; names matching it are skipped')
     a = ap.parse_args()
     if a.mosaic:
         mosaic(a.mosaic.split(','), a.out)
@@ -133,6 +134,9 @@ def main():
         return
     pats = a.pattern.split(',')
     names = sorted(f[:-4] for f in os.listdir(ATLAS) if f.endswith('.png') and any(fnmatch.fnmatch(f[:-4], p) for p in pats))
+    if a.exclude:
+        import re
+        names = [n for n in names if not re.search(a.exclude, n)]
     if not names:
         print('no match')
         return
