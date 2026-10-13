@@ -84,6 +84,18 @@ TIERS = {
     'express': hexc('#2f88d4'),  # blue
 }
 
+INSERTER_COLORS = {
+    'burner_inserter': hexc('#8a6238'),
+    'inserter': hexc('#e0a526'),
+    'long_handed_inserter': hexc('#c8402f'),
+    'fast_inserter': hexc('#3a7fd0'),
+    'filter_inserter': hexc('#8e4fc4'),
+    'stack_inserter': hexc('#4caa3e'),
+    'stack_filter_inserter': hexc('#aab4bd'),
+}
+
+MACHINE_TIERS = {1: hexc('#d9a02a'), 2: hexc('#3b78c9'), 3: hexc('#2fa37a')}
+
 CARD_COLORS = {
     'mechanics_card': hexc('#d43c2f'),
     'motion_card': hexc('#4cb43a'),
@@ -520,3 +532,83 @@ def rot_vec(x, y, k):
     for _ in range(k % 4):
         x, y = -y, x
     return x, y
+
+
+# --------------------------------------------------------------------------------------------- entity canvas
+
+class ECanvas(Canvas):
+    """Canvas for a world sprite whose *footprint* is fw x fh tiles.
+
+    Drawing coordinates are footprint pixels: (0,0) = top-left corner of the footprint, (fw*T, fh*T) = bottom-right.
+    Padding (left, top, right, bottom) allows overhang: height above the footprint (top) and baked shadows
+    (right/bottom). `finish()` returns (PIL image, SpriteKit anchor) where the anchor maps to the footprint centre.
+    """
+
+    def __init__(self, fw: float, fh: float, pad=(4, 14, 10, 10)):
+        self.fw, self.fh = fw, fh
+        self.pad = pad
+        self.W = int(round(fw * T)) + pad[0] + pad[2]
+        self.H = int(round(fh * T)) + pad[1] + pad[3]
+        super().__init__(self.W, self.H)
+        self.ctx.translate(pad[0], pad[1])
+        self.pw, self.ph = fw * T, fh * T
+
+    def anchor(self):
+        l, t, r, b = self.pad
+        return ((l + self.pw / 2) / self.W, (b + self.ph / 2) / self.H)
+
+    def finish(self, shadow=True, dx=4, dy=5, blur=2.4, strength=0.45, grit=0.035, caster=None):
+        img = self.pil()
+        if grit:
+            img = add_grit(img, grit, seed=f'{self.W}x{self.H}')
+        if shadow:
+            img = with_shadow(img, dx, dy, blur, strength, caster)
+        return img, self.anchor()
+
+
+def add_grit(img: Image.Image, amount=0.035, seed='grit') -> Image.Image:
+    """Subtle deterministic luminance noise + low-frequency grime on the opaque pixels (material texture)."""
+    a = np.asarray(img).astype(np.float32)
+    h, w = a.shape[:2]
+    r = rng('grit:' + seed)
+    n = r.randn(h, w).astype(np.float32)
+    # low-frequency grime: blurred noise
+    g = Image.fromarray(np.clip(128 + r.randn(h // 4 + 1, w // 4 + 1) * 60, 0, 255).astype(np.uint8), 'L')
+    g = np.asarray(g.resize((w, h), Image.BICUBIC)).astype(np.float32) / 128.0 - 1.0
+    f = 1.0 + n * amount + g * amount * 1.4
+    a[..., :3] = np.clip(a[..., :3] * f[..., None], 0, 255)
+    return Image.fromarray(a.astype(np.uint8), 'RGBA')
+
+
+def fit_icon(img: Image.Image, size=64, box=54, outline=True, shadow=True) -> Image.Image:
+    """Scale a sprite into a size x size icon (keeps aspect, centred), with outline + small shadow."""
+    img = img.copy()
+    bb = img.getchannel('A').point(lambda v: 255 if v > 40 else 0).getbbox()
+    if bb:
+        img = img.crop(bb)
+    w, h = img.size
+    s = box / max(w, h)
+    nw, nh = max(1, int(round(w * s))), max(1, int(round(h * s)))
+    img = img.resize((nw, nh), Image.LANCZOS)
+    out = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    out.alpha_composite(img, ((size - nw) // 2, (size - nh) // 2))
+    if outline:
+        out = outline_image(out, 1.0, strength=0.85)
+    if shadow:
+        out = with_shadow(out, 1.5, 2, 1.2, 0.45)
+    return out
+
+
+def icon_canvas(size=64):
+    return Canvas(size, size)
+
+
+def finish_icon(cv: Canvas, grit=0.02, outline=True, shadow=True) -> Image.Image:
+    img = cv.pil()
+    if grit:
+        img = add_grit(img, grit, 'icon')
+    if outline:
+        img = outline_image(img, 1.0, strength=0.9)
+    if shadow:
+        img = with_shadow(img, 1.5, 2, 1.2, 0.45)
+    return img
