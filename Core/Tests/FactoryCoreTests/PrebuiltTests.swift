@@ -46,6 +46,29 @@ final class PrebuiltTests: XCTestCase {
                   fluids: ["petroleum_gas"], warmupSeconds: 75, windowSeconds: 120)
     }
 
+    /// Opt-in profile (GF_LONGRUN=1 swift test -c release --filter testLongRunProfile): 90 game minutes per level,
+    /// rates per 10-minute window — shows how long the supply chests last.
+    func testLongRunProfile() {
+        guard ProcessInfo.processInfo.environment["GF_LONGRUN"] != nil else { return }
+        let cards = ["mechanics_card", "motion_card", "reaction_card", "fabrication_card", "systems_card"]
+        for id in ["L5", "L6", "L7", "L8"] {
+            let s = GameSession.newCampaign(level: Campaign.level(id)!)
+            let w = s.world
+            var prev = cards.map { w.stats.producedByMachines(item: w.item($0)) }
+            for m in stride(from: 10, through: 90, by: 10) {
+                s.run(ticks: 600 * 60)
+                let now = cards.map { w.stats.producedByMachines(item: w.item($0)) }
+                var line = "LONG \(id) t=\(m)min:"
+                for (i, c) in cards.enumerated() where now[i] > 0 { line += " \(c.prefix(4)) \(Double(now[i] - prev[i]) / 10)/min" }
+                var sat = 0.0, dem = 0.0
+                for st in w.power.networkStats { if st.demandW > dem { dem = st.demandW; sat = st.satisfaction } }
+                line += " | \(String(format: "%.1f", dem / 1e6)) MW sat \(String(format: "%.2f", sat))"
+                print(line)
+                prev = now
+            }
+        }
+    }
+
     // MARK: Helpers
 
     /// Creates the campaign session, warms up, then measures card production by machines over a window.
