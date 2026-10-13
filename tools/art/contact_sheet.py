@@ -5,7 +5,8 @@ Examples
   python3 tools/art/contact_sheet.py 'i_*' --out docs/art/contact_items.png --cell 72
   python3 tools/art/contact_sheet.py 'e_*' --scale 0.5 --bg grass
   python3 tools/art/contact_sheet.py --mosaic grass_1,dirt --out /tmp/mosaic.png      # seam check
-  python3 tools/art/contact_sheet.py --belt transport_belt --out /tmp/belts.png                 # belt layout check
+  python3 tools/art/contact_sheet.py --belt transport_belt --out /tmp/belts.png   # belt layout check
+  python3 tools/art/contact_sheet.py --all                                        # every sheet -> docs/art/
 """
 from __future__ import annotations
 
