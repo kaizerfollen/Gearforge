@@ -240,13 +240,30 @@ public final class InserterSystem: EntitySystem, ItemEndpoint {
     private func doPickup(_ i: Int, tick: UInt64) {
         let k = comps[i]
         // Burner inserter with empty fuel picks fuel for itself first (handled on move via refuelFromHand).
-        guard let dst = world.entity(at: k.drop.tile) else {
+        let dstOpt = world.entity(at: k.drop.tile)
+        if dstOpt == nil && !world.ground.canHold(k.drop.tile) {
             comps[i].status = .waitingForTarget; comps[i].wakeTick = tick + Self.idleRecheck; return
         }
         guard let src = world.entity(at: k.pickup.tile), src != k.entity else {
+            // pick up items lying on the ground
+            do {
+                let dstE = dstOpt
+                let got = world.ground.takeOne(at: k.pickup.tile) { item in
+                    guard self.filterAllows(k, item) else { return false }
+                    guard let d = dstE else { return true }
+                    return self.isBelt(d) || self.world.acceptCount(d, item: item, count: 1, source: .inserter) > 0
+                }
+                if got >= 0 {
+                    comps[i].handItem = Int32(got); comps[i].handCount = 1; comps[i].status = .working
+                    startSwing(i, to: .toDrop); return
+                }
+            }
             comps[i].status = .waitingForSource; comps[i].wakeTick = tick + Self.idleRecheck; return
         }
-        let dstIsBelt = isBelt(dst)
+        // no target entity: drop onto the ground (one item at a time, only onto an empty tile)
+        let groundTarget = dstOpt == nil
+        let dst = dstOpt ?? k.entity
+        let dstIsBelt = !groundTarget && isBelt(dst)
         let hand = handSize(k)
         let needsSelfFuel = k.burner.map { $0.remaining <= 0 && $0.fuel.isEmpty } ?? false
 
@@ -254,7 +271,7 @@ public final class InserterSystem: EntitySystem, ItemEndpoint {
         let accept: (Int) -> Bool = { [world] item in
             if needsSelfFuel && BurnerEnergy.isFuel(item, db: world.db) { return true }
             guard self.filterAllows(k, item) else { return false }
-            if dstIsBelt { return true }
+            if dstIsBelt || groundTarget { return true }
             return world.acceptCount(dst, item: item, count: 1, source: .inserter) > 0
         }
 
@@ -288,7 +305,8 @@ public final class InserterSystem: EntitySystem, ItemEndpoint {
         }
         let item = Int(stack.item)
         var n = min(hand, Int(stack.count))
-        if !dstIsBelt && !(needsSelfFuel && BurnerEnergy.isFuel(item, db: world.db)) {
+        if groundTarget { n = 1 }
+        if !dstIsBelt && !groundTarget && !(needsSelfFuel && BurnerEnergy.isFuel(item, db: world.db)) {
             n = min(n, max(1, world.acceptCount(dst, item: item, count: hand, source: .inserter)))
         }
         let took = world.extract(src, item: item, count: n, source: .inserter)
@@ -312,10 +330,17 @@ public final class InserterSystem: EntitySystem, ItemEndpoint {
         refuelFromHand(i)
         let k = comps[i]
         if k.handCount <= 0 { comps[i].handItem = -1; startSwing(i, to: .toPickup); return }
-        guard let dst = world.entity(at: k.drop.tile) else {
-            comps[i].status = .waitingForTarget; comps[i].wakeTick = tick + Self.idleRecheck; return
-        }
         let item = Int(k.handItem)
+        guard let dst = world.entity(at: k.drop.tile) else {
+            // drop on the ground, one item, only when the tile is empty
+            if world.ground.count(at: k.drop.tile) == 0 && world.ground.add(item: item, count: 1, at: k.drop.tile) == 1 {
+                comps[i].handCount -= 1
+                if comps[i].handCount <= 0 { comps[i].handCount = 0; comps[i].handItem = -1; comps[i].status = .working; startSwing(i, to: .toPickup) }
+            } else {
+                comps[i].status = .waitingForTarget; comps[i].wakeTick = tick + Self.idleRecheck
+            }
+            return
+        }
         if isBelt(dst) {
             let dir = world.entities[k.entity].direction
             let lane = world.belts.dropLane(dst, inserterDirection: dir)

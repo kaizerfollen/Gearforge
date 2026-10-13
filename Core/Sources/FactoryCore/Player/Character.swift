@@ -98,6 +98,7 @@ public final class Character {
         updateCrafting()
         updateMining()
         if world.tick % 30 == 0 { autoBuildGhosts() }
+        if world.tick % 10 == 0, !world.ground.isEmpty { autoLoot() }
     }
 
     private func walkable(_ p: Vec2) -> Bool {
@@ -228,7 +229,7 @@ public final class Character {
         let g = craftGroups.remove(at: group)
         for (item, n) in g.pool where n > 0 {
             let fit = give(Int(item), Int(n))
-            if fit < Int(n) { world.emit(.alert("Inventory full — \(Int(n) - fit) items lost")) }
+            if fit < Int(n) { world.ground.spill([ItemStack(item: item, count: n - Int32(fit))], near: position) }
         }
         return true
     }
@@ -336,6 +337,38 @@ public final class Character {
                 if left == 0 { world.emit(.tilesChanged(p.chunk)); stopMining() }
             }
         }
+    }
+
+    // MARK: Ground items
+
+    /// Picks up items lying within `GroundItems.autoLootRadius` (what fits).
+    private func autoLoot() {
+        let r = GroundItems.autoLootRadius
+        let x0 = Int32((position.x - r).rounded(.down)), x1 = Int32((position.x + r).rounded(.down))
+        let y0 = Int32((position.y - r).rounded(.down)), y1 = Int32((position.y + r).rounded(.down))
+        var y = y0
+        while y <= y1 {
+            var x = x0
+            while x <= x1 { pickUpGround(TilePos(x, y)); x += 1 }
+            y += 1
+        }
+    }
+
+    /// Moves ground items on a tile into the inventory (what fits). Returns the number picked up.
+    @discardableResult
+    public func pickUpGround(_ p: TilePos) -> Int {
+        let stacks = world.ground.items(at: p)
+        guard !stacks.isEmpty else { return 0 }
+        var got = 0
+        for s in stacks {
+            let fit = inventory.canInsert(item: Int(s.item), count: Int(s.count), stackSize: world.stackSize(Int(s.item)))
+            guard fit > 0 else { continue }
+            var taken = 0
+            while taken < fit, world.ground.takeOne(at: p, filter: { $0 == Int(s.item) }) >= 0 { taken += 1 }
+            give(Int(s.item), taken)
+            got += taken
+        }
+        return got
     }
 
     // MARK: Ghosts

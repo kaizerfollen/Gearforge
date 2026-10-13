@@ -100,6 +100,8 @@ public final class World {
     public private(set) var player: Character!
     public private(set) var stats: ProductionStats!
     public private(set) var mapGen: MapGenerator!
+    /// Items lying on the ground.
+    public private(set) var ground: GroundItems!
 
     /// All entity systems in update order.
     public private(set) var systems: [EntitySystem] = []
@@ -126,6 +128,7 @@ public final class World {
         player = Character(world: self)
         stats = ProductionStats(world: self)
         mapGen = MapGenerator(world: self)
+        ground = GroundItems(world: self)
 
         systems = [power, fluids, mining, crafting, labs, beacons, inserters, belts, containers, statics]
 

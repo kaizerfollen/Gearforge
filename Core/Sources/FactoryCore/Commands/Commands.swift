@@ -51,6 +51,8 @@ public enum PlayerCommand: Sendable {
     case transferFromEntity(entity: Int32, item: Int, count: Int)
     case takeAll(entity: Int32)
     case pickUpBeltItems(entity: Int32)
+    /// Pick up the items lying on a tile (within reach).
+    case pickUpGround(TilePos)
     // Character
     case craft(recipe: Int, count: Int)
     case cancelCraft(queueIndex: Int)
@@ -311,6 +313,10 @@ public extension World {
             for s in items { giveOrAlert(s) }
             return .ok
 
+        case .pickUpGround(let p):
+            guard pl.canReach(TileRect(origin: p, w: 1, h: 1)) else { return .failed(.outOfReach) }
+            return pl.pickUpGround(p) > 0 ? .ok : .failed(.nothingThere)
+
         case .craft(let r, let count):
             guard pl.canHandcraft(r) else { return .failed(.notResearched) }
             return pl.queueCraft(r, count: count) ? .ok : .failed(.notInInventory)
@@ -402,7 +408,7 @@ public extension World {
     private func giveOrAlert(_ s: ItemStack) {
         guard !s.isEmpty else { return }
         let fit = player.give(Int(s.item), Int(s.count))
-        if fit < Int(s.count) { emit(.alert("Inventory full")) }
+        if fit < Int(s.count) { ground.spill([ItemStack(item: s.item, count: s.count - Int32(fit))], near: player.position) }
     }
 
     /// Fast-replace target: a single entity exactly under the footprint, same replace group, different prototype or
@@ -474,6 +480,7 @@ public extension World {
         }
         pl.inventory.remove(item: item, count: 1)
         let e = createEntity(proto: proto, origin: origin, direction: dir)
+        ground.clear(entities[e].rect)
         if recordUndo { pushUndo(.built(entities.handle(e), proto: proto, origin: origin, direction: dir)) }
         return .ok
     }
@@ -492,9 +499,12 @@ public extension World {
         let contents = removeEntity(e)
         var all = contents
         if item >= 0 { all.append(ItemStack(item: item, count: 1)) }
-        var lost = 0
-        for s in all where !s.isEmpty { lost += Int(s.count) - pl.give(Int(s.item), Int(s.count)) }
-        if lost > 0 { emit(.alert("Inventory full — \(lost) items dropped")) }
+        var spill: [ItemStack] = []
+        for s in all where !s.isEmpty {
+            let fit = pl.give(Int(s.item), Int(s.count))
+            if fit < Int(s.count) { spill.append(ItemStack(item: s.item, count: s.count - Int32(fit))) }
+        }
+        if !spill.isEmpty { ground.spill(spill, near: rec.rect.center); emit(.alert("Inventory full — items dropped on the ground")) }
         if recordUndo { pushUndo(.removed(proto: proto, origin: rec.origin, direction: rec.direction, recipe: recipe)) }
         return .ok
     }

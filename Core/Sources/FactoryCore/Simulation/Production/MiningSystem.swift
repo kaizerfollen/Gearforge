@@ -282,7 +282,11 @@ public final class MiningSystem: EntitySystem, ItemEndpoint {
     private func deliver(_ c: Int) -> Bool {
         let item = Int(drills[c].pendingItem)
         let t = drills[c].output.tile
-        guard let target = world.entity(at: t), target != drills[c].entity else { return false }
+        guard let target = world.entity(at: t), target != drills[c].entity else {
+            // nothing in front: drop one item on the ground if the tile is empty (then block, like 1.1)
+            if world.ground.count(at: t) == 0 && world.ground.add(item: item, count: 1, at: t) == 1 { drills[c].pendingCount -= 1 }
+            return drills[c].pendingCount <= 0
+        }
         let kind = world.entities[target].kind
         if kind == .transportBelt || kind == .undergroundBelt || kind == .splitter {
             let lane = world.belts.nearestLane(target, point: drills[c].output)

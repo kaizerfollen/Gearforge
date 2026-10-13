@@ -56,6 +56,7 @@ public enum WorldCodec {
         w.writeSection(tag: fourCC("RSCH")) { s in world.research.serialize(to: &s) }
         w.writeSection(tag: fourCC("CHAR")) { s in world.player.serialize(to: &s) }
         w.writeSection(tag: fourCC("STAT")) { s in world.stats.serialize(to: &s) }
+        w.writeSection(tag: fourCC("GRND")) { s in world.ground.serialize(to: &s) }
         for (tag, bytes) in extra { w.writeSection(tag: tag) { $0.writeRaw(bytes) } }
         return w.bytes
     }
@@ -150,9 +151,10 @@ public enum WorldCodec {
         var rs = try section("RSCH"); try world.research.deserialize(from: &rs)
         var cs = try section("CHAR"); try world.player.deserialize(from: &cs)
         var st = try section("STAT"); try world.stats.deserialize(from: &st)
+        if var g = sections[fourCC("GRND")] { try world.ground.deserialize(from: &g) }
         for sys in world.systems { sys.didLoad() }
         world.recordsEvents = recordEvents
-        let known: Set<UInt32> = Set(["SETT", "CORE", "SURF", "ENTS", "RSCH", "CHAR", "STAT"].map { fourCCDynamic($0) })
+        let known: Set<UInt32> = Set(["SETT", "CORE", "SURF", "ENTS", "RSCH", "CHAR", "STAT", "GRND"].map { fourCCDynamic($0) })
             .union((0..<world.systems.count).map { fourCC("SYS0") &+ UInt32($0) << 24 })
         var extra: [UInt32: BinaryReader] = [:]
         for t in order where !known.contains(t) { extra[t] = sections[t] }
