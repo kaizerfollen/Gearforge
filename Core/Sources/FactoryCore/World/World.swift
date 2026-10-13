@@ -11,6 +11,8 @@ public enum WorldEvent: Sendable {
     case entityChanged(Int32)
     case tilesChanged(ChunkPos)
     case chunkGenerated(ChunkPos)
+    /// A chunk became visible on the map (character proximity or radar).
+    case chunkCharted(ChunkPos)
     case researchStarted(TechIndex)
     case researchFinished(TechIndex)
     case recipeUnlocked(RecipeIndex)
@@ -102,6 +104,8 @@ public final class World {
     public private(set) var mapGen: MapGenerator!
     /// Items lying on the ground.
     public private(set) var ground: GroundItems!
+    /// Pollution statistic (no diffusion in MVP).
+    public private(set) var pollution: PollutionStats!
 
     /// All entity systems in update order.
     public private(set) var systems: [EntitySystem] = []
@@ -129,6 +133,7 @@ public final class World {
         stats = ProductionStats(world: self)
         mapGen = MapGenerator(world: self)
         ground = GroundItems(world: self)
+        pollution = PollutionStats(world: self)
 
         systems = [power, fluids, mining, crafting, labs, beacons, inserters, belts, containers, statics]
 
@@ -183,6 +188,7 @@ public final class World {
         research.update()
         player.update()
         stats.update()
+        if tick % 60 == 59 { pollution.sample() }
         tick &+= 1
     }
 

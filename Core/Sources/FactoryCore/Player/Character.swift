@@ -99,6 +99,7 @@ public final class Character {
         updateMining()
         if world.tick % 30 == 0 { autoBuildGhosts() }
         if world.tick % 10 == 0, !world.ground.isEmpty { autoLoot() }
+        if world.tick % 60 == 0 { world.chartArea(around: position.tile.chunk, radius: World.characterChartRadius) }
     }
 
     private func walkable(_ p: Vec2) -> Bool {

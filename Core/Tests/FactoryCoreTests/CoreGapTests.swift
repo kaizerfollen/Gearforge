@@ -109,4 +109,54 @@ final class CoreGapTests: XCTestCase {
         XCTAssertEqual(w.fluids.fluid(ref, box: 3), w.db.fluid("light_oil"))
         XCTAssertEqual(w.fluids.fluid(ref, box: 4), w.db.fluid("petroleum_gas"))
     }
+
+    // MARK: Charting
+
+    func testCharacterChartsSurroundings() {
+        let w = TestWorld.make(mapSide: 512)
+        w.player.position = Vec2(10.5, 10.5)
+        w.step(2)
+        XCTAssertTrue(w.isCharted(TilePos(10, 10).chunk))
+        XCTAssertTrue(w.isCharted(ChunkPos(2, 2)))
+        XCTAssertFalse(w.isCharted(ChunkPos(6, 6)), "far chunks stay in the fog")
+        let (r, g, b) = w.mapColor(at: TilePos(10, 10))
+        XCTAssertGreaterThan(r + g + b, 0)
+        XCTAssertEqual(w.mapColor(at: TilePos(6 * 32, 6 * 32)).0, 0)
+    }
+
+    func testRadarScansFarChunks() {
+        let w = TestWorld.make(mapSide: 1024)
+        w.cheatInfinitePower = true
+        let radar = w.place("radar", 20, 20)
+        XCTAssertTrue(w.isCharted(ChunkPos(3, 3)), "nearby radius charted on build")
+        let before = w.chartedChunkCount
+        w.step(60 * 34 * 3)          // 300 kW → 10 MJ per sector ≈ 33 s → 3 sectors
+        XCTAssertGreaterThanOrEqual(w.chartedChunkCount - before, 3)
+        XCTAssertGreaterThanOrEqual(w.statics.radarProgress(of: radar), 0)
+    }
+
+    func testChartingSurvivesSaveLoad() throws {
+        let w = TestWorld.make(mapSide: 1024)
+        w.cheatInfinitePower = true
+        w.place("radar", 20, 20)
+        w.step(60 * 40)
+        let n = w.chartedChunkCount
+        let b = try GameSession.decode(payload: GameSession(world: w, mode: .freeplay).encodePayload())
+        XCTAssertEqual(b.world.chartedChunkCount, n)
+    }
+
+    // MARK: Pollution
+
+    func testPollutionFromWorkingMachines() {
+        let w = TestWorld.make()
+        let f = w.place("stone_furnace", 10, 10)
+        _ = w.crafting.insert(f, item: w.item("coal"), count: 10, source: .player)
+        _ = w.crafting.insert(f, item: w.item("iron_ore"), count: 50, source: .player)
+        w.step(60 * 61)
+        // stone furnace 2/min while working
+        XCTAssertEqual(w.pollution.perMinute, 2, accuracy: 0.2)
+        XCTAssertGreaterThan(w.pollution.total, 1.5)
+        let b = try? GameSession.decode(payload: GameSession(world: w, mode: .freeplay).encodePayload())
+        XCTAssertEqual(b?.world.pollution.total ?? 0, w.pollution.total, accuracy: 1e-9)
+    }
 }

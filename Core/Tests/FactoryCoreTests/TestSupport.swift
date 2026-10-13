@@ -5,10 +5,10 @@ import XCTest
 
 enum TestWorld {
     /// Small world whose area [0, size) × [0, size) is flat grass with no trees/rocks/entities.
-    static func make(size: Int = 64, seed: UInt64 = 7) -> World {
+    static func make(size: Int = 64, seed: UInt64 = 7, mapSide: Int? = nil) -> World {
         var s = WorldSettings()
         s.seed = seed
-        let side = max(64, ((size * 2) + 31) / 32 * 32)
+        let side = mapSide ?? max(64, ((size * 2) + 31) / 32 * 32)
         s.width = side; s.height = side   // surface is centred on (0,0); multiple of 32
         s.treeCoverage = 0
         s.rocks = false
