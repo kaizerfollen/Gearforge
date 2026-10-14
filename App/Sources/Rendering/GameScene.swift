@@ -34,6 +34,9 @@ final class GameScene: SKScene {
     private let validityLabel = SKLabelNode(text: "")
     /// Tile grid (Settings → show grid: off / build / always).
     private let gridNode = SKShapeNode()
+    /// Diagnostics (Settings → Show FPS): terrain state of the chunk under the camera centre.
+    private let debugLabel = SKLabelNode(text: "")
+    private var debugTimer: Double = 0
     private var gridKey = ""
     private var pastePool: [SKSpriteNode] = []
     /// Paste preview cache: recomputed when the origin/rotation/clipboard changes or every 15 ticks (not per frame).
@@ -150,6 +153,15 @@ final class GameScene: SKScene {
         nightNode.zPosition = 100
         nightNode.alpha = 0
         cam.addChild(nightNode)
+        debugLabel.fontName = "Menlo"
+        debugLabel.fontSize = 11
+        debugLabel.fontColor = .yellow
+        debugLabel.numberOfLines = 0
+        debugLabel.horizontalAlignmentMode = .left
+        debugLabel.verticalAlignmentMode = .top
+        debugLabel.zPosition = 200
+        debugLabel.isHidden = true
+        cam.addChild(debugLabel)
         buildTileSet()
         zoom = 1
         if let c = controller { cameraCenter = c.world.player.position }
@@ -235,6 +247,9 @@ final class GameScene: SKScene {
         updateOverlay(w, c)
         updateCopyPaste(w, c)
         updateGrid(c)
+        debugTimer += dt
+        if c.settings.showFPS, debugTimer > 0.5 { debugTimer = 0; updateDebug(w) }
+        else if !c.settings.showFPS { debugLabel.isHidden = true }
         let night = c.settings.dayNightLighting ? (1 - w.daylight) * 0.55 : 0
         nightNode.alpha = CGFloat(night)
     }
@@ -271,6 +286,26 @@ final class GameScene: SKScene {
     private func refreshBeltsNear(_ r: TileRect, _ w: World) {
         let rr = r.expanded(by: 1)
         for id in w.entities(in: rr) { if let v = views[id] { configure(v, id, w, force: true) } }
+    }
+
+    private func updateDebug(_ w: World) {
+        let t = cameraCenter.tile, cp = t.chunk
+        var lines = ["cam \(t.x),\(t.y) chunk \(cp.x),\(cp.y) zoom \(String(format: "%.2f", zoom)) size \(Int(size.width))x\(Int(size.height))"]
+        let vis = visibleRect(margin: 8)
+        lines.append("vis \(vis.x),\(vis.y) \(vis.w)x\(vis.h) nodes \(chunkNodes.count) terrainKids \(terrainLayer.children.count)")
+        if let ch = w.surface.existingChunk(cp) {
+            let mid = Int(ch.tiles[16 * 32 + 16])
+            lines.append("chunk ok charted=\(ch.charted) midTile=\(mid) groups=\(tileGroups[mid]?.count ?? -1)")
+        } else { lines.append("chunk MISSING") }
+        if let n = chunkNodes[cp] {
+            let g = n.ground
+            let tg = g.tileGroup(atColumn: 16, row: 15)
+            lines.append("node parent=\(g.parent != nil) pos=\(Int(g.position.x)),\(Int(g.position.y)) hidden=\(g.isHidden) a=\(g.alpha) z=\(g.zPosition)")
+            lines.append("cols=\(g.numberOfColumns) group=\(tg != nil) tex=\(tg?.rules.first?.tileDefinitions.first?.textures.first.map { "\(Int($0.size().width))" } ?? "nil")")
+        } else { lines.append("node NONE for chunk") }
+        debugLabel.text = lines.joined(separator: "\n")
+        debugLabel.position = CGPoint(x: -size.width / 2 + 12, y: size.height / 2 - 90)
+        debugLabel.isHidden = false
     }
 
     // MARK: Terrain

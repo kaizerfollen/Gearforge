@@ -416,6 +416,7 @@ open class SKTileGroupRule: NSObject, NSCopying, NSSecureCoding {
     public required init?(coder aDecoder: NSCoder) { _stub() }
     public func copy(with zone: NSZone? = nil) -> Any { _stub() }
     public func encode(with coder: NSCoder) { _stub() }
+    open var tileDefinitions: [SKTileDefinition] { get { _stub() } set { _stub() } }
 }
 
 public enum SKTileSetType: UInt, Sendable { case grid = 0, isometric, hexagonalFlat, hexagonalPointy }
