@@ -23,16 +23,17 @@ struct MapPanel: View {
                 let cx = geo.size.width / 2 + pan.width, cy = geo.size.height / 2 + pan.height
                 let originX = cx - CGFloat(pp.x - Double(b.x)) * k
                 let originY = cy - CGFloat(pp.y - Double(b.y)) * k
-                ZStack(alignment: .topLeading) {
+                // `.position` (not `.offset`) so the oversized map image never grows the ZStack.
+                ZStack {
                     Color.black
                     if let img = controller.mapImage {
                         Image(img, scale: 1, label: Text("Map")).interpolation(.none).resizable()
                             .frame(width: CGFloat(b.w) * k, height: CGFloat(b.h) * k)
-                            .offset(x: originX, y: originY)
+                            .position(x: originX + CGFloat(b.w) * k / 2, y: originY + CGFloat(b.h) * k / 2)
                     }
                     Circle().fill(Theme.accent).frame(width: 10, height: 10)
                         .overlay(Circle().stroke(Color.black, lineWidth: 2))
-                        .offset(x: cx - 5, y: cy - 5)
+                        .position(x: cx, y: cy)
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
                 .clipped()
