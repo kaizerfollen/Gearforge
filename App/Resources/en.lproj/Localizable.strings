@@ -35,7 +35,9 @@
 "Campaign" = "Campaign";
 "Can't build on water" = "Can't build on water";
 "Can't get there" = "Can't get there";
+"Can't rename: use a new, non-empty name without / or :" = "Can't rename: use a new, non-empty name without / or :";
 "Can't rotate" = "Can't rotate";
+"Cancel" = "Cancel";
 "Casual reach (build anywhere on screen)" = "Casual reach (build anywhere on screen)";
 "Charge: %@ / 5 MJ" = "Charge: %@ / 5 MJ";
 "Choose recipe" = "Choose recipe";
@@ -43,12 +45,14 @@
 "Close" = "Close";
 "Consumed / min" = "Consumed / min";
 "Continue" = "Continue";
+"Copied %@ buildings — tap to place" = "Copied %@ buildings — tap to place";
 "Data cards" = "Data cards";
 "Day/night lighting" = "Day/night lighting";
 "Delete" = "Delete";
 "Delete save?" = "Delete save?";
 "Demand %@ · Production %@ · Capacity %@" = "Demand %@ · Production %@ · Capacity %@";
 "Disabled" = "Disabled";
+"Drag over buildings to copy them" = "Drag over buildings to copy them";
 "Electric network #%@" = "Electric network #%@";
 "Extended starting kit" = "Extended starting kit";
 "Filter" = "Filter";
@@ -62,6 +66,8 @@
 "Gearforge" = "Gearforge";
 "Gearforge · original factory game · no ads, no tracking" = "Gearforge · original factory game · no ads, no tracking";
 "Generating world…" = "Generating world…";
+"Ghosts placed — missing %@" = "Ghosts placed — missing %@";
+"Ghosts placed — walk close to build them" = "Ghosts placed — walk close to build them";
 "Graphics & performance" = "Graphics & performance";
 "Hand mining speed +%@%%" = "Hand mining speed +%@%%";
 "Hand size: %@" = "Hand size: %@";
@@ -127,6 +133,7 @@
 "Not in inventory" = "Not in inventory";
 "Not researched" = "Not researched";
 "Nothing there" = "Nothing there";
+"Nothing to copy here" = "Nothing to copy here";
 "Nothing yet" = "Nothing yet";
 "OK" = "OK";
 "Off" = "Off";
@@ -153,6 +160,8 @@
 "Productivity" = "Productivity";
 "Queue" = "Queue";
 "Recipe" = "Recipe";
+"Rename" = "Rename";
+"Rename save" = "Rename save";
 "Requires" = "Requires";
 "Research" = "Research";
 "Research complete: %@" = "Research complete: %@";
@@ -184,6 +193,7 @@
 "Start Freeplay" = "Start Freeplay";
 "Take all" = "Take all";
 "Tap a building to place it." = "Tap a building to place it.";
+"Tap a spot to preview, tap again to place" = "Tap a spot to preview, tap again to place";
 "Tap to walk there · pinch to zoom" = "Tap to walk there · pinch to zoom";
 "Tech price" = "Tech price";
 "The game was closed unexpectedly" = "The game was closed unexpectedly";

@@ -179,6 +179,8 @@ struct NewGameView: View {
 struct LoadGameView: View {
     @Bindable var model: AppModel
     @State private var confirmDelete: SaveMetadata?
+    @State private var renaming: SaveMetadata?
+    @State private var newName = ""
 
     var body: some View {
         PanelChrome(title: "Load game", onClose: { model.screen = .menu }) {
@@ -194,6 +196,7 @@ struct LoadGameView: View {
                             Spacer()
                             Text(m.savedAt, style: .relative).font(.caption).foregroundStyle(Theme.textDim)
                             Button("Load") { model.load(slot: m.slot) }.buttonStyle(.borderedProminent).tint(Theme.accent)
+                            Button { newName = L(m.displayName); renaming = m } label: { Text("Rename").font(.caption) }.buttonStyle(.bordered)
                             Button { confirmDelete = m } label: { SpriteImage(name: "ui_remove", size: 24) }.buttonStyle(.plain)
                         }
                         .padding(12)
@@ -206,6 +209,17 @@ struct LoadGameView: View {
         }
         .frame(maxWidth: 760, maxHeight: 520)
         .padding(30)
+        .alert("Rename save", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
+            TextField("Save name", text: $newName)
+            Button("Rename") {
+                if let m = renaming {
+                    do { try model.saveManager.rename(slot: m.slot, to: newName); model.refreshSaves() }
+                    catch { model.errorMessage = L("Can't rename: use a new, non-empty name without / or :") }
+                }
+                renaming = nil
+            }
+            Button("Cancel", role: .cancel) { renaming = nil }
+        }
         .confirmationDialog("Delete save?", isPresented: Binding(get: { confirmDelete != nil }, set: { if !$0 { confirmDelete = nil } })) {
             Button("Delete", role: .destructive) {
                 if let m = confirmDelete { try? model.saveManager.delete(slot: m.slot); model.refreshSaves() }

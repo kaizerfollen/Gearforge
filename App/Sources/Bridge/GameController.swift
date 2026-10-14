@@ -10,7 +10,7 @@ import FactoryCore
 import UIKit
 #endif
 
-enum InteractionMode: Equatable { case explore, build, remove }
+enum InteractionMode: Equatable { case explore, build, remove, copy, paste }
 
 enum GamePanel: Equatable, Identifiable {
     case inventory
@@ -87,6 +87,11 @@ final class GameController {
     @ObservationIgnored var onLevelCompleted: ((Int, Double) -> Void)?
 
     var mode: InteractionMode = .explore
+    /// Copy/paste area (GDD §4.6): last copied area, its rotation (quarter turns) and the copy-rect being dragged.
+    var clipboard: Blueprint? = nil
+    var pasteRotation = 0
+    @ObservationIgnored var copyStart: TilePos? = nil
+    @ObservationIgnored var copyEnd: TilePos? = nil
     var buildItem: Int = -1
     var buildDirection: Direction = .north
     var selected: EntityHandle? = nil
@@ -320,7 +325,71 @@ final class GameController {
         haptic(.light)
     }
 
-    func cancelMode() { mode = .explore; buildItem = -1; previewTile = nil }
+    func cancelMode() { mode = .explore; buildItem = -1; previewTile = nil; copyStart = nil; copyEnd = nil }
+
+    // MARK: Copy / paste area
+
+    func beginCopy() { cancelMode(); mode = .copy; haptic(.light) }
+
+    /// Normalized rect between two tiles (inclusive).
+    static func rect(_ a: TilePos, _ b: TilePos) -> TileRect {
+        TileRect(x: min(a.x, b.x), y: min(a.y, b.y), w: abs(a.x - b.x) + 1, h: abs(a.y - b.y) + 1)
+    }
+
+    /// Finishes a copy drag: captures the area and switches to paste mode.
+    func finishCopy() {
+        defer { copyStart = nil; copyEnd = nil }
+        guard let a = copyStart, let b = copyEnd else { return }
+        let bp = world.captureBlueprint(Self.rect(a, b))
+        guard !bp.isEmpty else { show(L("Nothing to copy here")); mode = .explore; return }
+        clipboard = bp
+        pasteRotation = 0
+        mode = .paste
+        previewTile = nil
+        show(LF("Copied %@ buildings — tap to place", "\(bp.entries.count)"))
+        haptic(.medium)
+    }
+
+    /// The clipboard with the current rotation applied.
+    var pasteBlueprint: Blueprint? { clipboard.map { $0.rotated(pasteRotation, db: world.db) } }
+
+    /// Top-left of the paste so the blueprint is centred on the touched tile.
+    func pasteOrigin(_ tile: TilePos) -> TilePos? {
+        guard let bp = pasteBlueprint else { return nil }
+        return TilePos(tile.x - (bp.width - 1) / 2, tile.y - (bp.height - 1) / 2)
+    }
+
+    func rotatePaste() { pasteRotation = (pasteRotation + 1) % 4; haptic(.light) }
+
+    func beginPaste() {
+        guard clipboard != nil else { beginCopy(); return }
+        cancelMode(); mode = .paste
+    }
+
+    /// Places ghosts of the clipboard at the touched tile; the character builds them from the inventory.
+    func paste(at tile: TilePos) {
+        guard let bp = pasteBlueprint, let o = pasteOrigin(tile) else { return }
+        let r = execute(.pasteBlueprint(bp, origin: o))
+        guard r.isOK else { return }
+        haptic(.medium)
+        // tell the player what is missing
+        let need = bp.requiredItems(db: world.db)
+        let missing = need.filter { world.player.count(of: $0.key) < $0.value }
+        if let m = missing.first {
+            show(LF("Ghosts placed — missing %@", "\(Names.item(world.db, m.key)) ×\(m.value - world.player.count(of: m.key))"))
+        } else {
+            show(L("Ghosts placed — walk close to build them"))
+        }
+    }
+
+    /// Picks up the items lying on a tile (explore tap).
+    @discardableResult
+    func pickUpGround(at tile: TilePos) -> Bool {
+        guard world.ground.count(at: tile) > 0 else { return false }
+        let r = execute(.pickUpGround(tile), silent: true)
+        if r.isOK { haptic(.light) } else if case .failed(.outOfReach) = r { _ = walkTo(tile) }
+        return true
+    }
 
     func rotateBuild() {
         buildDirection = buildDirection.clockwise

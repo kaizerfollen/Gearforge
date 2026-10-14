@@ -28,6 +28,13 @@ final class GameScene: SKScene {
     private let ioOutNode = SKShapeNode(circleOfRadius: 6)
     private let selectionNode = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 32, height: 32), cornerRadius: 3)
     private let reachNode = SKShapeNode(circleOfRadius: 320)
+    /// Copy-area rectangle and paste preview (GDD §4.6).
+    private let copyRectNode = SKShapeNode()
+    private var pastePool: [SKSpriteNode] = []
+    /// Items lying on the ground (re-synced when GroundItems.revision or the view changes).
+    private var groundPool: [SKSpriteNode] = []
+    private var groundRevision = -1
+    private var groundCenter = TilePos(Int32.max, 0)
 
     private var chunkNodes: [ChunkPos: (ground: SKTileMapNode, ore: SKTileMapNode)] = [:]
     private var tileGroups: [Int: [SKTileGroup]] = [:]          // tile index → variants
@@ -111,6 +118,12 @@ final class GameScene: SKScene {
         reachNode.fillColor = .clear
         reachNode.isHidden = true
         overlayLayer.addChild(reachNode)
+        copyRectNode.strokeColor = UIColor(red: 0.35, green: 0.8, blue: 1, alpha: 1)
+        copyRectNode.fillColor = UIColor(red: 0.35, green: 0.8, blue: 1, alpha: 0.15)
+        copyRectNode.lineWidth = 2
+        copyRectNode.zPosition = 43
+        copyRectNode.isHidden = true
+        overlayLayer.addChild(copyRectNode)
         nightNode.zPosition = 100
         nightNode.alpha = 0
         cam.addChild(nightNode)
@@ -194,8 +207,10 @@ final class GameScene: SKScene {
         if wireTimer > 0.5 { wireTimer = 0; updateWires(w) }
         updateInserters(w)
         updateBeltItems(w)
+        updateGroundItems(w)
         updateCharacter(w, dt: dt)
         updateOverlay(w, c)
+        updateCopyPaste(w, c)
         let night = c.settings.dayNightLighting ? (1 - w.daylight) * 0.55 : 0
         nightNode.alpha = CGFloat(night)
     }
@@ -496,6 +511,71 @@ final class GameScene: SKScene {
                 hand.children.first?.isHidden = false
             } else { hand.children.first?.isHidden = true }
         }
+    }
+
+    /// Items on the ground: up to 4 icons per tile in a 2×2 pattern.
+    private func updateGroundItems(_ w: World) {
+        let center = cameraCenter.tile
+        let moved = abs(center.x - groundCenter.x) > 2 || abs(center.y - groundCenter.y) > 2
+        guard w.ground.revision != groundRevision || moved else { return }
+        groundRevision = w.ground.revision; groundCenter = center
+        var used = 0
+        let isz = CGSize(width: S * 0.4, height: S * 0.4)
+        let offs: [(Double, Double)] = [(0.3, 0.3), (0.7, 0.35), (0.35, 0.72), (0.7, 0.7)]
+        w.ground.forEach(in: visibleRect(margin: 2)) { p, stacks in
+            var k = 0
+            for s in stacks {
+                for _ in 0..<min(Int(s.count), 4 - k) {
+                    let n: SKSpriteNode
+                    if used < groundPool.count { n = groundPool[used] } else {
+                        n = SKSpriteNode(); n.size = isz; n.zPosition = 19; itemLayer.addChild(n); groundPool.append(n)
+                    }
+                    n.isHidden = false
+                    n.texture = SpriteCatalog.shared.texture("i_\(w.db.items[Int(s.item)].id)")
+                    n.position = scenePoint(Double(p.x) + offs[k].0, Double(p.y) + offs[k].1)
+                    used += 1; k += 1
+                }
+                if k >= 4 { break }
+            }
+        }
+        var i = used
+        while i < groundPool.count && !groundPool[i].isHidden { groundPool[i].isHidden = true; i += 1 }
+    }
+
+    /// Copy rectangle while dragging; translucent ghost preview of the clipboard in paste mode.
+    private func updateCopyPaste(_ w: World, _ c: GameController) {
+        if c.mode == .copy, let a = c.copyStart, let b = c.copyEnd {
+            let r = GameController.rect(a, b)
+            copyRectNode.path = CGPath(rect: CGRect(x: 0, y: 0, width: CGFloat(r.w) * S, height: CGFloat(r.h) * S), transform: nil)
+            copyRectNode.position = CGPoint(x: CGFloat(r.x) * S, y: -CGFloat(r.maxY) * S)
+            copyRectNode.isHidden = false
+        } else { copyRectNode.isHidden = true }
+
+        var used = 0
+        if c.mode == .paste, let t = c.previewTile, let bp = c.pasteBlueprint, let o = c.pasteOrigin(t) {
+            for e in w.blueprintPreview(bp, at: o) {
+                let p = w.db.entities[e.proto]
+                let d = SpriteNames.dirSuffix(e.direction)
+                var names = ["e_\(p.id)_\(d)", "e_\(p.id)"]
+                if p.kind == .transportBelt { names.insert("belt_\(p.id)_straight_\(d)_f0", at: 0) }
+                if p.kind == .inserter { names.insert("ins_\(p.id)_base", at: 0) }
+                if p.kind == .pipe { names.insert("pipe_0", at: 0) }
+                let n: SKSpriteNode
+                if used < pastePool.count { n = pastePool[used] } else {
+                    n = SKSpriteNode(); n.alpha = 0.55; n.colorBlendFactor = 0.5; n.zPosition = 44
+                    overlayLayer.addChild(n); pastePool.append(n)
+                }
+                let (fw, fh) = w.footprint(e.proto, e.direction)
+                n.texture = SpriteCatalog.shared.texture(firstOf: names)
+                n.size = CGSize(width: CGFloat(fw) * S, height: CGFloat(fh) * S)
+                n.position = scenePoint(Double(e.origin.x) + Double(fw) / 2, Double(e.origin.y) + Double(fh) / 2)
+                n.color = e.ok ? UIColor(red: 0.35, green: 0.8, blue: 1, alpha: 1) : UIColor(red: 1, green: 0.25, blue: 0.2, alpha: 1)
+                n.isHidden = false
+                used += 1
+            }
+        }
+        var i = used
+        while i < pastePool.count && !pastePool[i].isHidden { pastePool[i].isHidden = true; i += 1 }
     }
 
     private func updateBeltItems(_ w: World) {

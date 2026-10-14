@@ -35,7 +35,9 @@
 "Campaign" = "Кампания";
 "Can't build on water" = "Нельзя строить на воде";
 "Can't get there" = "Туда не пройти";
+"Can't rename: use a new, non-empty name without / or :" = "Не удалось переименовать: нужно новое непустое имя без / и :";
 "Can't rotate" = "Нельзя повернуть";
+"Cancel" = "Отмена";
 "Casual reach (build anywhere on screen)" = "Без ограничения досягаемости (строить в любом месте экрана)";
 "Charge: %@ / 5 MJ" = "Заряд: %@ / 5 МДж";
 "Choose recipe" = "Выберите рецепт";
@@ -43,12 +45,14 @@
 "Close" = "Закрыть";
 "Consumed / min" = "Потреблено / мин";
 "Continue" = "Продолжить";
+"Copied %@ buildings — tap to place" = "Скопировано построек: %@ — коснитесь, чтобы разместить";
 "Data cards" = "Карты данных";
 "Day/night lighting" = "Смена дня и ночи";
 "Delete" = "Удалить";
 "Delete save?" = "Удалить сохранение?";
 "Demand %@ · Production %@ · Capacity %@" = "Спрос %@ · Выработка %@ · Мощность %@";
 "Disabled" = "Отключено";
+"Drag over buildings to copy them" = "Проведите по постройкам, чтобы скопировать их";
 "Electric network #%@" = "Электросеть №%@";
 "Extended starting kit" = "Расширенный стартовый набор";
 "Filter" = "Фильтр";
@@ -62,6 +66,8 @@
 "Gearforge" = "Gearforge";
 "Gearforge · original factory game · no ads, no tracking" = "Gearforge · оригинальная игра о заводах · без рекламы и слежки";
 "Generating world…" = "Создание мира…";
+"Ghosts placed — missing %@" = "Призраки размещены — не хватает: %@";
+"Ghosts placed — walk close to build them" = "Призраки размещены — подойдите ближе, чтобы построить";
 "Graphics & performance" = "Графика и производительность";
 "Hand mining speed +%@%%" = "Скорость ручной добычи +%@%%";
 "Hand size: %@" = "Размер захвата: %@";
@@ -127,6 +133,7 @@
 "Not in inventory" = "Нет в инвентаре";
 "Not researched" = "Не исследовано";
 "Nothing there" = "Здесь ничего нет";
+"Nothing to copy here" = "Здесь нечего копировать";
 "Nothing yet" = "Пока ничего";
 "OK" = "ОК";
 "Off" = "Выкл.";
@@ -153,6 +160,8 @@
 "Productivity" = "Продуктивность";
 "Queue" = "Очередь";
 "Recipe" = "Рецепт";
+"Rename" = "Переименовать";
+"Rename save" = "Переименовать сохранение";
 "Requires" = "Требует";
 "Research" = "Исследования";
 "Research complete: %@" = "Исследование завершено: %@";
@@ -184,6 +193,7 @@
 "Start Freeplay" = "Начать свободную игру";
 "Take all" = "Забрать всё";
 "Tap a building to place it." = "Коснитесь здания, чтобы разместить его.";
+"Tap a spot to preview, tap again to place" = "Коснитесь места для предпросмотра, ещё раз — чтобы разместить";
 "Tap to walk there · pinch to zoom" = "Коснитесь, чтобы пойти · сведите пальцы для масштаба";
 "Tech price" = "Цена технологий";
 "The game was closed unexpectedly" = "Игра была неожиданно закрыта";

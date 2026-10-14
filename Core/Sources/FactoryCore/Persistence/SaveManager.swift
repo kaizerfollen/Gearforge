@@ -114,10 +114,23 @@ public final class SaveManager {
         do { try FileManager.default.removeItem(at: url(for: slot)) } catch { throw SaveError.notFound(slot) }
     }
 
+    /// Renames a save: new file name and the display name stored inside it (metadata is rewritten, world untouched).
     public func rename(slot: String, to newName: String) throws {
-        guard Self.isValidName(newName) else { throw SaveError.invalidName(newName) }
-        guard !FileManager.default.fileExists(atPath: url(for: newName).path) else { throw SaveError.slotExists(newName) }
-        do { try FileManager.default.moveItem(at: url(for: slot), to: url(for: newName)) } catch { throw SaveError.notFound(slot) }
+        let name = newName.trimmingCharacters(in: .whitespaces)
+        guard Self.isValidName(name) else { throw SaveError.invalidName(newName) }
+        if name == slot { return }
+        guard !FileManager.default.fileExists(atPath: url(for: name).path) else { throw SaveError.slotExists(name) }
+        let data: Data
+        do { data = try Data(contentsOf: url(for: slot)) } catch { throw SaveError.notFound(slot) }
+        let parsed = try SaveFile.parse([UInt8](data), slot: slot)
+        let payload = try SaveFile.worldPayload(parsed, compressor: compressor)
+        var meta = parsed.metadata
+        meta.slot = name
+        meta.displayName = name
+        meta.isAutosave = false
+        let bytes = SaveFile.assemble(metadata: meta, worldPayload: payload, compressor: compressor)
+        try write(bytes, slot: name)
+        do { try FileManager.default.removeItem(at: url(for: slot)) } catch { throw SaveError.io("\(error)") }
     }
 
     public func duplicate(slot: String, as newSlot: String) throws {

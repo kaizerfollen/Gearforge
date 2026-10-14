@@ -52,6 +52,18 @@ struct HUDView: View {
                     if controller.mode == .build {
                         HUDButton(glyph: "ui_rotate") { controller.rotateBuild() }
                     }
+                    if controller.mode == .paste {
+                        HUDButton(glyph: "ui_rotate") { controller.rotatePaste() }
+                    }
+                    HStack(spacing: 8) {
+                        HUDButton(glyph: "ui_copy", active: controller.mode == .copy, size: 44) {
+                            if controller.mode == .copy { controller.cancelMode() } else { controller.beginCopy() }
+                        }
+                        HUDButton(glyph: "ui_paste", active: controller.mode == .paste, size: 44) {
+                            if controller.mode == .paste { controller.cancelMode() } else { controller.beginPaste() }
+                        }
+                        .opacity(controller.clipboard == nil ? 0.4 : 1)
+                    }
                     HStack(spacing: 8) {
                         HUDButton(glyph: "ui_undo", size: 44) { controller.undo() }.opacity(hud.canUndo ? 1 : 0.4)
                         HUDButton(glyph: "ui_redo", size: 44) { controller.redo() }.opacity(hud.canRedo ? 1 : 0.4)
@@ -69,6 +81,12 @@ struct HUDView: View {
                     Text(t).font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
                         .padding(.horizontal, 14).padding(.vertical, 8)
                         .background(Capsule().fill(Color.black.opacity(0.7)))
+                }
+                if controller.mode == .copy || controller.mode == .paste {
+                    Text(controller.mode == .copy ? L("Drag over buildings to copy them") : L("Tap a spot to preview, tap again to place"))
+                        .font(.caption.bold()).foregroundStyle(Theme.accent)
+                        .padding(.horizontal, 10).padding(.vertical, 4)
+                        .background(Capsule().fill(Color.black.opacity(0.6)))
                 }
                 if !hud.buildReason.isEmpty && controller.mode == .build {
                     Text(L(hud.buildReason)).font(.caption.bold()).foregroundStyle(Theme.bad)

@@ -101,6 +101,8 @@ final class ProgressionTests: XCTestCase {
         XCTAssertEqual(slots[3], "autosave_1", "oldest autosave is overwritten")
         XCTAssertEqual(sm.mostRecent?.slot, "autosave_1")
         try sm.rename(slot: "My factory", to: "Base")
+        XCTAssertEqual(sm.listSaves().first { $0.slot == "Base" }?.displayName, "Base", "display name follows the rename")
+        XCTAssertEqual(try sm.load(slot: "Base").world.tick, 120, "renamed save still loads")
         try sm.duplicate(slot: "Base", as: "Base copy")
         XCTAssertThrowsError(try sm.rename(slot: "Base", to: "Base copy"))
         XCTAssertThrowsError(try sm.save(s, slot: "../evil"))

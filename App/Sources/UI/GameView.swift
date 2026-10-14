@@ -101,6 +101,11 @@ struct GameView: View {
             }
         case .remove:
             if dragging, lastTile != t { controller.remove(at: t, silent: true) }
+        case .copy:
+            if controller.copyStart == nil { controller.copyStart = lastTile ?? t }
+            controller.copyEnd = t
+        case .paste:
+            controller.previewTile = t
         }
         lastTile = t
         lastDrag = v.location
@@ -109,6 +114,15 @@ struct GameView: View {
     private func touchEnded(_ v: DragGesture.Value) {
         defer { touchStart = nil; dragging = false; lastTile = nil; touchID += 1 }
         if holding { holding = false; controller.stopMining(); return }
+        if controller.mode == .copy {
+            if let t = tile(v.location) {
+                if controller.copyStart == nil { controller.copyStart = t }
+                controller.copyEnd = t
+            }
+            controller.finishCopy()
+            return
+        }
+        if controller.mode == .paste, dragging { return }      // drag only moves the preview
         guard !dragging, let t = tile(v.location) else { return }
         switch controller.mode {
         case .explore:
@@ -119,6 +133,8 @@ struct GameView: View {
                 } else {
                     controller.tapEntity(e)
                 }
+            } else if controller.pickUpGround(at: t) {
+                controller.selected = nil
             } else {
                 controller.selected = nil
                 if controller.world.surface.resource(at: t).1 > 0 { controller.show("Hold to mine") }
@@ -128,6 +144,10 @@ struct GameView: View {
             controller.build(at: t)
         case .remove:
             controller.remove(at: t)
+        case .paste:
+            if controller.previewTile == t { controller.paste(at: t) } else { controller.previewTile = t }
+        case .copy:
+            break
         }
     }
 
