@@ -9,7 +9,10 @@ All names/art/text are original. This file is the single source of truth for "wh
   - `checkpoints/Gearforge-<YYYYMMDD-HHMM>.bundle` — full git history (`git clone <bundle> Gearforge`); use the newest
   - `checkpoints/Gearforge-src-<YYYYMMDD-HHMM>.tar.gz` — working tree snapshot
   - NOTE: device_commit_files caches by file name — always use a NEW timestamped name (tools/checkpoint.sh does).
-- Cloud container (ephemeral!): `/home/claude/Gearforge` (git repo, branch `master`).
+- **GitHub (primary remote from 2026-10-15):** `https://github.com/kaizerfollen/Gearforge` (branch `main`).
+  In a new session: `add_repo kaizerfollen/Gearforge` (access push), then `git clone` it — no bundle needed.
+  Push after every milestone; Mac checkpoints stay as a second backup.
+- Cloud container (ephemeral!): `/home/claude/Gearforge` (git repo, branch `main`; remotes `origin` = GitHub, `bundle` = old bundle).
 
 ## How to build the iOS app (client)
 Open `project/App/Gearforge.xcodeproj` in Xcode 15+ → target Gearforge → Signing & Capabilities → pick your Team → choose an iPad/iPhone simulator (landscape) → Run. Details: `docs/team/platform.md`.
