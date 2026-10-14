@@ -107,6 +107,23 @@ final class GameplayTests: XCTestCase {
         XCTAssertFalse(w.player.isWalkingPath)
     }
 
+    func testIoPointsMatchPlacedEntities() {
+        let w = playerWorld()
+        for (id, dir) in [("burner_mining_drill", Direction.north), ("electric_mining_drill", .east), ("inserter", .south), ("long_handed_inserter", .west)] {
+            let proto = w.proto(id)
+            let origin = TilePos(30, 30)
+            let pts = w.ioPoints(proto: proto, origin: origin, dir: dir)
+            let e = w.place(id, 30, 30, dir)
+            if let d = w.inserters.pickupDropPoints(of: e) {
+                XCTAssertEqual(pts.input!.tile, d.pickup.tile, id); XCTAssertEqual(pts.output!.tile, d.drop.tile, id)
+            } else {
+                XCTAssertNotNil(pts.output, id)
+                XCTAssertFalse(w.entities[e].rect.contains(pts.output!.tile), "\(id) output outside its footprint")
+            }
+            w.removeEntity(e)
+        }
+    }
+
     func testChainCraftBurnerDrill() {
         let w = playerWorld()
         let drillR = w.db.recipe("burner_mining_drill")

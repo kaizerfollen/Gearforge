@@ -160,7 +160,7 @@ public enum Campaign {
             objectives: [
                 o(1, "Hand-mine 10 stone", .handMine(item: "stone", count: 10), "Press and hold on a stone patch to mine it."),
                 o(2, "Hand-mine 10 coal", .handMine(item: "coal", count: 10), "Coal is fuel for burner machines."),
-                o(3, "Build a burner drill and a furnace", .buildEntity(entity: "burner_mining_drill", count: 1), "Place the drill on iron ore and the furnace in front of it."),
+                o(3, "Place a burner drill on iron ore", .buildEntity(entity: "burner_mining_drill", count: 1), "Place the drill on iron ore and the furnace in front of it."),
                 o(4, "Smelt 50 iron plates", .produceItem(item: "iron_plate", count: 50, byMachinesOnly: false)),
                 o(5, "Craft 4 burner mining drills", .craftItem(item: "burner_mining_drill", count: 4), "Crafting automatically makes the gears and furnaces you need."),
                 o(6, "Smelt 50 copper plates", .produceItem(item: "copper_plate", count: 50, byMachinesOnly: false)),

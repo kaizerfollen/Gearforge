@@ -231,6 +231,18 @@ public final class World {
     // MARK: Spatial queries
 
     /// Footprint (w,h) of an entity prototype in a direction.
+    /// Build-overlay points for a prototype placed at `origin` facing `dir` (world coordinates, tile units):
+    /// mining drill → output point; inserter → pickup and drop points. Used by the build preview so the player
+    /// sees where items will go before placing.
+    public func ioPoints(proto: Int, origin: TilePos, dir: Direction) -> (input: Vec2?, output: Vec2?) {
+        let p = db.entities[proto]
+        let (fw, fh) = footprint(proto, dir)
+        let c = Vec2(Double(origin.x) + Double(fw) / 2, Double(origin.y) + Double(fh) / 2)
+        if let ins = p.inserter { return (c + dir.rotate(ins.pickup), c + dir.rotate(ins.drop)) }
+        if let d = p.drill { return (nil, c + dir.rotate(d.outputVector)) }
+        return (nil, nil)
+    }
+
     public func footprint(_ proto: Int, _ dir: Direction) -> (w: Int, h: Int) {
         let p = db.entities[proto]
         return dir.isHorizontal ? (p.height, p.width) : (p.width, p.height)

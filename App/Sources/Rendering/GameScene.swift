@@ -23,6 +23,9 @@ final class GameScene: SKScene {
     private let nightNode = SKSpriteNode(color: .black, size: CGSize(width: 10, height: 10))
     private let characterNode = SKSpriteNode()
     private let previewNode = SKSpriteNode()
+    /// Build preview markers: where an inserter picks up (green ring) and where a drill/inserter drops (orange dot).
+    private let ioInNode = SKShapeNode(circleOfRadius: 5)
+    private let ioOutNode = SKShapeNode(circleOfRadius: 6)
     private let selectionNode = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 32, height: 32), cornerRadius: 3)
     private let reachNode = SKShapeNode(circleOfRadius: 320)
 
@@ -87,6 +90,17 @@ final class GameScene: SKScene {
         previewNode.zPosition = 41
         previewNode.colorBlendFactor = 0.45
         overlayLayer.addChild(previewNode)
+        ioInNode.strokeColor = UIColor(red: 0.3, green: 1, blue: 0.4, alpha: 0.95)
+        ioInNode.lineWidth = 2
+        ioInNode.fillColor = .clear
+        ioInNode.zPosition = 42
+        ioOutNode.fillColor = UIColor(red: 1, green: 0.62, blue: 0.2, alpha: 0.95)
+        ioOutNode.strokeColor = UIColor(white: 0, alpha: 0.6)
+        ioOutNode.lineWidth = 1.5
+        ioOutNode.zPosition = 42
+        ioInNode.isHidden = true; ioOutNode.isHidden = true
+        overlayLayer.addChild(ioInNode)
+        overlayLayer.addChild(ioOutNode)
         selectionNode.strokeColor = UIColor(red: 1, green: 0.8, blue: 0.2, alpha: 1)
         selectionNode.lineWidth = 2
         selectionNode.fillColor = .clear
@@ -562,6 +576,10 @@ final class GameScene: SKScene {
                     || isFastReplace(w, proto, origin, c.buildDirection)
                 previewNode.color = ok ? UIColor(red: 0.3, green: 1, blue: 0.4, alpha: 1) : UIColor(red: 1, green: 0.25, blue: 0.2, alpha: 1)
                 previewNode.isHidden = false
+                let io = w.ioPoints(proto: proto, origin: origin, dir: c.buildDirection)
+                if let i = io.input { ioInNode.position = scenePoint(i.x, i.y); ioInNode.isHidden = false } else { ioInNode.isHidden = true }
+                if let o = io.output { ioOutNode.position = scenePoint(o.x, o.y); ioOutNode.isHidden = false } else { ioOutNode.isHidden = true }
+                ioInNode.setScale(S / 32); ioOutNode.setScale(S / 32)
             } else if w.db.itemPlaceTile[c.buildItem] >= 0 {
                 previewNode.texture = SpriteCatalog.shared.texture("tile_\(w.db.tiles[w.db.itemPlaceTile[c.buildItem]].id)_v0")
                 previewNode.size = CGSize(width: S, height: S)
@@ -570,6 +588,7 @@ final class GameScene: SKScene {
                 previewNode.isHidden = false
             }
         } else { previewNode.isHidden = true }
+        if previewNode.isHidden || c.mode != .build { ioInNode.isHidden = true; ioOutNode.isHidden = true }
     }
 
     private func isFastReplace(_ w: World, _ proto: Int, _ origin: TilePos, _ dir: Direction) -> Bool {

@@ -200,7 +200,42 @@ final class GameController {
     /// Top-left origin for a prototype whose footprint is centred on the touched tile.
     func buildOrigin(proto: Int, tile: TilePos) -> TilePos {
         let (w, h) = world.footprint(proto, buildDirection)
-        return TilePos(tile.x - Int32((w - 1) / 2), tile.y - Int32((h - 1) / 2))
+        let base = TilePos(tile.x - Int32((w - 1) / 2), tile.y - Int32((h - 1) / 2))
+        return snappedOrigin(proto: proto, base: base)
+    }
+
+    /// Mobile placement assist: a furnace / assembler / chest / lab dropped next to a mining drill shifts by at most
+    /// one tile so that it covers the drill's output point (a fingertip is wider than a tile). No shift when the
+    /// base position already covers an output or no shifted position is valid.
+    private func snappedOrigin(proto: Int, base: TilePos) -> TilePos {
+        let w = world
+        switch w.db.entities[proto].kind {
+        case .furnace, .assemblingMachine, .container, .lab: break
+        default: return base
+        }
+        let (fw, fh) = w.footprint(proto, buildDirection)
+        let search = TileRect(x: base.x - 4, y: base.y - 4, w: Int32(fw) + 8, h: Int32(fh) + 8)
+        var outputs: [TilePos] = []
+        for e in w.entities(in: search) {
+            let rec = w.entities[e]
+            guard rec.kind == .miningDrill, !rec.flags.contains(.ghost) else { continue }
+            if let o = w.ioPoints(proto: Int(rec.proto), origin: TilePos(rec.rect.x, rec.rect.y), dir: rec.direction).output {
+                outputs.append(o.tile)
+            }
+        }
+        if outputs.isEmpty { return base }
+        func covers(_ o: TilePos) -> Bool {
+            let r = TileRect(x: o.x, y: o.y, w: Int32(fw), h: Int32(fh))
+            return outputs.contains { r.contains($0) }
+        }
+        if covers(base) { return base }
+        var best: TilePos? = nil
+        for dy in -1...1 { for dx in -1...1 where dx != 0 || dy != 0 {
+            let o = TilePos(base.x + Int32(dx), base.y + Int32(dy))
+            guard covers(o), w.placementError(proto: proto, origin: o, direction: buildDirection) == nil else { continue }
+            if best == nil || abs(dx) + abs(dy) < abs(best!.x - base.x) + abs(best!.y - base.y) { best = o }
+        } }
+        return best ?? base
     }
 
     func selectBuildItem(_ item: Int) {
@@ -230,7 +265,10 @@ final class GameController {
         guard proto >= 0 else { return false }
         let ok = execute(.build(item: buildItem, origin: buildOrigin(proto: proto, tile: tile), direction: buildDirection), silent: silent).isOK
         if ok { haptic(.medium) }
-        if world.player.count(of: buildItem) == 0 && ok { show("Out of \(db.items[buildItem].name)") }
+        if world.player.count(of: buildItem) == 0 && ok {
+            show("Out of \(db.items[buildItem].name)")
+            cancelMode()          // nothing left to place: leave build mode (no stale red preview)
+        }
         return ok
     }
 
