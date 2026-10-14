@@ -56,6 +56,7 @@
 "Continue" = "Продолжить";
 "Controls" = "Управление";
 "Copied %@ buildings — tap to place" = "Скопировано построек: %@ — коснитесь, чтобы разместить";
+"Crafting" = "Создание";
 "Crafting speed %@" = "Скорость сборки %@";
 "Data cards" = "Карты данных";
 "Day/night lighting" = "Смена дня и ночи";
@@ -244,6 +245,7 @@
 "Unlocked by %@" = "Открыто исследованием «%@»";
 "Unlocks" = "Открывает";
 "Used in" = "Где используется";
+"View" = "Вид";
 "Waiting for ingredients" = "Ждёт ингредиентов";
 "Waiting for source" = "Ждёт источника";
 "Waiting for target" = "Ждёт получателя";

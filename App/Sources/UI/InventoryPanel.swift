@@ -8,19 +8,39 @@ struct InventoryPanel: View {
     @State private var group = 0
     @State private var craftable: [Int: Int] = [:]
     @State private var selectedRecipe: Int? = nil
+    /// Narrow screens: 1 = crafting, 0 = inventory.
+    @State private var compactTab = 1
+    private let geoPadding: CGFloat = 12
 
     private var db: PrototypeDB { controller.world.db }
 
     var body: some View {
-        PanelChrome(title: "Inventory & crafting", onClose: { controller.panel = nil }) {
-            HStack(alignment: .top, spacing: 0) {
-                inventoryGrid.frame(width: 470)
-                Divider().background(Color.white.opacity(0.1))
-                crafting
+        GeometryReader { geo in
+            PanelChrome(title: "Inventory & crafting", onClose: { controller.panel = nil }) {
+                if geo.size.width >= 980 {
+                    // iPad / large screens: both side by side
+                    HStack(alignment: .top, spacing: 0) {
+                        inventoryGrid.frame(width: 470)
+                        Divider().background(Color.white.opacity(0.1))
+                        crafting
+                    }
+                } else {
+                    // iPhone: one at a time, full width
+                    VStack(spacing: 0) {
+                        Picker("View", selection: $compactTab) {
+                            Text("Crafting").tag(1)
+                            Text("Inventory").tag(0)
+                        }
+                        .pickerStyle(.segmented)
+                        .padding(.horizontal, 14).padding(.top, 8)
+                        if compactTab == 0 { inventoryGrid } else { crafting }
+                    }
+                }
             }
+            .frame(maxWidth: 1060, maxHeight: 600)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(maxWidth: 1060, maxHeight: 600)
-        .padding(20)
+        .padding(geoPadding)
         .onAppear(perform: recompute)
         .onChange(of: controller.hud.inventoryRevision) { _, _ in recompute() }
         .onChange(of: group) { _, _ in recompute() }      // counts are computed per tab
