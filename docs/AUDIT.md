@@ -93,10 +93,17 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
 - 153 core tests green.
 
 ## UX backlog found while playtesting (S9)
-- Inventory & crafting panel is cramped on iPhone (crafting column squeezed, group tabs wrap) → needs a compact layout.
+- ~~Inventory & crafting panel is cramped on iPhone~~ → fixed S9: Crafting | Inventory tabs on narrow screens (checked on simulator).
 - Save thumbnails show black for older saves (made before thumbnails existed) — verify a fresh save shows its map.
 - Xcode warnings: Sprites.atlas split into 3 textures (fine), AudioManager "consider async alternative", "Update to recommended settings".
 
 ## QA S9 (independent agent)
 - 15 findings in this session's changes (1 high, 7 medium, 7 low), all fixed; details `docs/team/qa_s9.md`.
 - Design follow-up resolved by lead: paste clears trees/rocks **only within the character's reach** (preview red otherwise, message tells the player to walk closer). 165 tests green.
+
+## Next steps (after S9)
+1. Listen to the audio on a real iPhone/iPad (levels, loops, music) and tune `tools/audio/generate.py`; check the HAL overload log on device.
+2. Play L1→L3 end-to-end on device (balance, tutorial flow), then L4–L8 with the pre-built factories.
+3. On-device performance profile (Instruments) with a large factory; battery saver check.
+4. Remaining small items: floating joystick option, larger-text setting, Xcode "recommended settings" warning.
+5. Later phases by plan (GDD §3): blueprint library (named, saved), robots, trains, circuits, nuclear, hostiles.
