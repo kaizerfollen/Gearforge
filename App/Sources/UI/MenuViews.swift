@@ -128,9 +128,11 @@ struct NewGameView: View {
         HStack(alignment: .top, spacing: 20) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
-                    row("Seed") { TextField("Seed", text: $seedText).textFieldStyle(.roundedBorder).frame(maxWidth: 220) }
-                    row("Map size") {
-                        FitPicker("Map size", selection: $sizeIndex, options: [("Small", 0), ("Medium", 1), ("Large", 2), ("Huge", 3)])
+                    HStack(alignment: .top, spacing: 12) {
+                        row("Seed") { TextField("Seed", text: $seedText).textFieldStyle(.roundedBorder).frame(maxWidth: 160) }
+                        row("Map size") {
+                            FitPicker("Map size", selection: $sizeIndex, options: [("Small", 0), ("Medium", 1), ("Large", 2), ("Huge", 3)])
+                        }
                     }
                     row("Resource richness") { slider($richness, 0.5...3, fmt: "%.0f%%", scale: 100) }
                     row("Tech price") {
@@ -299,10 +301,14 @@ struct SettingsView: View {
                                   options: [("Grid off", "off"), ("Grid when building", "build"), ("Grid always", "always")])
                     }
                     section("Accessibility") {
-                        Picker("Colour-blind palette", selection: $model.settings.colorblindMode) {
-                            Text("Standard").tag("off"); Text("Deuteranopia").tag("deuteranopia")
-                            Text("Protanopia").tag("protanopia"); Text("Tritanopia").tag("tritanopia")
-                        }.pickerStyle(.menu)
+                        HStack {
+                            Text("Colour-blind palette")
+                            Spacer()
+                            Picker("Colour-blind palette", selection: $model.settings.colorblindMode) {
+                                Text("Standard").tag("off"); Text("Deuteranopia").tag("deuteranopia")
+                                Text("Protanopia").tag("protanopia"); Text("Tritanopia").tag("tritanopia")
+                            }.pickerStyle(.menu).tint(Theme.accent)
+                        }
                         Toggle("Reduce motion (no belt / machine animation)", isOn: $model.settings.reduceMotion)
                     }
                     section("Graphics & performance") {

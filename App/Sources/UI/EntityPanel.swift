@@ -9,6 +9,10 @@ struct EntityPanel: View {
     let handle: EntityHandle
     @State private var pickingRecipe = false
     @State private var tick = 0          // forces refresh with the HUD
+    @Environment(\.verticalSizeClass) private var vClass
+    /// iPhone in landscape: the player's inventory sits in a column on the right instead of a strip below,
+    /// so it is visible without scrolling on a ~370 pt tall screen.
+    private var compact: Bool { vClass == .compact }
 
     private var w: World { controller.world }
     private var db: PrototypeDB { w.db }
@@ -19,16 +23,34 @@ struct EntityPanel: View {
             let rec = w.entities[e]
             let p = db.entities[Int(rec.proto)]
             PanelChrome(title: db.entityName(Int(rec.proto)), onClose: { controller.panel = nil }) {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 12) {
-                        header(e, rec)
-                        content(e, rec, p)
+                if compact {
+                    HStack(alignment: .top, spacing: 0) {
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 10) {
+                                header(e, rec)
+                                content(e, rec, p)
+                            }
+                            .padding(12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .scrollBounceBehavior(.basedOnSize)
                         Divider().background(Color.white.opacity(0.1))
-                        inventoryStrip(e, rec)
+                        inventoryColumn(e, rec)
+                            .padding(10)
+                            .frame(width: 236)
                     }
-                    .padding(16)
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 12) {
+                            header(e, rec)
+                            content(e, rec, p)
+                            Divider().background(Color.white.opacity(0.1))
+                            inventoryStrip(e, rec)
+                        }
+                        .padding(16)
+                    }
+                    .scrollBounceBehavior(.basedOnSize)
                 }
-                .scrollBounceBehavior(.basedOnSize)
             }
             .panelFrame(maxWidth: 820, maxHeight: 620)
             .sheet(isPresented: $pickingRecipe) { RecipePicker(controller: controller, entity: e) { pickingRecipe = false } }
@@ -337,6 +359,23 @@ struct EntityPanel: View {
                     }
                 }
             }
+        }
+    }
+
+    private func inventoryColumn(_ e: Int32, _ rec: EntityRecord) -> some View {
+        let items = controller.world.player.inventory.contents()
+        return VStack(alignment: .leading, spacing: 6) {
+            Text("Your inventory — tap to insert").font(.caption).foregroundStyle(Theme.textDim)
+                .fixedSize(horizontal: false, vertical: true)
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 48, maximum: 48), spacing: 4)], alignment: .leading, spacing: 4) {
+                    ForEach(items, id: \.item) { it in
+                        SlotView(size: 48) { ItemIcon(item: it.item, db: db, count: it.count, size: 36) }
+                            .onTapGesture { insert(it.item, it.count, e, rec) }
+                    }
+                }
+            }
+            .scrollBounceBehavior(.basedOnSize)
         }
     }
 
