@@ -23,6 +23,7 @@ struct InventoryPanel: View {
         .padding(20)
         .onAppear(perform: recompute)
         .onChange(of: controller.hud.inventoryRevision) { _, _ in recompute() }
+        .onChange(of: group) { _, _ in recompute() }      // counts are computed per tab
     }
 
     // MARK: Inventory
