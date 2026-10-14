@@ -49,6 +49,8 @@ final class GameScene: SKScene {
     private var wireTimer: Double = 1
     private var lastSyncCenter = TilePos(Int32.max, 0)
     private var walkPhase: Double = 0
+    /// Inserter hand positions at the previous state refresh (an inserter whose hand moved is "working" for audio).
+    private var lastHandPos: [Int32: Vec2] = [:]
 
     /// Zoom factor: 1 = 32 points per tile; clamped 0.35…3 (GDD §4.2).
     var zoom: CGFloat = 1 { didSet { zoom = max(0.35, min(3, zoom)); cam.setScale(1 / zoom) } }
@@ -409,6 +411,10 @@ final class GameScene: SKScene {
 
     /// Working animation, status icons, alt-mode recipe icons (4 Hz).
     private func refreshStates(_ w: World, _ c: GameController) {
+        let vis = visibleRect(margin: 3)
+        var sounds: [(kind: AudioManager.LoopKind, x: Double, y: Double)] = []
+        var inserterSounds: [(kind: AudioManager.LoopKind, x: Double, y: Double)] = []
+        var handPos: [Int32: Vec2] = [:]
         for (id, v) in views where !v.ghost {
             let rec = w.entities[id]
             guard rec.isAlive else { continue }
@@ -421,11 +427,19 @@ final class GameScene: SKScene {
             case .lab: working = w.labs.isWorking(id); status = w.labs.status(of: id)
             case .boiler: working = w.power.isBoilerWorking(id)
             case .generator: working = w.power.powerOutput(of: id) > 1
-            case .inserter: status = w.inserters.status(of: id)
+            case .inserter:
+                status = w.inserters.status(of: id)
+                let hp = w.inserters.handPosition(of: id)
+                handPos[id] = hp
+                if let old = lastHandPos[id], abs(old.x - hp.x) + abs(old.y - hp.y) > 0.01 { working = true }
             default: continue
             }
             if rec.kind != .inserter && rec.kind != .transportBelt {
                 setWorking(v, rec, w, working)
+            }
+            if working, vis.contains(rec.center.tile), let kind = loopKind(rec, w) {
+                let p = rec.center
+                if kind == .inserter { inserterSounds.append((kind, p.x, p.y)) } else { sounds.append((kind, p.x, p.y)) }
             }
             setStatusIcon(v, status, rec)
             if c.altMode && (rec.kind == .assemblingMachine || rec.kind == .furnace) {
@@ -440,6 +454,41 @@ final class GameScene: SKScene {
                 } else { v.recipeIcon?.isHidden = true }
             } else { v.recipeIcon?.isHidden = true }
         }
+        lastHandPos = handPos
+        updateAmbience(w, sounds: sounds, inserters: inserterSounds, visible: vis)
+    }
+
+    // MARK: Ambience
+
+    private func loopKind(_ rec: EntityRecord, _ w: World) -> AudioManager.LoopKind? {
+        switch rec.kind {
+        case .assemblingMachine: return .assembler
+        case .furnace: return .furnace
+        case .miningDrill: return w.db.entities[Int(rec.proto)].id == "pumpjack" ? .pumpjack : .drill
+        case .generator: return .steamEngine
+        case .boiler: return .boiler
+        case .lab: return .lab
+        case .inserter: return .inserter
+        default: return nil
+        }
+    }
+
+    /// Feeds the working machines in view (plus the 12 nearest belt tiles carrying items, 8 nearest moving
+    /// inserters) to the audio engine, with the character as the listener.
+    private func updateAmbience(_ w: World, sounds: [(kind: AudioManager.LoopKind, x: Double, y: Double)],
+                                inserters: [(kind: AudioManager.LoopKind, x: Double, y: Double)], visible: TileRect) {
+        let me = w.player.position
+        func d2(_ x: Double, _ y: Double) -> Double { (x - me.x) * (x - me.x) + (y - me.y) * (y - me.y) }
+        var all = sounds
+        all += inserters.sorted { d2($0.x, $0.y) < d2($1.x, $1.y) }.prefix(8)
+        var beltTiles = Set<TilePos>()
+        w.belts.forEachItem(in: visible) { _, x, y in
+            beltTiles.insert(TilePos(Int32(x.rounded(.down)), Int32(y.rounded(.down))))
+        }
+        let belts = beltTiles.map { (x: Double($0.x) + 0.5, y: Double($0.y) + 0.5) }
+            .sorted { d2($0.x, $0.y) < d2($1.x, $1.y) }.prefix(12)
+        for b in belts { all.append((.belt, b.x, b.y)) }
+        AudioManager.shared.updateAmbience(listener: (me.x, me.y), sources: all)
     }
 
     private func setWorking(_ v: EntityView, _ rec: EntityRecord, _ w: World, _ working: Bool) {

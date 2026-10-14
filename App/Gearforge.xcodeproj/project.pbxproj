@@ -11,6 +11,7 @@
 		0F2C3A1A2125259513111590 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D2EF0B49EA01824F4EDA3250 /* Assets.xcassets */; };
 		1668ADE4B497B09B6777D327 /* OtherPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DFA53DD0EC14A5227833C59 /* OtherPanels.swift */; };
 		2C50E6DFBF38AD7E18BA4BB2 /* InventoryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64CB6F58F91E7BED429525FA /* InventoryPanel.swift */; };
+		2D167E87D10F28225A69D103 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = D2E1E2D3D13EE04F1E7F7CEA /* Sounds */; };
 		40DE273DCCE27B38613910CD /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 03C608477711F56CE040B909 /* Localizable.strings */; };
 		527EA2EFEF8BAEA764EDD2BD /* MapPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD51ACDAC24D83DDDF570BD9 /* MapPanel.swift */; };
 		5FF248CA80894C7D9DDC2D37 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC2785D25BAD05C8473EA863 /* GameView.swift */; };
@@ -27,6 +28,7 @@
 		D3C0943AEA9A60A55F3BEFBE /* SpriteCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 087261AC6A1D95AA2D904CF2 /* SpriteCatalog.swift */; };
 		DDE89D51F3CDB0F5D78E3DBB /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3864A4EFF5804D899D426818 /* AppModel.swift */; };
 		F1CD419557BA6D9F8E56DC89 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DBDC8AC494E38F5404F1A7 /* Localization.swift */; };
+		F88326E2CD7EB9EBE56EE994 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 821FBC5C05A97B9D89394732 /* AudioManager.swift */; };
 		FA4DC36481094E81064A2213 /* GearforgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6292FE1CDC4C36DA4A10FFEF /* GearforgeApp.swift */; };
 /* End PBXBuildFile section */
 
@@ -43,12 +45,14 @@
 		67B011019FF0374ED0CAA576 /* sprite_manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sprite_manifest.json; sourceTree = "<group>"; };
 		7551B2D381E4C1228326DB74 /* Sprites.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; path = Sprites.atlas; sourceTree = "<group>"; };
 		7A48154A452651EB67C8B10B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		821FBC5C05A97B9D89394732 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		9DFA53DD0EC14A5227833C59 /* OtherPanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtherPanels.swift; sourceTree = "<group>"; };
 		A8B7EB56E528E1A51D10A3C7 /* GameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameController.swift; sourceTree = "<group>"; };
 		B1C0A2DBCF7FB22D1EF143F8 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		BD51ACDAC24D83DDDF570BD9 /* MapPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapPanel.swift; sourceTree = "<group>"; };
 		C656D52BB0CBFCA4F652AF45 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		CCD32A38A0176DBDEBEF3FCE /* HUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDView.swift; sourceTree = "<group>"; };
+		D2E1E2D3D13EE04F1E7F7CEA /* Sounds */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Sounds; sourceTree = "<group>"; };
 		D2EF0B49EA01824F4EDA3250 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D8DBDC8AC494E38F5404F1A7 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		DC2785D25BAD05C8473EA863 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
@@ -107,6 +111,14 @@
 			path = UI;
 			sourceTree = "<group>";
 		};
+		5F9FA8183DA9ACEF40A20C25 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				821FBC5C05A97B9D89394732 /* AudioManager.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
 		88D14B4F47A8307FF14872E6 = {
 			isa = PBXGroup;
 			children = (
@@ -128,6 +140,7 @@
 			isa = PBXGroup;
 			children = (
 				D2EF0B49EA01824F4EDA3250 /* Assets.xcassets */,
+				D2E1E2D3D13EE04F1E7F7CEA /* Sounds */,
 				67B011019FF0374ED0CAA576 /* sprite_manifest.json */,
 				7551B2D381E4C1228326DB74 /* Sprites.atlas */,
 				FACEBD3821B259E64007FD60 /* GameData.strings */,
@@ -152,6 +165,7 @@
 			children = (
 				E2B9FFC9021B8717DB268A38 /* App */,
 				16C3FEB892B57738DCA31EB7 /* Art */,
+				5F9FA8183DA9ACEF40A20C25 /* Audio */,
 				B8A0DFDD9AA37A1BFE4CAA11 /* Bridge */,
 				09C85856807DCB098D20B64A /* Rendering */,
 				3BAF19BB1D96F961A5FDDF8E /* UI */,
@@ -227,6 +241,7 @@
 				0F2C3A1A2125259513111590 /* Assets.xcassets in Resources */,
 				017E511213C406D813161AD7 /* GameData.strings in Resources */,
 				40DE273DCCE27B38613910CD /* Localizable.strings in Resources */,
+				2D167E87D10F28225A69D103 /* Sounds in Resources */,
 				AE076C695F20F4C934664FF6 /* sprite_manifest.json in Resources */,
 				630B2BA91194F9944500E4A0 /* Sprites.atlas in Resources */,
 			);
@@ -240,6 +255,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DDE89D51F3CDB0F5D78E3DBB /* AppModel.swift in Sources */,
+				F88326E2CD7EB9EBE56EE994 /* AudioManager.swift in Sources */,
 				8E1CD7E08464C243DB951E91 /* EntityPanel.swift in Sources */,
 				A5E4CC0013CF3B1455C0D324 /* GameController.swift in Sources */,
 				CB7C00B739B03AA34D72A6FC /* GameScene.swift in Sources */,

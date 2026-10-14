@@ -113,6 +113,7 @@
 "Mining productivity +%@%%" = "Mining productivity +%@%%";
 "Mode" = "Mode";
 "Modules" = "Modules";
+"Music" = "Music";
 "Needs water edge" = "Needs water edge";
 "New Game" = "New Game";
 "No %@ in inventory" = "No %@ in inventory";
@@ -189,6 +190,7 @@
 "Size" = "Size";
 "Small" = "Small";
 "Sort" = "Sort";
+"Sound effects" = "Sound effects";
 "Speed %@" = "Speed %@";
 "Stack inserter hand size +%@" = "Stack inserter hand size +%@";
 "Start Freeplay" = "Start Freeplay";

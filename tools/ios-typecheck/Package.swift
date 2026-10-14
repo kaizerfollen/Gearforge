@@ -18,12 +18,13 @@ let package = Package(
         .target(name: "Combine", path: "Stubs/Combine"),
         .target(name: "SwiftUI", dependencies: ["CoreGraphics", "UIKit", "Combine"], path: "Stubs/SwiftUI"),
         .target(name: "SpriteKit", dependencies: ["CoreGraphics", "UIKit", "SwiftUI"], path: "Stubs/SpriteKit"),
+        .target(name: "AVFoundation", path: "Stubs/AVFoundation"),
 
         // Copy of App/Sources/** (refreshed by run.sh; not committed).
         .target(
             name: "AppTypecheck",
             dependencies: [
-                "CoreGraphics", "simd", "UIKit", "Combine", "SwiftUI", "SpriteKit",
+                "CoreGraphics", "simd", "UIKit", "Combine", "SwiftUI", "SpriteKit", "AVFoundation",
                 .product(name: "FactoryCore", package: "GearforgeCore"),
             ],
             path: "Sources/AppTypecheck",
@@ -33,7 +34,7 @@ let package = Package(
         // Sample usage of the stubs: a regression test for the stubs themselves (built by run.sh too).
         .target(
             name: "StubSamples",
-            dependencies: ["CoreGraphics", "simd", "UIKit", "Combine", "SwiftUI", "SpriteKit"],
+            dependencies: ["CoreGraphics", "simd", "UIKit", "Combine", "SwiftUI", "SpriteKit", "AVFoundation"],
             path: "Tests/StubSamples"
         ),
     ]

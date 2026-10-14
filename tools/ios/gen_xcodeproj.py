@@ -9,6 +9,7 @@ Inputs scanned at generation time (relative to App/):
   Sources/**.swift                 -> Sources build phase; groups mirror the folders
   Resources/*.atlas                -> folder reference, lastKnownFileType folder.skatlas (Xcode compiles a texture atlas)
   Resources/*.xcassets             -> asset catalog (Assets.xcassets + empty AppIcon set are created if missing)
+  Resources/Sounds                 -> folder reference (lastKnownFileType folder): copied as the bundle folder "Sounds"
   Resources/**.json (+ audio/font) -> Copy Bundle Resources; sub-folders become groups
   ../Core                          -> local Swift package (XCLocalSwiftPackageReference), product FactoryCore linked
 
@@ -43,6 +44,10 @@ BUNDLE_ID = "com.gearforge.game"
 DEPLOYMENT = "17.0"
 PACKAGE_PATH = "../Core"
 PACKAGE_PRODUCT = "FactoryCore"
+
+# Resource sub-folders (relative to App/) added as folder references ("blue folders") instead of groups, so the
+# bundle keeps the sub-folder: AudioManager loads Bundle.main.url(forResource:withExtension:subdirectory: "Sounds").
+FOLDER_REFERENCES = {"Resources/Sounds"}
 
 RESOURCE_TYPES = {
     ".json": "text.json",
@@ -329,6 +334,8 @@ class Model:
                 ref = self.file_ref(r, "folder.skatlas")
             elif os.path.isdir(p) and ext == ".xcassets":
                 ref = self.file_ref(r, "folder.assetcatalog")
+            elif os.path.isdir(p) and r in FOLDER_REFERENCES:
+                ref = self.file_ref(r, "folder")         # blue folder: contents copied as a sub-folder of the bundle
             elif os.path.isdir(p):
                 g = self.scan_resources(p, r)
                 if g:

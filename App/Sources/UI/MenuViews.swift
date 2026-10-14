@@ -275,6 +275,8 @@ struct SettingsView: View {
                     }
                     section("Audio") {
                         HStack { Text("Master"); Slider(value: $model.settings.masterVolume, in: 0...1) }
+                        HStack { Text("Music"); Slider(value: $model.settings.musicVolume, in: 0...1) }
+                        HStack { Text("Sound effects"); Slider(value: $model.settings.sfxVolume, in: 0...1) }
                     }
                     Text("Gearforge · original factory game · no ads, no tracking").font(.caption).foregroundStyle(Theme.textDim)
                 }
