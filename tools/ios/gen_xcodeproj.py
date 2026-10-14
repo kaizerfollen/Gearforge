@@ -280,6 +280,7 @@ class Model:
         self.objects: list[Obj] = []
         self.sources: list[Obj] = []      # PBXBuildFile
         self.resources: list[Obj] = []    # PBXBuildFile
+        self.regions: set[str] = set()    # languages found in *.lproj
 
     def add(self, o: Obj) -> Obj:
         self.objects.append(o)
@@ -322,6 +323,8 @@ class Model:
             p = os.path.join(abs_dir, n)
             r = f"{rel}/{n}"
             ext = os.path.splitext(n)[1].lower()
+            if os.path.isdir(p) and ext == ".lproj":
+                continue                                # handled below as variant groups
             if os.path.isdir(p) and ext == ".atlas":
                 ref = self.file_ref(r, "folder.skatlas")
             elif os.path.isdir(p) and ext == ".xcassets":
@@ -337,6 +340,23 @@ class Model:
                 continue
             self.build_file(ref, "Resources")
             files.append(ref)
+        # Localized resources: <lang>.lproj/<name>.strings → one PBXVariantGroup per file name.
+        lprojs = [n for n in listdir_sorted(abs_dir) if n.endswith(".lproj") and os.path.isdir(os.path.join(abs_dir, n))]
+        names = sorted({f for l in lprojs for f in os.listdir(os.path.join(abs_dir, l)) if f.endswith(".strings")})
+        for fname in names:
+            children = []
+            for l in lprojs:
+                if os.path.exists(os.path.join(abs_dir, l, fname)):
+                    lang = l[:-len(".lproj")]
+                    self.regions.add(lang)
+                    children.append(self.add(Obj(f"fileref:{rel}/{l}/{fname}", "PBXFileReference", lang,
+                                                 lastKnownFileType="text.plist.strings", name=lang,
+                                                 path=f"{l}/{fname}", sourceTree="<group>")))
+            vg = self.add(Obj(f"variant:{rel}/{fname}", "PBXVariantGroup", fname,
+                              children=[Ref(c) for c in children], name=fname, sourceTree="<group>"))
+            bf = self.add(Obj(f"buildfile:Resources:{rel}/{fname}", "PBXBuildFile", f"{fname} in Resources", fileRef=Ref(vg)))
+            self.resources.append(bf)
+            files.append(vg)
         if not groups and not files:
             return None
         name = os.path.basename(rel)
@@ -405,7 +425,7 @@ def generate() -> tuple[str, str, Obj]:
                             "TargetAttributes": {target.id: {"CreatedOnToolsVersion": "15.0"}},
                         },
                         buildConfigurationList=Ref(project_cfgs), compatibilityVersion="Xcode 14.0",
-                        developmentRegion="en", hasScannedForEncodings="0", knownRegions=["en", "Base"],
+                        developmentRegion="en", hasScannedForEncodings="0", knownRegions=["en", "Base"] + sorted(m.regions - {"en", "Base"}),
                         mainGroup=Ref(main_group), packageReferences=[Ref(pkg)],
                         productRefGroup=Ref(products_group), projectDirPath="", projectRoot="",
                         targets=[Ref(target)]))

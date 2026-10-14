@@ -117,7 +117,7 @@ final class GameController {
         for e in frameEvents {
             switch e {
             case .alert(let s): show(s)
-            case .researchFinished(let t): show("Research complete: \(world.db.technologies[t].name)"); haptic(.success)
+            case .researchFinished(let t): show(LF("Research complete: %@", world.db.techName(t))); haptic(.success)
             case .levelCompleted:
                 showVictory = true
                 onLevelCompleted?(session.objectives.stars, session.gameSeconds)
@@ -180,7 +180,7 @@ final class GameController {
         if net >= 0, let st = w.power.stats(network: net) { h.powerSatisfaction = st.demandW > 0 ? st.satisfaction : 1 }
         let cur = w.research.current
         if cur >= 0 {
-            h.researchName = w.db.technologies[cur].name
+            h.researchName = w.db.techName(cur)
             h.researchIcon = w.db.technologies[cur].id
             h.researchProgress = w.research.progress(of: cur)
         }
@@ -188,13 +188,13 @@ final class GameController {
         h.objectives = session.objectives.active.map { o in
             let s = session.objectives.states[o.id] ?? ObjectiveTracker.State()
             let detail = s.target > 1 ? "\(Int(s.current.rounded(.down)))/\(Int(s.target))" : ""
-            return ObjectiveLine(id: o.id, title: o.title, fraction: s.fraction, detail: detail)
+            return ObjectiveLine(id: o.id, title: Names.objectiveTitle(session.level?.id, o), fraction: s.fraction, detail: detail)
         }
         h.levelCompleted = session.objectives.levelCompleted
         h.stars = session.objectives.stars
         if let sh = selected, let e = w.entities.resolve(sh) {
             let rec = w.entities[e]
-            h.selectedName = w.db.entities[Int(rec.proto)].name
+            h.selectedName = w.db.entityName(Int(rec.proto))
             switch rec.kind {
             case .assemblingMachine, .furnace, .rocketSilo:
                 h.selectedStatus = w.crafting.status(of: e); h.selectedProgress = w.crafting.progress(of: e)
@@ -237,7 +237,7 @@ final class GameController {
     }
 
     func show(_ message: String) {
-        toast = message
+        toast = L(message)
         toastTimer = 2.5
     }
 
@@ -312,7 +312,7 @@ final class GameController {
         let ok = execute(.build(item: buildItem, origin: buildOrigin(proto: proto, tile: tile), direction: buildDirection), silent: silent).isOK
         if ok { haptic(.medium) }
         if world.player.count(of: buildItem) == 0 && ok {
-            show("Out of \(db.items[buildItem].name)")
+            show(LF("Out of %@", db.itemName(buildItem)))
             cancelMode()          // nothing left to place: leave build mode (no stale red preview)
         }
         return ok
@@ -387,7 +387,7 @@ final class GameController {
         let item = world.db.entityItem[Int(world.entities[e].proto)]
         guard item >= 0 else { return }
         buildDirection = world.entities[e].direction
-        if world.player.count(of: item) > 0 { selectBuildItem(item) } else { show("No \(world.db.items[item].name) in inventory") }
+        if world.player.count(of: item) > 0 { selectBuildItem(item) } else { show(LF("No %@ in inventory", world.db.itemName(item))) }
     }
 
     func undo() { if world.undo().isOK { haptic(.light) } }
@@ -417,7 +417,7 @@ final class GameController {
         do {
             try saveManager.save(session, slot: slot, displayName: name ?? slot)
             show("Saved")
-        } catch { show("Save failed: \(error)") }
+        } catch { show(LF("Save failed: %@", "\(error)")) }
     }
 
     func autosave() {

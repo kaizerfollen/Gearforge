@@ -10,6 +10,7 @@
 		0F2C3A1A2125259513111590 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D2EF0B49EA01824F4EDA3250 /* Assets.xcassets */; };
 		1668ADE4B497B09B6777D327 /* OtherPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DFA53DD0EC14A5227833C59 /* OtherPanels.swift */; };
 		2C50E6DFBF38AD7E18BA4BB2 /* InventoryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64CB6F58F91E7BED429525FA /* InventoryPanel.swift */; };
+		40DE273DCCE27B38613910CD /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 03C608477711F56CE040B909 /* Localizable.strings */; };
 		527EA2EFEF8BAEA764EDD2BD /* MapPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD51ACDAC24D83DDDF570BD9 /* MapPanel.swift */; };
 		5FF248CA80894C7D9DDC2D37 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC2785D25BAD05C8473EA863 /* GameView.swift */; };
 		62F8DC3089D1E0382B72A96F /* HUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD32A38A0176DBDEBEF3FCE /* HUDView.swift */; };
@@ -24,11 +25,13 @@
 		CB7C00B739B03AA34D72A6FC /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C0A2DBCF7FB22D1EF143F8 /* GameScene.swift */; };
 		D3C0943AEA9A60A55F3BEFBE /* SpriteCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 087261AC6A1D95AA2D904CF2 /* SpriteCatalog.swift */; };
 		DDE89D51F3CDB0F5D78E3DBB /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3864A4EFF5804D899D426818 /* AppModel.swift */; };
+		F1CD419557BA6D9F8E56DC89 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DBDC8AC494E38F5404F1A7 /* Localization.swift */; };
 		FA4DC36481094E81064A2213 /* GearforgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6292FE1CDC4C36DA4A10FFEF /* GearforgeApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		087261AC6A1D95AA2D904CF2 /* SpriteCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteCatalog.swift; sourceTree = "<group>"; };
+		1F33BAC76A9D0347E182D8D4 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		24697E0782FE1E9E1E1C82ED /* EntityPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityPanel.swift; sourceTree = "<group>"; };
 		338534F74D12A4AB190B1BB8 /* Gearforge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gearforge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3864A4EFF5804D899D426818 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
@@ -37,6 +40,7 @@
 		662CC3E2A879DEB90A9680AB /* MenuViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuViews.swift; sourceTree = "<group>"; };
 		67B011019FF0374ED0CAA576 /* sprite_manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sprite_manifest.json; sourceTree = "<group>"; };
 		7551B2D381E4C1228326DB74 /* Sprites.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; path = Sprites.atlas; sourceTree = "<group>"; };
+		7A48154A452651EB67C8B10B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		9DFA53DD0EC14A5227833C59 /* OtherPanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtherPanels.swift; sourceTree = "<group>"; };
 		A8B7EB56E528E1A51D10A3C7 /* GameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameController.swift; sourceTree = "<group>"; };
 		B1C0A2DBCF7FB22D1EF143F8 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
@@ -44,6 +48,7 @@
 		C656D52BB0CBFCA4F652AF45 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		CCD32A38A0176DBDEBEF3FCE /* HUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDView.swift; sourceTree = "<group>"; };
 		D2EF0B49EA01824F4EDA3250 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D8DBDC8AC494E38F5404F1A7 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		DC2785D25BAD05C8473EA863 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		FBFD0F262D319C53E9C49828 /* SaveCompression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveCompression.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -122,6 +127,7 @@
 				D2EF0B49EA01824F4EDA3250 /* Assets.xcassets */,
 				67B011019FF0374ED0CAA576 /* sprite_manifest.json */,
 				7551B2D381E4C1228326DB74 /* Sprites.atlas */,
+				03C608477711F56CE040B909 /* Localizable.strings */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -131,6 +137,7 @@
 			children = (
 				3864A4EFF5804D899D426818 /* AppModel.swift */,
 				6292FE1CDC4C36DA4A10FFEF /* GearforgeApp.swift */,
+				D8DBDC8AC494E38F5404F1A7 /* Localization.swift */,
 				FBFD0F262D319C53E9C49828 /* SaveCompression.swift */,
 			);
 			path = App;
@@ -193,6 +200,7 @@
 			knownRegions = (
 				en,
 				Base,
+				ru,
 			);
 			mainGroup = 88D14B4F47A8307FF14872E6;
 			packageReferences = (
@@ -213,6 +221,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0F2C3A1A2125259513111590 /* Assets.xcassets in Resources */,
+				40DE273DCCE27B38613910CD /* Localizable.strings in Resources */,
 				AE076C695F20F4C934664FF6 /* sprite_manifest.json in Resources */,
 				630B2BA91194F9944500E4A0 /* Sprites.atlas in Resources */,
 			);
@@ -233,6 +242,7 @@
 				FA4DC36481094E81064A2213 /* GearforgeApp.swift in Sources */,
 				62F8DC3089D1E0382B72A96F /* HUDView.swift in Sources */,
 				2C50E6DFBF38AD7E18BA4BB2 /* InventoryPanel.swift in Sources */,
+				F1CD419557BA6D9F8E56DC89 /* Localization.swift in Sources */,
 				527EA2EFEF8BAEA764EDD2BD /* MapPanel.swift in Sources */,
 				A957E043A96F617A5B4D0183 /* MenuViews.swift in Sources */,
 				1668ADE4B497B09B6777D327 /* OtherPanels.swift in Sources */,
@@ -243,6 +253,18 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		03C608477711F56CE040B909 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7A48154A452651EB67C8B10B /* en */,
+				1F33BAC76A9D0347E182D8D4 /* ru */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		94E103798157E586A0E57046 /* Debug */ = {

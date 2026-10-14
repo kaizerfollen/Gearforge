@@ -97,7 +97,7 @@ struct PanelChrome<Content: View>: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text(title).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(Theme.text)
+                Text(LocalizedStringKey(title)).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(Theme.text)
                 Spacer()
                 Button(action: onClose) { SpriteImage(name: "ui_close", size: 26) }.buttonStyle(.plain)
             }
@@ -121,8 +121,8 @@ struct MenuButton: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 2) {
-                Text(title).font(.system(size: 20, weight: .semibold, design: .rounded))
-                if let s = subtitle { Text(s).font(.caption).foregroundStyle(Theme.textDim) }
+                Text(LocalizedStringKey(title)).font(.system(size: 20, weight: .semibold, design: .rounded))
+                if let s = subtitle { Text(L(s)).font(.caption).foregroundStyle(Theme.textDim) }
             }
             .frame(width: 300, height: subtitle == nil ? 50 : 60)
             .foregroundStyle(enabled ? Theme.text : Theme.textDim)

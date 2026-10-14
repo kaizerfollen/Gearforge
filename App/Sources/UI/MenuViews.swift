@@ -87,14 +87,14 @@ struct NewGameView: View {
                                     }
                                 }
                             }
-                            Text(l.title).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(Theme.text)
-                            Text(l.subtitle).font(.subheadline).foregroundStyle(Theme.textDim)
-                            Text(l.teaches).font(.caption).foregroundStyle(Theme.textDim).lineLimit(4)
+                            Text(Names.levelTitle(l)).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(Theme.text)
+                            Text(Names.levelSubtitle(l)).font(.subheadline).foregroundStyle(Theme.textDim)
+                            Text(Names.levelTeaches(l)).font(.caption).foregroundStyle(Theme.textDim).lineLimit(4)
                             Spacer()
                             HStack {
-                                Text("Par \(l.parSeconds / 60) min").font(.caption2)
+                                Text(LF("Par %@ min", "\(l.parSeconds / 60)")).font(.caption2)
                                 Spacer()
-                                if let b = entry?.bestSeconds, b.isFinite { Text("Best \(Int(b) / 60) min").font(.caption2) }
+                                if let b = entry?.bestSeconds, b.isFinite { Text(LF("Best %@ min", "\(Int(b) / 60)")).font(.caption2) }
                             }.foregroundStyle(Theme.textDim)
                         }
                         .padding(16)
@@ -146,7 +146,7 @@ struct NewGameView: View {
 
     private func row<C: View>(_ title: String, @ViewBuilder _ c: () -> C) -> some View {
         HStack {
-            Text(title).frame(width: 170, alignment: .leading).foregroundStyle(Theme.textDim)
+            Text(LocalizedStringKey(title)).frame(width: 170, alignment: .leading).foregroundStyle(Theme.textDim)
             c()
         }
     }

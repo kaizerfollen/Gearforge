@@ -67,7 +67,7 @@ struct HUDView: View {
                         .background(Capsule().fill(Color.black.opacity(0.7)))
                 }
                 if !hud.buildReason.isEmpty && controller.mode == .build {
-                    Text(hud.buildReason).font(.caption.bold()).foregroundStyle(Theme.bad)
+                    Text(L(hud.buildReason)).font(.caption.bold()).foregroundStyle(Theme.bad)
                         .padding(.horizontal, 10).padding(.vertical, 4)
                         .background(Capsule().fill(Color.black.opacity(0.6)))
                 }
@@ -149,7 +149,7 @@ struct HUDView: View {
                 if !hud.selectedRecipeIcon.isEmpty { SpriteImage(name: "i_\(hud.selectedRecipeIcon)", size: 30) }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(hud.selectedName).font(.caption.bold()).foregroundStyle(Theme.text)
-                    if let s = hud.selectedStatus { Text(s.label).font(.caption2).foregroundStyle(s.color) }
+                    if let s = hud.selectedStatus { Text(L(s.label)).font(.caption2).foregroundStyle(s.color) }
                     if hud.selectedProgress > 0 { BarView(fraction: hud.selectedProgress, height: 3).frame(width: 120) }
                 }
                 Spacer()
@@ -207,7 +207,7 @@ struct HUDView: View {
                     if item >= 0 {
                         if controller.mode == .build && controller.buildItem == item { controller.cancelMode() }
                         else if count > 0 { controller.selectBuildItem(item) }
-                        else { controller.show("No \(db.items[item].name) — craft some first") }
+                        else { controller.show(LF("No %@ — craft some first", db.itemName(item))) }
                     }
                 } label: {
                     SlotView(highlighted: controller.mode == .build && controller.buildItem == item && item >= 0, size: 48) {

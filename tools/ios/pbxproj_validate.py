@@ -299,7 +299,7 @@ def validate(text: str, app_dir: str | None = None) -> list[str]:
     # group children must not be listed twice
     parent = {}
     for oid, o in objs.items():
-        if isinstance(o, dict) and o.get("isa") == "PBXGroup":
+        if isinstance(o, dict) and o.get("isa") in ("PBXGroup", "PBXVariantGroup"):
             for ch in o.get("children", []):
                 if ch in parent:
                     errors.append(f"{ch}: child of two groups ({parent[ch]}, {oid})")

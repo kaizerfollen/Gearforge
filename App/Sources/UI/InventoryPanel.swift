@@ -60,7 +60,7 @@ struct InventoryPanel: View {
             controller.selectBuildItem(item)
             controller.panel = nil
         } else {
-            controller.show(db.items[item].name)
+            controller.show(db.itemName(item))
         }
     }
 
@@ -90,7 +90,7 @@ struct InventoryPanel: View {
             HStack(spacing: 8) {
                 ForEach(Array(groups.enumerated()), id: \.offset) { i, g in
                     Button { group = i } label: {
-                        Text(g.name).font(.caption.bold())
+                        Text(Names.group(g)).font(.caption.bold())
                             .padding(.horizontal, 10).padding(.vertical, 6)
                             .foregroundStyle(group == i ? Color.black : Theme.text)
                             .background(Capsule().fill(group == i ? Theme.accent : Theme.panelLight))
@@ -138,7 +138,7 @@ struct InventoryPanel: View {
         let n = craftable[r] ?? 0
         return VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(db.recipes[r].name).font(.headline).foregroundStyle(Theme.text)
+                Text(db.recipeName(r)).font(.headline).foregroundStyle(Theme.text)
                 Spacer()
                 Text(String(format: "%.1f s", db.recipes[r].time)).font(.caption).foregroundStyle(Theme.textDim)
             }

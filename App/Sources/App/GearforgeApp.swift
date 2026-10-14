@@ -55,7 +55,7 @@ struct LoadingView: View {
     var body: some View {
         VStack(spacing: 16) {
             ProgressView()
-            Text(text).font(.headline).foregroundStyle(Theme.text)
+            Text(LocalizedStringKey(text)).font(.headline).foregroundStyle(Theme.text)
         }
     }
 }

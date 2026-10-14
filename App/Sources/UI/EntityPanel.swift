@@ -18,7 +18,7 @@ struct EntityPanel: View {
         if let e = w.entities.resolve(handle) {
             let rec = w.entities[e]
             let p = db.entities[Int(rec.proto)]
-            PanelChrome(title: p.name, onClose: { controller.panel = nil }) {
+            PanelChrome(title: db.entityName(Int(rec.proto)), onClose: { controller.panel = nil }) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
                         header(e, rec)
@@ -43,10 +43,10 @@ struct EntityPanel: View {
         HStack(spacing: 12) {
             SpriteImage(name: "i_\(db.items[max(0, db.entityItem[Int(rec.proto)])].id)", size: 44)
             VStack(alignment: .leading, spacing: 3) {
-                if let s = status { Text(s.label).font(.subheadline.bold()).foregroundStyle(s.color) }
+                if let s = status { Text(L(s.label)).font(.subheadline.bold()).foregroundStyle(s.color) }
                 if w.entities[e].powerSlot >= 0 {
                     let sat = w.power.satisfaction(of: e)
-                    Text("Power \(Int(sat * 100))%").font(.caption).foregroundStyle(Theme.powerColor(sat))
+                    Text(LF("Power %@%%", "\(Int(sat * 100))")).font(.caption).foregroundStyle(Theme.powerColor(sat))
                 }
             }
             Spacer()
@@ -100,7 +100,7 @@ struct EntityPanel: View {
                     }.buttonStyle(.plain)
                 }
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(r >= 0 ? db.recipes[r].name : "No recipe").font(.headline).foregroundStyle(Theme.text)
+                    Text(r >= 0 ? db.recipeName(r) : L("No recipe")).font(.headline).foregroundStyle(Theme.text)
                     BarView(fraction: w.crafting.progress(of: e), height: 8).frame(width: 260)
                     HStack {
                         Text(String(format: "Speed %.2f", w.crafting.craftingSpeed(of: e))).font(.caption).foregroundStyle(Theme.textDim)
@@ -131,7 +131,7 @@ struct EntityPanel: View {
         let parts = w.crafting.rocketParts(of: e)
         HStack(spacing: 12) {
             VStack(alignment: .leading) {
-                Text("Rocket parts \(parts)/100").font(.subheadline).foregroundStyle(Theme.text)
+                Text(LF("Rocket parts %@/100", "\(parts)")).font(.subheadline).foregroundStyle(Theme.text)
                 BarView(fraction: Double(parts) / 100, color: Theme.good, height: 8).frame(width: 240)
             }
             itemsRow("Payload", w.crafting.rocketInventory(of: e)?.slots.filter { !$0.isEmpty } ?? []) { _ in }
@@ -143,7 +143,7 @@ struct EntityPanel: View {
     @ViewBuilder private func drill(_ e: Int32) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             BarView(fraction: w.mining.progress(of: e), height: 8).frame(width: 260)
-            Text("Resources left: \(w.mining.remainingResources(of: e))").font(.caption).foregroundStyle(Theme.textDim)
+            Text(LF("Resources left: %@", "\(w.mining.remainingResources(of: e))")).font(.caption).foregroundStyle(Theme.textDim)
             if let f = w.mining.fuel(of: e) { fuelRow(e, f) }
             if let m = w.mining.modules(of: e) { modulesRow(e, m) }
         }
@@ -187,7 +187,7 @@ struct EntityPanel: View {
             }
             BarView(fraction: w.labs.progress(of: e), height: 8).frame(width: 260)
             let cur = w.research.current
-            Text(cur >= 0 ? "Researching \(db.technologies[cur].name)" : "No research selected").font(.caption).foregroundStyle(Theme.textDim)
+            Text(cur >= 0 ? LF("Researching %@", db.techName(cur)) : L("No research selected")).font(.caption).foregroundStyle(Theme.textDim)
             if let m = w.labs.modules(of: e) { modulesRow(e, m) }
         }
     }
@@ -201,7 +201,7 @@ struct EntityPanel: View {
 
     @ViewBuilder private func generator(_ e: Int32, _ rec: EntityRecord) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Output: \(formatWatts(w.power.powerOutput(of: e)))").foregroundStyle(Theme.text)
+            Text(LF("Output: %@", "\(formatWatts(w.power.powerOutput(of: e)))")).foregroundStyle(Theme.text)
             if rec.kind == .accumulator {
                 Text(String(format: "Charge: %.1f / 5 MJ", w.power.accumulatorCharge(of: e) / 1e6)).foregroundStyle(Theme.textDim)
             }
@@ -212,7 +212,7 @@ struct EntityPanel: View {
 
     @ViewBuilder private func inserter(_ e: Int32, _ p: EntityProto) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Hand size: \(w.inserters.handSize(of: e))").font(.caption).foregroundStyle(Theme.textDim)
+            Text(LF("Hand size: %@", "\(w.inserters.handSize(of: e))")).font(.caption).foregroundStyle(Theme.textDim)
             if let f = w.inserters.fuel(of: e) { fuelRow(e, f) }
             let filters = w.inserters.filters(of: e)
             if !filters.isEmpty {
@@ -243,8 +243,8 @@ struct EntityPanel: View {
 
     private func prioPicker(_ title: String, _ v: Int8, _ set: @escaping (Int8) -> Void) -> some View {
         HStack {
-            Text(title).frame(width: 130, alignment: .leading).foregroundStyle(Theme.textDim)
-            Picker(title, selection: Binding(get: { v }, set: { set($0) })) {
+            Text(LocalizedStringKey(title)).frame(width: 130, alignment: .leading).foregroundStyle(Theme.textDim)
+            Picker(LocalizedStringKey(title), selection: Binding(get: { v }, set: { set($0) })) {
                 Text("Left").tag(Int8(0)); Text("None").tag(Int8(-1)); Text("Right").tag(Int8(1))
             }.pickerStyle(.segmented).frame(width: 260)
         }
@@ -256,8 +256,8 @@ struct EntityPanel: View {
         let n = w.power.networkID(of: e)
         if n >= 0, let st = w.power.stats(network: n) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Electric network #\(n)").font(.subheadline.bold()).foregroundStyle(Theme.text)
-                Text("Demand \(formatWatts(st.demandW)) · Production \(formatWatts(st.productionW)) · Capacity \(formatWatts(st.capacityW))")
+                Text(LF("Electric network #%@", "\(n)")).font(.subheadline.bold()).foregroundStyle(Theme.text)
+                Text(LF("Demand %@ · Production %@ · Capacity %@", "\(formatWatts(st.demandW))", "\(formatWatts(st.productionW))", "\(formatWatts(st.capacityW))"))
                     .font(.caption).foregroundStyle(Theme.textDim)
                 BarView(fraction: st.satisfaction, color: Theme.powerColor(st.satisfaction), height: 8).frame(width: 300)
                 if st.accumulatorCapacity > 0 {
@@ -287,7 +287,7 @@ struct EntityPanel: View {
 
     private func itemsRow(_ title: String, _ stacks: [ItemStack], tap: @escaping (ItemStack) -> Void) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.caption).foregroundStyle(Theme.textDim)
+            Text(LocalizedStringKey(title)).font(.caption).foregroundStyle(Theme.textDim)
             HStack(spacing: 4) {
                 ForEach(Array(stacks.enumerated()), id: \.offset) { _, s in
                     SlotView(size: 48) { if s.count > 0 { ItemIcon(item: Int(s.item), db: db, count: Int(s.count), size: 36) } }

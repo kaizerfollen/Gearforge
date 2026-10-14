@@ -191,7 +191,7 @@ struct GameView: View {
         let alive = w.entities[cm.entity].isAlive
         return VStack(spacing: 6) {
             if alive {
-                Text(w.db.entities[Int(w.entities[cm.entity].proto)].name).font(.caption.bold()).foregroundStyle(Theme.text)
+                Text(w.db.entityName(Int(w.entities[cm.entity].proto))).font(.caption.bold()).foregroundStyle(Theme.text)
                 HStack(spacing: 8) {
                     HUDButton(glyph: "ui_inventory", size: 46) { controller.openEntity(w.entities.handle(cm.entity)); contextMenu = nil }
                     HUDButton(glyph: "ui_rotate", size: 46) { controller.execute(.rotate(entity: cm.entity, clockwise: true)); contextMenu = nil }
@@ -242,7 +242,7 @@ struct VictoryView: View {
                             Text("★").font(.system(size: 44)).foregroundStyle(i < controller.hud.stars ? Theme.accent : Color.white.opacity(0.2))
                         }
                     }
-                    Text("Time \(controller.hud.gameTime)").foregroundStyle(Theme.text)
+                    Text(LF("Time %@", "\(controller.hud.gameTime)")).foregroundStyle(Theme.text)
                 }
                 HStack(spacing: 12) {
                     MenuButton(title: "Keep playing") { controller.showVictory = false }

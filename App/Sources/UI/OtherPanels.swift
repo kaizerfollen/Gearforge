@@ -48,7 +48,7 @@ struct ResearchPanel: View {
                                     }
                                     .frame(width: 64, height: 64)
                                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(selected == t ? Theme.accent : Color.clear, lineWidth: 2))
-                                    Text(db.technologies[t].name).font(.system(size: 9)).foregroundStyle(Theme.textDim).lineLimit(2)
+                                    Text(db.techName(t)).font(.system(size: 9)).foregroundStyle(Theme.textDim).lineLimit(2)
                                         .multilineTextAlignment(.center).frame(width: 72, height: 24)
                                 }
                                 .onTapGesture { selected = t }
@@ -75,7 +75,7 @@ struct ResearchPanel: View {
                 HStack {
                     Image(uiImage: SpriteCatalog.shared.techIcon(t, db: db)).resizable().frame(width: 52, height: 52)
                     VStack(alignment: .leading) {
-                        Text(tp.name + (tp.maxLevel != nil && tp.maxLevel != 1 ? " \(r.level(of: t))" : "")).font(.headline).foregroundStyle(Theme.text)
+                        Text(db.techName(t) + (tp.maxLevel != nil && tp.maxLevel != 1 ? " \(r.level(of: t))" : "")).font(.headline).foregroundStyle(Theme.text)
                         Text(r.isResearched(t) ? "Researched" : (r.isAvailable(t) ? "Available" : "Locked")).font(.caption)
                             .foregroundStyle(r.isResearched(t) ? Theme.good : (r.isAvailable(t) ? Theme.accent : Theme.textDim))
                     }
@@ -104,7 +104,7 @@ struct ResearchPanel: View {
                     }
                 }
                 ForEach(Array(tp.effects.filter { $0.type != "unlock-recipe" }.enumerated()), id: \.offset) { _, ef in
-                    Text("• \(effectText(ef))").font(.caption).foregroundStyle(Theme.text)
+                    Text(verbatim: "• \(effectText(ef))").font(.caption).foregroundStyle(Theme.text)
                 }
                 Spacer()
                 if !r.isResearched(t) || tp.isInfinite {
@@ -123,12 +123,12 @@ struct ResearchPanel: View {
     private func effectText(_ e: TechEffect) -> String {
         let m = e.modifier ?? 0
         switch e.type {
-        case "mining-drill-productivity-bonus": return String(format: "Mining productivity +%.0f%%", m * 100)
-        case "laboratory-speed": return String(format: "Lab speed +%.0f%%", m * 100)
-        case "inserter-stack-size-bonus": return "Inserter hand size +\(Int(m))"
-        case "stack-inserter-capacity-bonus": return "Stack inserter hand size +\(Int(m))"
-        case "character-mining-speed": return String(format: "Hand mining speed +%.0f%%", m * 100)
-        case "character-inventory-slots-bonus": return "Inventory +\(Int(m)) slots"
+        case "mining-drill-productivity-bonus": return LF("Mining productivity +%@%%", "\(Int((m * 100).rounded()))")
+        case "laboratory-speed": return LF("Lab speed +%@%%", "\(Int((m * 100).rounded()))")
+        case "inserter-stack-size-bonus": return LF("Inserter hand size +%@", "\(Int(m))")
+        case "stack-inserter-capacity-bonus": return LF("Stack inserter hand size +%@", "\(Int(m))")
+        case "character-mining-speed": return LF("Hand mining speed +%@%%", "\(Int((m * 100).rounded()))")
+        case "character-inventory-slots-bonus": return LF("Inventory +%@ slots", "\(Int(m))")
         default: return e.type.replacingOccurrences(of: "-", with: " ")
         }
     }
@@ -154,10 +154,10 @@ struct StatsPanel: View {
                     column("Produced / min", produced, db)
                     column("Consumed / min", consumed, db)
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Rockets launched: \(st.rocketsLaunched)").foregroundStyle(Theme.text)
+                        Text(LF("Rockets launched: %@", "\(st.rocketsLaunched)")).foregroundStyle(Theme.text)
                         let pol = controller.world.pollution!
                         Text("Pollution").font(.caption).foregroundStyle(Theme.textDim).padding(.top, 6)
-                        Text("\(Int(pol.perMinute.rounded())) / min · total \(Int(pol.total.rounded()))").foregroundStyle(Theme.text)
+                        Text(LF("%@ / min · total %@", "\(Int(pol.perMinute.rounded()))", "\(Int(pol.total.rounded()))")).foregroundStyle(Theme.text)
                         ForEach(pol.bySource.sorted { $0.value > $1.value }.prefix(4), id: \.key) { kv in
                             HStack(spacing: 6) {
                                 SpriteImage(name: "i_\(db.items[max(0, db.entityItem[kv.key])].id)", size: 18)
@@ -181,7 +181,7 @@ struct StatsPanel: View {
     private func column(_ title: String, _ rows: [StatEntry], _ db: PrototypeDB) -> some View {
         let maxV = rows.first?.perMinute ?? 1
         return VStack(alignment: .leading, spacing: 5) {
-            Text(title).font(.caption.bold()).foregroundStyle(Theme.accent)
+            Text(LocalizedStringKey(title)).font(.caption.bold()).foregroundStyle(Theme.accent)
             ForEach(Array(rows.enumerated()), id: \.offset) { _, r in
                 HStack(spacing: 6) {
                     switch r.subject {
@@ -214,7 +214,7 @@ struct PauseMenu: View {
             ScrollView {
             VStack(spacing: 10) {
                 Text("Paused").font(.system(size: 28, weight: .heavy, design: .rounded)).foregroundStyle(Theme.accent)
-                if let l = controller.session.level { Text("\(l.id) · \(l.title)").foregroundStyle(Theme.textDim) }
+                if let l = controller.session.level { Text(verbatim: "\(l.id) · \(Names.levelTitle(l))").foregroundStyle(Theme.textDim) }
                 MenuButton(title: "Resume") { controller.panel = nil }
                 HStack {
                     TextField("Save name", text: $saveName).textFieldStyle(.roundedBorder).frame(width: 190)
