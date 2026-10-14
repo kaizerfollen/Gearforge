@@ -186,6 +186,7 @@ struct LoadGameView: View {
                 VStack(spacing: 8) {
                     ForEach(model.saves) { m in
                         HStack(spacing: 14) {
+                            SaveThumbnail(model: model, slot: m.slot)
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(L(m.displayName)).font(.headline).foregroundStyle(Theme.text)
                                 Text(describe(m)).font(.caption).foregroundStyle(Theme.textDim)
@@ -274,6 +275,25 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(L(title).uppercased()).font(.caption.bold()).foregroundStyle(Theme.accent)
             c()
+        }
+    }
+}
+
+
+/// Save-slot thumbnail (map snapshot stored in the save's THMB section), loaded lazily per row.
+struct SaveThumbnail: View {
+    let model: AppModel
+    let slot: String
+    @State private var image: UIImage? = nil
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(0.5))
+            if let img = image { Image(uiImage: img).interpolation(.none).resizable().clipShape(RoundedRectangle(cornerRadius: 6)) }
+        }
+        .frame(width: 96, height: 54)
+        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.white.opacity(0.15), lineWidth: 1))
+        .onAppear {
+            if image == nil, let png = model.saveManager.thumbnail(slot: slot) { image = UIImage(data: png) }
         }
     }
 }

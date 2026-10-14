@@ -254,4 +254,18 @@ final class ProgressionTests: XCTestCase {
         XCTAssertEqual(s?.tutorialHints, true, "new key gets its default")
         XCTAssertNil(GameSettings.decodeTolerant(Data("nope".utf8)))
     }
+
+    func testSaveThumbnailRoundTrip() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("gf-thumb-\(UUID().uuidString)")
+        let sm = SaveManager(directory: dir)
+        let s = GameSession.newCampaign(level: Campaign.levels[0])
+        let png = Data([0x89, 0x50, 0x4E, 0x47, 1, 2, 3, 4])
+        try sm.save(s, slot: "t1", displayName: "T", thumbnailPNG: png)
+        try sm.autosave(s, slots: 2, thumbnailPNG: png)
+        XCTAssertEqual(sm.thumbnail(slot: "t1"), png)
+        XCTAssertEqual(sm.thumbnail(slot: "autosave_1"), png)
+        XCTAssertNil(sm.thumbnail(slot: "missing"))
+        XCTAssertNil(sm.listSaves().first { $0.slot == "t1" }?.thumbnailPNG, "list without thumbnails stays light")
+        try? FileManager.default.removeItem(at: dir)
+    }
 }

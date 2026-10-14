@@ -168,6 +168,25 @@ final class GameController {
         panel = .map
     }
 
+    /// Save thumbnail: 16:9 map snapshot around the character (96×54 tiles, 2 px per tile), PNG. ~1 ms.
+    func thumbnailPNG() -> Data? {
+        let w = 96, h = 54
+        let c = world.player.position.tile
+        let rgba = world.mapRGBA(x0: c.x - Int32(w / 2), y0: c.y - Int32(h / 2), w: w, h: h)
+        var big = [UInt8](repeating: 0, count: w * h * 16)          // 2× nearest-neighbour upscale
+        for y in 0..<(h * 2) { for x in 0..<(w * 2) {
+            let s = ((y / 2) * w + x / 2) * 4, d = (y * w * 2 + x) * 4
+            big[d] = rgba[s]; big[d + 1] = rgba[s + 1]; big[d + 2] = rgba[s + 2]; big[d + 3] = 255
+        } }
+        // Character marker.
+        for dy in -2...2 { for dx in -2...2 where dx * dx + dy * dy <= 5 {
+            let x = w + dx, y = h + dy, d = (y * w * 2 + x) * 4
+            big[d] = 255; big[d + 1] = 160; big[d + 2] = 60
+        } }
+        guard let img = Self.image(rgba: big, w: w * 2, h: h * 2) else { return nil }
+        return UIImage(cgImage: img).pngData()
+    }
+
     static func image(rgba: [UInt8], w: Int, h: Int) -> CGImage? {
         guard w > 0, h > 0, let provider = CGDataProvider(data: Data(rgba) as CFData) else { return nil }
         return CGImage(width: w, height: h, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: w * 4,
@@ -424,19 +443,19 @@ final class GameController {
 
     func save(slot: String, name: String? = nil) {
         do {
-            try saveManager.save(session, slot: slot, displayName: name ?? slot)
+            try saveManager.save(session, slot: slot, displayName: name ?? slot, thumbnailPNG: thumbnailPNG())
             show("Saved")
         } catch { show(LF("Save failed: %@", "\(error)")) }
     }
 
     func autosave() {
-        do { try saveManager.autosave(session, slots: settings.autosaveSlots); show("Autosaved") }
+        do { try saveManager.autosave(session, slots: settings.autosaveSlots, thumbnailPNG: thumbnailPNG()); show("Autosaved") }
         catch { session.didAutosave(); show("Autosave failed") }
     }
 
     /// Background save — must be fast (called when the app leaves the foreground).
     func backgroundSave() {
-        _ = try? saveManager.save(session, slot: SaveManager.backgroundSlot, displayName: "Last session")
+        _ = try? saveManager.save(session, slot: SaveManager.backgroundSlot, displayName: "Last session", thumbnailPNG: thumbnailPNG())
     }
 
     // MARK: Haptics

@@ -40,6 +40,11 @@ public final class SaveManager {
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     }
 
+    /// Thumbnail PNG of a save slot (nil if none) — reads only the file header sections.
+    public func thumbnail(slot: String) -> Data? {
+        (try? SaveFile.readMetadata(at: url(for: slot), slot: slot, includeThumbnail: true))?.thumbnailPNG
+    }
+
     public func url(for slot: String) -> URL { directory.appendingPathComponent(slot).appendingPathExtension(Self.fileExtension) }
 
     /// Valid manual slot name: non-empty, no path separators, ≤ 64 characters.
@@ -87,9 +92,9 @@ public final class SaveManager {
 
     /// Rotating autosave: writes to the first missing `autosave_k` (k = 1...slots) or the oldest one.
     @discardableResult
-    public func autosave(_ session: GameSession, slots: Int) throws -> SaveMetadata {
+    public func autosave(_ session: GameSession, slots: Int, thumbnailPNG: Data? = nil) throws -> SaveMetadata {
         let slot = nextAutosaveSlot(slots: slots)
-        let m = try save(session, slot: slot, displayName: "Autosave")
+        let m = try save(session, slot: slot, displayName: "Autosave", thumbnailPNG: thumbnailPNG)
         session.didAutosave()
         return m
     }
