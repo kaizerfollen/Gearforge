@@ -22,6 +22,8 @@ struct GameView: View {
     @State private var pasteArmed = false
     /// Build mode with "confirm placement": the touch started on the tile already previewed.
     @State private var buildArmed = false
+    /// A pinch happened during this touch (copy mode must not capture the area the first finger dragged over).
+    @State private var pinching = false
 
     /// Holds a generation-checked handle: the entity may be removed (undo, mining…) while the menu is open (QA A1).
     struct ContextMenuState: Equatable { var handle: EntityHandle; var point: CGPoint }
@@ -58,6 +60,7 @@ struct GameView: View {
                     .onChanged { v in
                         if !holding { model.scene?.zoom = zoomStart * v.magnification }
                         dragging = true
+                        pinching = true
                     }
                     .onEnded { _ in zoomStart = model.scene?.zoom ?? 1 }
             )
@@ -74,6 +77,7 @@ struct GameView: View {
             touchStartTime = Date()
             dragging = false
             holding = false
+            pinching = false
             lastDrag = v.startLocation
             lastTile = tile(v.startLocation)
             touchID += 1
@@ -112,6 +116,7 @@ struct GameView: View {
         case .remove:
             if dragging, lastTile != t { controller.remove(at: t, silent: true) }
         case .copy:
+            if pinching { break }
             if controller.copyStart == nil { controller.copyStart = lastTile ?? t }
             controller.copyEnd = t
         case .paste:
@@ -125,6 +130,7 @@ struct GameView: View {
         defer { touchStart = nil; dragging = false; lastTile = nil; touchID += 1 }
         if holding { holding = false; controller.stopMining(); return }
         if controller.mode == .copy {
+            if pinching { controller.copyStart = nil; controller.copyEnd = nil; return }   // zoomed, didn't copy
             if let t = tile(v.location) {
                 if controller.copyStart == nil { controller.copyStart = t }
                 controller.copyEnd = t
