@@ -26,7 +26,7 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
 | Campaign L1–L8 data, objectives (all kinds), stars, progress store | ✅ data / 🟡 balance | ProgressionTests (validity, L1 objectives) |
 | Refinery output box order (heavy left, light middle, petroleum right) | ✅ | CoreGapTests |
 | Items on the ground: spill when inventory full, inserter/drill drop & pickup, auto-loot, build-over pickup | ✅ | CoreGapTests |
-| Copy/paste area: blueprints with settings, rotation, ghost settings applied on build, saved | ✅ core / ❌ UI | CoreGapTests |
+| Copy/paste area: blueprints with settings, rotation, ghost settings applied on build, saved; paste clears trees/rocks | ✅ core + UI (Copy/Paste buttons, drag rect, preview, rotate, 2nd tap places; checked on simulator S9) | CoreGapTests |
 | Charting / fog of war: character radius, radar nearby + sector scanning, map colours, bulk mapRGBA | ✅ (minimap + map screen) | CoreGapTests |
 | Pollution statistic (per minute, total, by source) | ✅ (stats panel) | CoreGapTests |
 | Direct machine→machine fluid links (no pipe) | ✅ | CoreGapTests |
@@ -53,7 +53,7 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
 | Map screen / minimap | ✅ minimap (tap → map), map: pinch/pan, tap to walk |
 | Tutorial hint bubbles | ✅ current objective's hint, dismissible, setting "Tutorial hints" |
 | Codex (item/recipe browser) | ❌ |
-| Save thumbnails, rename in UI | ✅ thumbnails (map snapshot) in Load game; ❌ rename UI |
+| Save thumbnails, rename in UI | ✅ thumbnails (map snapshot) in Load game; ✅ rename (metadata rewritten, checked on simulator S9) |
 | Settings wired: autosave, haptics, alt-mode, reach circle, day/night, FPS, battery saver | 🟡 |
 | Settings NOT wired: UI scale, colorblind palettes, larger text, joystick options, volume | ❌ (left-handed ✅ S8; settings decode tolerantly across versions) |
 | MFi game controller | ❌ (stretch) |
@@ -84,3 +84,10 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
 5. Audio: SFX + ambience + music (original, generated/procedural or licensed CC0).
 6. Designer pass: L5–L8 pre-built factories, campaign balance, refinery output order.
 7. On-device performance profiling (Instruments), render culling tuning, battery.
+
+
+## S9 additions (2026-10-14 evening)
+- Ground items now **rendered** (were invisible) and picked up by tapping the tile (walks there if out of reach).
+- HUD respects the safe area (buttons were under the Dynamic Island on iPhone); compact 2-column mode grid.
+- Copy/paste area UI, save rename UI — both verified in the iPhone 17 Pro simulator.
+- 153 core tests green.

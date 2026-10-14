@@ -90,7 +90,9 @@ stage it from the Mac `checkpoints/` → `git clone <bundle> /home/claude/Gearfo
   tools/l10n), **independent QA agent** (15 core bugs found → all fixed, 152 tests green), tutorial hint bubbles,
   left-handed layout, save thumbnails, tolerant settings decoding. Mac went offline ~12:50 (screen locked).
 - **S9 (2026-10-14 evening):** new container (repo + Swift gone). Restored repo from bundle 1321, installed Swift
-  from Ubuntu questing (see Toolchain), 152 tests + app typecheck green; synced checkpoint 1321 to the Mac.
+  from Ubuntu questing (see Toolchain), 152 tests + app typecheck green; synced checkpoint 1321 to the Mac. Then: ground items rendering + tap pickup,
+  copy/paste area UI (paste clears trees), save rename, HUD safe-area fix — built & checked in Xcode simulator (153 tests).
+  NOTE: on the Mac `rm` is not permitted this session → unpack each patch into a new `.p<TS>` dir (hidden, harmless).
 
 ## Honest audit
 See **docs/AUDIT.md** (what is done / partial / missing, saves, agents, priority backlog). Keep it updated.
