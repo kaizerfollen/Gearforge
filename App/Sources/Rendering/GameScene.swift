@@ -517,7 +517,12 @@ final class GameScene: SKScene {
             } else { v.recipeIcon?.isHidden = true }
         }
         lastHandPos = handPos
-        updateAmbience(w, sounds: sounds, inserters: inserterSounds, visible: vis)
+        if c.panel == .pause {
+            // simulation paused: machines keep their last "working" state, so fade the factory out explicitly
+            AudioManager.shared.updateAmbience(listener: (w.player.position.x, w.player.position.y), sources: [])
+        } else {
+            updateAmbience(w, sounds: sounds, inserters: inserterSounds, visible: vis)
+        }
     }
 
     // MARK: Ambience
