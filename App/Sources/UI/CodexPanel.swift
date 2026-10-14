@@ -45,7 +45,8 @@ struct CodexPanel: View {
     }
 
     private var browser: some View {
-        let cols = Array(repeating: GridItem(.fixed(44), spacing: 4), count: 9)
+        // 8 × 44 + 7 × 4 = 380 pt fits the 430 pt browser minus its 2 × 12 pt padding (9 columns overflowed by 22 pt)
+        let cols = Array(repeating: GridItem(.fixed(44), spacing: 4), count: 8)
         return VStack(alignment: .leading, spacing: 8) {
             TextField("Search", text: $query).textFieldStyle(.roundedBorder)
             if query.isEmpty {

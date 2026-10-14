@@ -36,6 +36,10 @@ final class GameScene: SKScene {
     private let gridNode = SKShapeNode()
     private var gridKey = ""
     private var pastePool: [SKSpriteNode] = []
+    /// Paste preview cache: recomputed when the origin/rotation/clipboard changes or every 15 ticks (not per frame).
+    private var pasteKey: Int? = nil
+    private var pasteTick: UInt64 = 0
+    private var groundZoom: CGFloat = 0
     /// Items lying on the ground (re-synced when GroundItems.revision or the view changes).
     private var groundPool: [SKSpriteNode] = []
     private var groundRevision = -1
@@ -614,8 +618,9 @@ final class GameScene: SKScene {
     private func updateGroundItems(_ w: World) {
         let center = cameraCenter.tile
         let moved = abs(center.x - groundCenter.x) > 2 || abs(center.y - groundCenter.y) > 2
+            || abs(zoom - groundZoom) > 0.05            // zooming out reveals tiles outside the last synced rect
         guard w.ground.revision != groundRevision || moved else { return }
-        groundRevision = w.ground.revision; groundCenter = center
+        groundRevision = w.ground.revision; groundCenter = center; groundZoom = zoom
         var used = 0
         let isz = CGSize(width: S * 0.4, height: S * 0.4)
         let offs: [(Double, Double)] = [(0.3, 0.3), (0.7, 0.35), (0.35, 0.72), (0.7, 0.7)]
@@ -648,28 +653,37 @@ final class GameScene: SKScene {
             copyRectNode.isHidden = false
         } else { copyRectNode.isHidden = true }
 
+        guard c.mode == .paste, let t = c.previewTile, let bp = c.pasteBlueprint, let o = c.pasteOrigin(t) else {
+            pasteKey = nil
+            var i = 0
+            while i < pastePool.count && !pastePool[i].isHidden { pastePool[i].isHidden = true; i += 1 }
+            return
+        }
+        var h = Hasher()
+        h.combine(o.x); h.combine(o.y); h.combine(c.pasteRotation); h.combine(c.clipboardVersion); h.combine(Theme.colorblind)
+        let key = h.finalize()
+        guard key != pasteKey || w.tick &- pasteTick >= 15 || w.tick < pasteTick else { return }
+        pasteKey = key; pasteTick = w.tick
         var used = 0
-        if c.mode == .paste, let t = c.previewTile, let bp = c.pasteBlueprint, let o = c.pasteOrigin(t) {
-            for e in w.blueprintPreview(bp, at: o) {
-                let p = w.db.entities[e.proto]
-                let d = SpriteNames.dirSuffix(e.direction)
-                var names = ["e_\(p.id)_\(d)", "e_\(p.id)"]
-                if p.kind == .transportBelt { names.insert("belt_\(p.id)_straight_\(d)_f0", at: 0) }
-                if p.kind == .inserter { names.insert("ins_\(p.id)_base", at: 0) }
-                if p.kind == .pipe { names.insert("pipe_0", at: 0) }
-                let n: SKSpriteNode
-                if used < pastePool.count { n = pastePool[used] } else {
-                    n = SKSpriteNode(); n.alpha = 0.55; n.colorBlendFactor = 0.5; n.zPosition = 44
-                    overlayLayer.addChild(n); pastePool.append(n)
-                }
-                let (fw, fh) = w.footprint(e.proto, e.direction)
-                n.texture = SpriteCatalog.shared.texture(firstOf: names)
-                n.size = CGSize(width: CGFloat(fw) * S, height: CGFloat(fh) * S)
-                n.position = scenePoint(Double(e.origin.x) + Double(fw) / 2, Double(e.origin.y) + Double(fh) / 2)
-                n.color = e.ok ? (Theme.colorblind == "off" ? UIColor(red: 0.35, green: 0.8, blue: 1, alpha: 1) : Theme.goodUI) : Theme.badUI
-                n.isHidden = false
-                used += 1
+        for e in w.blueprintPreview(bp, at: o) {
+            let p = w.db.entities[e.proto]
+            let d = SpriteNames.dirSuffix(e.direction)
+            var names = ["e_\(p.id)_\(d)", "e_\(p.id)"]
+            if p.kind == .transportBelt { names.insert("belt_\(p.id)_straight_\(d)_f0", at: 0) }
+            if p.kind == .inserter { names.insert("ins_\(p.id)_base", at: 0) }
+            if p.kind == .pipe { names.insert("pipe_0", at: 0) }
+            let n: SKSpriteNode
+            if used < pastePool.count { n = pastePool[used] } else {
+                n = SKSpriteNode(); n.alpha = 0.55; n.colorBlendFactor = 0.5; n.zPosition = 44
+                overlayLayer.addChild(n); pastePool.append(n)
             }
+            let (fw, fh) = w.footprint(e.proto, e.direction)
+            n.texture = SpriteCatalog.shared.texture(firstOf: names)
+            n.size = CGSize(width: CGFloat(fw) * S, height: CGFloat(fh) * S)
+            n.position = scenePoint(Double(e.origin.x) + Double(fw) / 2, Double(e.origin.y) + Double(fh) / 2)
+            n.color = e.ok ? (Theme.colorblind == "off" ? UIColor(red: 0.35, green: 0.8, blue: 1, alpha: 1) : Theme.goodUI) : Theme.badUI
+            n.isHidden = false
+            used += 1
         }
         var i = used
         while i < pastePool.count && !pastePool[i].isHidden { pastePool[i].isHidden = true; i += 1 }
@@ -764,6 +778,8 @@ final class GameScene: SKScene {
                 previewNode.position = scenePoint(Double(t.x) + 0.5, Double(t.y) + 0.5)
                 previewNode.color = Theme.goodUI
                 previewNode.isHidden = false
+                // floor tiles have no validity/IO markers: don't leave the last entity preview's ones behind
+                validityLabel.isHidden = true; ioInNode.isHidden = true; ioOutNode.isHidden = true
             }
         } else { previewNode.isHidden = true }
         if previewNode.isHidden || c.mode != .build { validityLabel.isHidden = true }

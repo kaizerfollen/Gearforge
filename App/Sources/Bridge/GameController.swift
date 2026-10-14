@@ -90,8 +90,11 @@ final class GameController {
 
     var mode: InteractionMode = .explore
     /// Copy/paste area (GDD §4.6): last copied area, its rotation (quarter turns) and the copy-rect being dragged.
-    var clipboard: Blueprint? = nil
-    var pasteRotation = 0
+    var clipboard: Blueprint? = nil { didSet { clipboardVersion &+= 1; rotatedClipboard = nil } }
+    var pasteRotation = 0 { didSet { rotatedClipboard = nil } }
+    /// Bumped whenever the clipboard changes (the renderer caches its paste preview by it).
+    @ObservationIgnored private(set) var clipboardVersion = 0
+    @ObservationIgnored private var rotatedClipboard: Blueprint? = nil
     @ObservationIgnored var copyStart: TilePos? = nil
     @ObservationIgnored var copyEnd: TilePos? = nil
     var buildItem: Int = -1
@@ -396,6 +399,7 @@ final class GameController {
     func selectBuildItem(_ item: Int) {
         guard item >= 0, world.db.itemPlaceResult[item] >= 0 || world.db.itemPlaceTile[item] >= 0 else { return }
         buildItem = item
+        if mode != .build { previewTile = nil }    // a stale tile from paste/remove would arm "confirm placement"
         mode = .build
         addToQuickbar(item)
         haptic(.light)
@@ -435,7 +439,12 @@ final class GameController {
     }
 
     /// The clipboard with the current rotation applied.
-    var pasteBlueprint: Blueprint? { clipboard.map { $0.rotated(pasteRotation, db: world.db) } }
+    /// Cached: the renderer asks for it every frame in paste mode.
+    var pasteBlueprint: Blueprint? {
+        if let r = rotatedClipboard { return r }
+        rotatedClipboard = clipboard.map { $0.rotated(pasteRotation, db: world.db) }
+        return rotatedClipboard
+    }
 
     /// Top-left of the paste so the blueprint is centred on the touched tile.
     func pasteOrigin(_ tile: TilePos) -> TilePos? {
