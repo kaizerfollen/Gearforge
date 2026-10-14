@@ -49,13 +49,13 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
 | Lifecycle: background save, crash recovery offer, autosave | ✅ autosave + "Last exit" continue verified |
 | Playtest fixes (S8) | far starting ores; hold-to-mine reach; imprecise 2×2 placement (snap onto drill output + IO markers); stale red preview after last item; pause menu overflow; entity panel overflow; Production tab showed 0 craftable; map screen offset; lock icon over text |
 | **Localization** (GDD §10) | ✅ English + **Russian**: 187 UI keys + 817 game-content keys (items, entities, recipes, techs, fluids, levels, objectives), 100 % coverage; `tools/l10n/build.py --strict`; language follows iOS settings. 🟡 not yet seen on device |
-| Audio (music, SFX, ambience) | ❌ no sound assets, no audio code |
+| Audio (music, SFX, ambience) | ✅ 31 procedural sounds (tools/audio), AudioManager (SFX pool, spatial machine loops, music), volume sliders — 🟡 not listened to on a device yet; simulator logs HAL 'overload' (check on device) |
 | Map screen / minimap | ✅ minimap (tap → map), map: pinch/pan, tap to walk |
 | Tutorial hint bubbles | ✅ current objective's hint, dismissible, setting "Tutorial hints" |
-| Codex (item/recipe browser) | ❌ |
+| Codex (item/recipe browser) | ✅ search, groups, made by / used in, machines, tech, building stats (S9, checked on simulator) |
 | Save thumbnails, rename in UI | ✅ thumbnails (map snapshot) in Load game; ✅ rename (metadata rewritten, checked on simulator S9) |
 | Settings wired: autosave, haptics, alt-mode, reach circle, day/night, FPS, battery saver | 🟡 |
-| Settings NOT wired: UI scale, colorblind palettes, larger text, joystick options, volume | ❌ (left-handed ✅ S8; settings decode tolerantly across versions) |
+| Settings wired S9: UI scale (HUD), colour-blind palettes (+✓/✕ ghost glyph), reduce motion, grid, long-press walk, confirm placement, auto-build ghosts, music/SFX volume | ✅ — ❌ still: floating joystick option, larger text |
 | MFi game controller | ❌ (stretch) |
 
 ## 3. Art
@@ -91,3 +91,8 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
 - HUD respects the safe area (buttons were under the Dynamic Island on iPhone); compact 2-column mode grid.
 - Copy/paste area UI, save rename UI — both verified in the iPhone 17 Pro simulator.
 - 153 core tests green.
+
+## UX backlog found while playtesting (S9)
+- Inventory & crafting panel is cramped on iPhone (crafting column squeezed, group tabs wrap) → needs a compact layout.
+- Save thumbnails show black for older saves (made before thumbnails existed) — verify a fresh save shows its map.
+- Xcode warnings: Sprites.atlas split into 3 textures (fine), AudioManager "consider async alternative", "Update to recommended settings".
