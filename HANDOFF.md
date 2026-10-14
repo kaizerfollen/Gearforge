@@ -69,7 +69,10 @@ Typecheck on Linux: `tools/ios-typecheck/run.sh --app-only`. Regenerate project 
   Hand playtest of L1 through computer use; fixed: tutorial ore layout (L1/L2 patches near spawn, layout saved in
   WorldSettings), walk-and-mine + long-press walk, near-miss ore snap, build assist (IO markers, snap onto drill output,
   auto-exit build mode), pause/entity panel scrolling, craftable counts per tab, campaign lock icon; new minimap + map
-  screen (tap to walk), pollution in stats; core 122 tests green.
+  screen (tap to walk), pollution in stats. Then: **Russian localization** (l10n agent: 1000+ keys, tooling
+  tools/l10n), **independent QA agent** (15 core bugs found → all fixed, 152 tests green), tutorial hint bubbles,
+  left-handed layout, save thumbnails, tolerant settings decoding. Mac went offline ~12:50 (screen locked):
+  last Mac sync = patch-20261014-124930 (localization tables); later commits only in container / sent as files.
 
 ## Honest audit
 See **docs/AUDIT.md** (what is done / partial / missing, saves, agents, priority backlog). Keep it updated.

@@ -7,7 +7,7 @@ played through by hand and the UX problems found were fixed (see §2).
 
 Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
 
-## 1. Simulation core (FactoryCore) — 122 tests, all green (S7: core gaps closed, S8: playtest fixes)
+## 1. Simulation core (FactoryCore) — 152 tests, all green (S7: core gaps closed, S8: playtest fixes + independent QA: 15 bugs found and fixed)
 | Mechanic | Status | Evidence |
 |---|---|---|
 | Belts (3 tiers), curves, sideload, undergrounds, splitters (priority/filter), loops | ✅ | LogisticsTests (11 belt tests), 0.1 ms/tick @10k belts |
@@ -48,14 +48,14 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
 | Menus: main, new game (campaign+freeplay), load, settings | ✅ main, campaign select, Continue |
 | Lifecycle: background save, crash recovery offer, autosave | ✅ autosave + "Last exit" continue verified |
 | Playtest fixes (S8) | far starting ores; hold-to-mine reach; imprecise 2×2 placement (snap onto drill output + IO markers); stale red preview after last item; pause menu overflow; entity panel overflow; Production tab showed 0 craftable; map screen offset; lock icon over text |
-| **Localization** (GDD §10: string tables from day 1) | ❌ 121+ hard-coded English UI strings; item/tech names English only; **no Russian** |
+| **Localization** (GDD §10) | ✅ English + **Russian**: 187 UI keys + 817 game-content keys (items, entities, recipes, techs, fluids, levels, objectives), 100 % coverage; `tools/l10n/build.py --strict`; language follows iOS settings. 🟡 not yet seen on device |
 | Audio (music, SFX, ambience) | ❌ no sound assets, no audio code |
 | Map screen / minimap | ✅ minimap (tap → map), map: pinch/pan, tap to walk |
-| Tutorial hint bubbles (L1–L2 data has hints) | ❌ not shown |
+| Tutorial hint bubbles | ✅ current objective's hint, dismissible, setting "Tutorial hints" |
 | Codex (item/recipe browser) | ❌ |
-| Save thumbnails, rename in UI | ❌ (core supports rename) |
+| Save thumbnails, rename in UI | ✅ thumbnails (map snapshot) in Load game; ❌ rename UI |
 | Settings wired: autosave, haptics, alt-mode, reach circle, day/night, FPS, battery saver | 🟡 |
-| Settings NOT wired: left-handed, UI scale, colorblind palettes, larger text, joystick options, volume | ❌ |
+| Settings NOT wired: UI scale, colorblind palettes, larger text, joystick options, volume | ❌ (left-handed ✅ S8; settings decode tolerantly across versions) |
 | MFi game controller | ❌ (stretch) |
 
 ## 3. Art
@@ -71,14 +71,15 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
 
 ## 5. Team / agents
 - Used: art director ✅, iOS platform/build engineer ✅, 7 wave-1 specialists (stopped by usage limit, only fragments).
-- Not used yet: **game designer** (balance, level pre-builts, tutorial texts), **UX designer** (layout/ergonomics review),
-  **QA engineer** (independent review + test plan), **localization** (ru/en string tables), **audio designer**,
-  performance engineer (on-device profiling), rendering specialist (I wrote the renderer myself).
+- S7–S8: designer agent (prebuilt factories L5–L8) ✅, **localization agent** (ru/en tables + tooling) ✅,
+  **QA agent** (independent review: 15 core bugs + 6 app risks, all core bugs fixed by lead) ✅.
+- Not used yet: UX designer (layout review), audio designer, performance engineer (on-device profiling),
+  rendering specialist.
 
 ## 6. Priority backlog (next sessions)
 1. ~~Build in Xcode~~ ✅ S8. Continue playtesting L2+ (research panel, recipe picker, power, inserters).
-2. Localization: String Catalog `Localizable.xcstrings` (en + ru) for all UI strings + localized names for items/entities/techs/recipes (GameData `name` → localization keys).
-3. Independent QA agent review of core + app; add UI smoke tests (XCUITest) once Xcode builds.
+2. ~~Localization~~ ✅ S8 (verify Russian on the simulator).
+3. ~~Independent QA review~~ ✅ S8; still to do: UI smoke tests (XCUITest).
 4. Missing MVP features: tutorial hints, copy/paste area UI, ground item rendering check, save thumbnails, wire remaining settings.
 5. Audio: SFX + ambience + music (original, generated/procedural or licensed CC0).
 6. Designer pass: L5–L8 pre-built factories, campaign balance, refinery output order.
