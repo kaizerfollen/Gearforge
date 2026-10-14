@@ -107,3 +107,13 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
 3. On-device performance profile (Instruments) with a large factory; battery saver check.
 4. Remaining small items: floating joystick option, larger-text setting, Xcode "recommended settings" warning.
 5. Later phases by plan (GDD §3): blueprint library (named, saved), robots, trains, circuits, nuclear, hostiles.
+
+## S10 — every screen fits an iPhone in landscape (2026-10-15)
+- Cause: fixed widths that summed past the ~750 × 370 pt safe area of an iPhone in landscape (research 640+300,
+  new game 170+320+340, stats 3×240, HUD top row ~810 pt), so content ran under the Dynamic Island and off screen.
+- Fix: `FitPicker` (segmented → menu when it doesn't fit), `panelFrame()`, adaptive grids, compact columns
+  (`verticalSizeClass == .compact`), label-above-control rows, scrolling where content is taller than the screen.
+- Checked in the iPhone 17 Pro simulator (Russian): main menu, campaign, freeplay, load, settings, HUD (quickbar now
+  between the joystick and the mode buttons), research, production stats, map, pause, Codex, furnace screen
+  (inventory column beside the machine).
+- Not seen yet on a small phone (iPhone SE / mini) or with Interface size > 100 %.
