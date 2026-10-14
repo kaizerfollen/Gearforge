@@ -8,6 +8,8 @@ struct HUDView: View {
     @Bindable var model: AppModel
     @Bindable var controller: GameController
 
+    private var leftHanded: Bool { controller.settings.leftHanded }
+
     var body: some View {
         let hud = controller.hud
         let db = controller.world.db
@@ -18,6 +20,7 @@ struct HUDView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         statusChip(hud)
                         if !hud.objectives.isEmpty { objectives(hud) }
+                        if let hint = hud.hint { hintBubble(hint, hud.hintObjective) }
                         if !hud.selectedName.isEmpty { selectionCard(hud, db) }
                     }
                     .frame(width: 250, alignment: .leading)
@@ -35,9 +38,9 @@ struct HUDView: View {
             }
             .padding(.horizontal, 16).padding(.top, 10)
 
-            // Right column: modes
+            // Mode column (right; left in the left-handed layout)
             HStack {
-                Spacer()
+                if !leftHanded { Spacer() }
                 VStack(spacing: 10) {
                     Spacer()
                     HUDButton(glyph: "ui_build", active: controller.mode == .build) {
@@ -55,7 +58,8 @@ struct HUDView: View {
                     }
                     HUDButton(glyph: "ui_inventory", size: 60) { controller.panel = .inventory }
                 }
-                .padding(.trailing, 16).padding(.bottom, 16)
+                .padding(leftHanded ? .leading : .trailing, 16).padding(.bottom, 16)
+                if leftHanded { Spacer() }
             }
 
             // Bottom: craft queue + quickbar
@@ -79,17 +83,18 @@ struct HUDView: View {
             }
             .padding(.bottom, 10)
 
-            // Joystick (bottom-left)
+            // Joystick (bottom-left; bottom-right in the left-handed layout)
             VStack {
                 Spacer()
                 HStack {
+                    if leftHanded { Spacer() }
                     JoystickView { v in
                         controller.world.player.moveInput = Vec2(Double(v.dx), Double(v.dy))
                         if v.dx != 0 || v.dy != 0 { controller.cameraFollowsPlayer = true }
                     }
                     .frame(width: 180, height: 180)
-                    .padding(.leading, 20).padding(.bottom, 16)
-                    Spacer()
+                    .padding(leftHanded ? .trailing : .leading, 20).padding(.bottom, 16)
+                    if !leftHanded { Spacer() }
                 }
             }
 
@@ -139,6 +144,20 @@ struct HUDView: View {
         }
         .padding(10)
         .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.55)))
+    }
+
+    private func hintBubble(_ text: String, _ objective: Int) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "lightbulb.fill").foregroundStyle(Theme.accent).font(.caption)
+            Text(text).font(.caption).foregroundStyle(Theme.text).fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+            Button { controller.dismissedHints.insert(objective); controller.refreshHUD() } label: {
+                Image(systemName: "xmark").font(.caption2.bold()).foregroundStyle(Theme.textDim)
+            }.buttonStyle(.plain)
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Theme.accent.opacity(0.18)))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.accent.opacity(0.5), lineWidth: 1))
     }
 
     private func selectionCard(_ hud: HUDState, _ db: PrototypeDB) -> some View {

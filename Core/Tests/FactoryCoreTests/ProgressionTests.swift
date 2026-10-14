@@ -243,4 +243,15 @@ final class ProgressionTests: XCTestCase {
             XCTAssertEqual(b.world.mapGen.startingPatches, w.mapGen.startingPatches, "\(id): layout restored after load")
         }
     }
+
+    /// Settings written by an older version (missing newer keys, with an unknown key) keep the saved values.
+    func testSettingsDecodeTolerant() {
+        let old = #"{"haptics": false, "autosaveMinutes": 10, "someRemovedKey": 3}"#.data(using: .utf8)!
+        let s = GameSettings.decodeTolerant(old)
+        XCTAssertNotNil(s)
+        XCTAssertEqual(s?.haptics, false)
+        XCTAssertEqual(s?.autosaveMinutes, 10)
+        XCTAssertEqual(s?.tutorialHints, true, "new key gets its default")
+        XCTAssertNil(GameSettings.decodeTolerant(Data("nope".utf8)))
+    }
 }

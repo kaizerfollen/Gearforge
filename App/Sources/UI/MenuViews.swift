@@ -247,6 +247,7 @@ struct SettingsView: View {
                         Toggle("Show reach circle", isOn: $model.settings.showReachCircle)
                         Toggle("Haptics", isOn: $model.settings.haptics)
                         Toggle("Left-handed layout", isOn: $model.settings.leftHanded)
+                        Toggle("Tutorial hints", isOn: $model.settings.tutorialHints)
                     }
                     section("Graphics & performance") {
                         Toggle("Day/night lighting", isOn: $model.settings.dayNightLighting)

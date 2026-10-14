@@ -35,7 +35,7 @@ final class AppModel {
         saveManager = SaveManager(directory: dir.appendingPathComponent("Saves", isDirectory: true), compressor: makeCompressor())
         settingsURL = dir.appendingPathComponent("settings.json")
         progressURL = dir.appendingPathComponent("campaign.json")
-        settings = (try? JSONDecoder().decode(GameSettings.self, from: Data(contentsOf: settingsURL))) ?? GameSettings()
+        settings = (try? Data(contentsOf: settingsURL)).flatMap(GameSettings.decodeTolerant) ?? GameSettings()
         progress = CampaignProgress.load(from: progressURL)
         offerRecovery = saveManager.hadUncleanExit && FileManager.default.fileExists(atPath: saveManager.url(for: SaveManager.backgroundSlot).path)
         refreshSaves()

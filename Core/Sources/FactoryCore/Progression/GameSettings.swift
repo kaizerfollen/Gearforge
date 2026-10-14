@@ -35,7 +35,20 @@ public struct GameSettings: Codable, Equatable, Sendable {
     // Accessibility
     public var colorblindMode: String = "off"          // off | deuteranopia | protanopia | tritanopia
     public var reduceMotion: Bool = false
+    // Help
+    public var tutorialHints: Bool = true
     public init() {}
+
+    /// Decodes settings saved by any app version: keys missing in `data` (added later) keep their defaults,
+    /// unknown keys are ignored. Returns nil only for unreadable JSON.
+    public static func decodeTolerant(_ data: Data) -> GameSettings? {
+        guard let saved = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+              let defData = try? JSONEncoder().encode(GameSettings()),
+              var merged = (try? JSONSerialization.jsonObject(with: defData)) as? [String: Any] else { return nil }
+        for (k, v) in saved where merged[k] != nil { merged[k] = v }
+        guard let m = try? JSONSerialization.data(withJSONObject: merged) else { return nil }
+        return try? JSONDecoder().decode(GameSettings.self, from: m)
+    }
 }
 
 public final class SettingsStore {
@@ -43,7 +56,7 @@ public final class SettingsStore {
     public private(set) var settings: GameSettings
     public init(url: URL) {
         self.url = url
-        if let d = try? Data(contentsOf: url), let s = try? JSONDecoder().decode(GameSettings.self, from: d) { settings = s }
+        if let d = try? Data(contentsOf: url), let s = GameSettings.decodeTolerant(d) { settings = s }
         else { settings = GameSettings() }
     }
     public func update(_ body: (inout GameSettings) -> Void) {

@@ -58,6 +58,9 @@ struct HUDState: Equatable {
     var gameTime: String = "0:00"
     var miningProgress: Double = -1
     var buildReason: String = ""
+    /// Tutorial hint for the first active objective that has one (and was not dismissed).
+    var hint: String? = nil
+    var hintObjective: Int = -1
 }
 
 @MainActor
@@ -70,6 +73,8 @@ final class GameController {
     /// Events drained from the world this frame (the renderer consumes them in the same update).
     @ObservationIgnored private(set) var frameEvents: [WorldEvent] = []
     @ObservationIgnored private var hudTimer: Double = 0
+    /// Objective ids whose tutorial hint the player closed (this session only).
+    @ObservationIgnored var dismissedHints: Set<Int> = []
     @ObservationIgnored private var minimapTimer: Double = 1
     /// Minimap around the character (1 px per tile, `minimapRadius` tiles each way), refreshed twice a second.
     var minimap: CGImage? = nil
@@ -189,6 +194,10 @@ final class GameController {
             let s = session.objectives.states[o.id] ?? ObjectiveTracker.State()
             let detail = s.target > 1 ? "\(Int(s.current.rounded(.down)))/\(Int(s.target))" : ""
             return ObjectiveLine(id: o.id, title: Names.objectiveTitle(session.level?.id, o), fraction: s.fraction, detail: detail)
+        }
+        if settings.tutorialHints, let o = session.objectives.active.first(where: { $0.hint != nil && !dismissedHints.contains($0.id) }) {
+            h.hint = Names.objectiveHint(session.level?.id, o)
+            h.hintObjective = o.id
         }
         h.levelCompleted = session.objectives.levelCompleted
         h.stars = session.objectives.stars
