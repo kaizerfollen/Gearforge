@@ -19,13 +19,16 @@ struct EntityPanel: View {
             let rec = w.entities[e]
             let p = db.entities[Int(rec.proto)]
             PanelChrome(title: p.name, onClose: { controller.panel = nil }) {
-                VStack(alignment: .leading, spacing: 12) {
-                    header(e, rec)
-                    content(e, rec, p)
-                    Divider().background(Color.white.opacity(0.1))
-                    inventoryStrip(e, rec)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        header(e, rec)
+                        content(e, rec, p)
+                        Divider().background(Color.white.opacity(0.1))
+                        inventoryStrip(e, rec)
+                    }
+                    .padding(16)
                 }
-                .padding(16)
+                .scrollBounceBehavior(.basedOnSize)
             }
             .frame(maxWidth: 820, maxHeight: 620)
             .padding(20)

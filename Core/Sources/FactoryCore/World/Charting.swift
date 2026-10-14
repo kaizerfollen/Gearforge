@@ -58,4 +58,40 @@ public extension World {
         }
         return (0.2, 0.2, 0.2)
     }
+
+    /// RGBA8 pixels (premultiplied-free, alpha 255) for the map area starting at tile (`x0`, `y0`), `w`×`h` pixels,
+    /// one pixel per `step`×`step` tiles (top-left sample). Same colours as `mapColor`; uncharted / out of map → black.
+    /// Bulk path for the minimap and the map screen (chunk lookups cached along each row).
+    func mapRGBA(x0: Int32, y0: Int32, w: Int, h: Int, step: Int32 = 1) -> [UInt8] {
+        var out = [UInt8](repeating: 0, count: w * h * 4)
+        for i in 0..<(w * h) { out[i * 4 + 3] = 255 }
+        func u8(_ v: Double) -> UInt8 { UInt8(max(0, min(255, (v * 255).rounded()))) }
+        func rgb(_ c: [Double]) -> (UInt8, UInt8, UInt8)? { c.count >= 3 ? (u8(c[0]), u8(c[1]), u8(c[2])) : nil }
+        let tileC = db.tiles.map { rgb($0.mapColor) ?? (51, 51, 51) }
+        let resC = db.resources.map { rgb($0.mapColor) }
+        for py in 0..<h {
+            let ty = y0 + Int32(py) * step
+            var lastPos: ChunkPos? = nil
+            var lastChunk: Chunk? = nil
+            for px in 0..<w {
+                let p = TilePos(x0 + Int32(px) * step, ty)
+                let cp = p.chunk
+                if cp != lastPos { lastPos = cp; lastChunk = surface.existingChunk(cp) }
+                guard let ch = lastChunk, ch.charted else { continue }
+                let c: (UInt8, UInt8, UInt8)
+                if entity(at: p) != nil {
+                    let m = mapColor(at: p)
+                    c = (u8(m.0), u8(m.1), u8(m.2))
+                } else {
+                    let li = p.localIndex
+                    let res = Int(ch.resource[li]) - 1
+                    if res >= 0, let rc = resC[res] { c = rc }
+                    else { let t = Int(ch.tiles[li]); c = t < tileC.count ? tileC[t] : (51, 51, 51) }
+                }
+                let o = (py * w + px) * 4
+                out[o] = c.0; out[o + 1] = c.1; out[o + 2] = c.2
+            }
+        }
+        return out
+    }
 }

@@ -18,6 +18,7 @@ enum GamePanel: Equatable, Identifiable {
     case research
     case stats
     case pause
+    case map
     var id: String {
         switch self {
         case .inventory: return "inventory"
@@ -25,6 +26,7 @@ enum GamePanel: Equatable, Identifiable {
         case .research: return "research"
         case .stats: return "stats"
         case .pause: return "pause"
+        case .map: return "map"
         }
     }
 }
@@ -68,6 +70,14 @@ final class GameController {
     /// Events drained from the world this frame (the renderer consumes them in the same update).
     @ObservationIgnored private(set) var frameEvents: [WorldEvent] = []
     @ObservationIgnored private var hudTimer: Double = 0
+    @ObservationIgnored private var minimapTimer: Double = 1
+    /// Minimap around the character (1 px per tile, `minimapRadius` tiles each way), refreshed twice a second.
+    var minimap: CGImage? = nil
+    static let minimapRadius: Int32 = 48
+    /// Whole-map image for the map screen (refreshed every second while open) and its tile origin / scale.
+    var mapImage: CGImage? = nil
+    var mapOrigin = TilePos(0, 0)
+    var mapStep: Int32 = 1
     @ObservationIgnored private var inventoryHash = 0
     @ObservationIgnored var onLevelCompleted: ((Int, Double) -> Void)?
 
@@ -120,8 +130,44 @@ final class GameController {
         if let h = selected, world.entities.resolve(h) == nil { selected = nil; if case .entity = panel { panel = nil } }
         hudTimer += dt
         if hudTimer >= 0.1 { hudTimer = 0; refreshHUD() }
+        minimapTimer += dt
+        if minimapTimer >= (panel == .map ? 1.0 : 0.5) {
+            minimapTimer = 0
+            if panel == .map { refreshMapImage() } else { refreshMinimap() }
+        }
         if toast != nil { toastTimer -= dt; if toastTimer <= 0 { toast = nil } }
         if session.autosaveDue && settings.autosaveMinutes > 0 { autosave() }
+    }
+
+    // MARK: Map
+
+    func refreshMinimap() {
+        let r = Self.minimapRadius
+        let c = world.player.position.tile
+        let n = Int(r * 2)
+        minimap = Self.image(rgba: world.mapRGBA(x0: c.x - r, y0: c.y - r, w: n, h: n), w: n, h: n)
+    }
+
+    func refreshMapImage() {
+        let b = world.surface.bounds
+        let step = max(1, (max(b.w, b.h) + 511) / 512)
+        let w = Int(b.w / step), h = Int(b.h / step)
+        mapOrigin = TilePos(b.x, b.y)
+        mapStep = step
+        mapImage = Self.image(rgba: world.mapRGBA(x0: b.x, y0: b.y, w: w, h: h, step: step), w: w, h: h)
+    }
+
+    func openMap() {
+        refreshMapImage()
+        minimapTimer = 0
+        panel = .map
+    }
+
+    static func image(rgba: [UInt8], w: Int, h: Int) -> CGImage? {
+        guard w > 0, h > 0, let provider = CGDataProvider(data: Data(rgba) as CFData) else { return nil }
+        return CGImage(width: w, height: h, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: w * 4,
+                       space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
+                       provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
     }
 
     // MARK: HUD

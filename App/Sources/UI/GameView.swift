@@ -218,6 +218,7 @@ struct GameView: View {
                 case .research: ResearchPanel(controller: controller)
                 case .stats: StatsPanel(controller: controller)
                 case .pause: PauseMenu(model: model, controller: controller)
+                case .map: MapPanel(controller: controller)
                 }
             }
         }

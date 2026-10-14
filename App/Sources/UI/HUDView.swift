@@ -24,7 +24,8 @@ struct HUDView: View {
                     Spacer()
                     researchBar(hud)
                     Spacer()
-                    HStack(spacing: 8) {
+                    HStack(alignment: .top, spacing: 8) {
+                        MinimapView(controller: controller)
                         HUDButton(glyph: "ui_altmode", active: controller.altMode, size: 44) { controller.altMode.toggle() }
                         HUDButton(glyph: "ui_stats", size: 44) { controller.panel = .stats }
                         HUDButton(glyph: "ui_pause", size: 44) { controller.panel = .pause }
@@ -258,5 +259,29 @@ struct JoystickView: View {
                     onChange(CGVector(dx: 0, dy: 0))
                 }
         )
+    }
+}
+
+
+// MARK: - Minimap
+
+struct MinimapView: View {
+    @Bindable var controller: GameController
+    var size: CGFloat = 96
+    var body: some View {
+        Button { controller.openMap() } label: {
+            ZStack {
+                Rectangle().fill(Color.black)
+                if let img = controller.minimap {
+                    Image(img, scale: 1, label: Text("Minimap")).interpolation(.none).resizable()
+                }
+                Circle().fill(Color.white).frame(width: 7, height: 7)
+                    .overlay(Circle().stroke(Color.black, lineWidth: 1.5))
+            }
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.35), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
     }
 }

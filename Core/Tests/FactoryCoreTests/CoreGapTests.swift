@@ -258,4 +258,25 @@ final class CoreGapTests: XCTestCase {
         XCTAssertFalse(w.player.isWalkingPath)
         w.player.moveInput = .zero
     }
+
+    func testMapRGBAMatchesMapColor() {
+        let s = GameSession.newCampaign(level: Campaign.levels[0])
+        let w = s.world
+        w.step(61)       // character charts its surroundings
+        let x0: Int32 = -40, y0: Int32 = -40
+        let px = w.mapRGBA(x0: x0, y0: y0, w: 80, h: 80)
+        var charted = 0
+        for y in 0..<80 { for x in 0..<80 {
+            let m = w.mapColor(at: TilePos(x0 + Int32(x), y0 + Int32(y)))
+            let o = (y * 80 + x) * 4
+            XCTAssertEqual(Int(px[o]), Int((m.0 * 255).rounded()), "r at \(x),\(y)")
+            XCTAssertEqual(Int(px[o + 2]), Int((m.2 * 255).rounded()))
+            XCTAssertEqual(px[o + 3], 255)
+            if m != (0, 0, 0) { charted += 1 }
+        } }
+        XCTAssertGreaterThan(charted, 3000, "area around spawn is charted")
+        let t0 = Date()
+        _ = w.mapRGBA(x0: -80, y0: -80, w: 160, h: 160)
+        XCTAssertLessThan(Date().timeIntervalSince(t0), 0.5)
+    }
 }
