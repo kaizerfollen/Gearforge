@@ -143,10 +143,30 @@ struct GameView: View {
                 controller.haptic(.medium)
                 touchStart = nil
             }
-        } else if w.surface.resource(at: t).1 > 0 {
-            holding = controller.walkAndMine(at: t)
+        } else if let r = nearestMineable(t) {
+            holding = controller.walkAndMine(at: r)
             if !holding { controller.show("Can't get there") }
+        } else if controller.walkTo(t) {
+            // Long-press on empty ground: walk there (A*); lifting the finger does not cancel it.
+            controller.cameraFollowsPlayer = true
+            controller.haptic(.light)
         }
+    }
+
+    /// The touched tile if it holds a minable resource, else the nearest one in the 8 neighbours
+    /// (ore sprites leave visual gaps at patch edges, so a near miss still mines).
+    private func nearestMineable(_ t: TilePos) -> TilePos? {
+        let s = controller.world.surface
+        func ok(_ p: TilePos) -> Bool {
+            let (r, a) = s.resource(at: p)
+            return r >= 0 && a > 0 && !controller.world.db.resources[r].resultIsFluid
+        }
+        if ok(t) { return t }
+        for (dx, dy) in [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1)] {
+            let p = TilePos(t.x + Int32(dx), t.y + Int32(dy))
+            if ok(p) { return p }
+        }
+        return nil
     }
 
     /// 4-connected path between two tiles (so fast drags don't skip belt tiles).

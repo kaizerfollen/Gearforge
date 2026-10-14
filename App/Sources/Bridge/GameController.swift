@@ -290,6 +290,12 @@ final class GameController {
     func walkAndMine(at tile: TilePos) -> Bool {
         execute(.walkAndMine(tile), silent: true).isOK
     }
+    /// Tap-to-walk (A* path, cancelled by the joystick).
+    func walkTo(_ tile: TilePos) -> Bool {
+        let r = execute(.walkTo(tile), silent: true)
+        if !r.isOK { show("Can't get there") }
+        return r.isOK
+    }
     func stopMining() { world.player.stopMining(); world.player.cancelWalk() }
 
     /// Pipette: select the item that builds this entity.
