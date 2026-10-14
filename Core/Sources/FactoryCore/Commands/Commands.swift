@@ -366,7 +366,8 @@ public extension World {
 
         case .pickUpGround(let p):
             guard pl.canReach(TileRect(origin: p, w: 1, h: 1)) else { return .failed(.outOfReach) }
-            return pl.pickUpGround(p) > 0 ? .ok : .failed(.nothingThere)
+            guard ground.count(at: p) > 0 else { return .failed(.nothingThere) }
+            return pl.pickUpGround(p) > 0 ? .ok : .failed(.inventoryFull)
 
         case .craft(let r, let count):
             guard count > 0 else { return .failed(.notAllowed) }

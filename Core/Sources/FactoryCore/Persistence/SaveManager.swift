@@ -126,7 +126,9 @@ public final class SaveManager {
         let name = newName.trimmingCharacters(in: .whitespaces)
         guard Self.isValidName(name), !Self.isReservedName(name) else { throw SaveError.invalidName(newName) }
         if name == slot { return }
-        guard !FileManager.default.fileExists(atPath: url(for: name).path) else { throw SaveError.slotExists(name) }
+        // A case-only change ("base" → "Base") finds the file itself on a case-insensitive file system (iOS).
+        let caseOnly = name.lowercased() == slot.lowercased()
+        guard caseOnly || !FileManager.default.fileExists(atPath: url(for: name).path) else { throw SaveError.slotExists(name) }
         let data: Data
         do { data = try Data(contentsOf: url(for: slot)) } catch { throw SaveError.notFound(slot) }
         let parsed = try SaveFile.parse([UInt8](data), slot: slot)
@@ -136,6 +138,17 @@ public final class SaveManager {
         meta.displayName = name
         meta.isAutosave = false
         let bytes = SaveFile.assemble(metadata: meta, worldPayload: payload, compressor: compressor)
+        if caseOnly {
+            // write beside, drop the old file, then move into place (writing "Base" directly would replace "base"
+            // in place on a case-insensitive FS and the removal below would then delete the save)
+            let tmp = directory.appendingPathComponent(".rename-\(UUID().uuidString).tmp")
+            do {
+                try Data(bytes).write(to: tmp, options: .atomic)
+                try FileManager.default.removeItem(at: url(for: slot))
+                try FileManager.default.moveItem(at: tmp, to: url(for: name))
+            } catch { throw SaveError.io("\(error)") }
+            return
+        }
         try write(bytes, slot: name)
         do { try FileManager.default.removeItem(at: url(for: slot)) } catch { throw SaveError.io("\(error)") }
     }

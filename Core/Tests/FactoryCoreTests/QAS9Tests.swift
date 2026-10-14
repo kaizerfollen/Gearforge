@@ -94,4 +94,49 @@ final class QAS9Tests: XCTestCase {
         try sm.rename(slot: "Mine", to: "My autosave_1 copy")
         XCTAssertEqual(sm.listSaves().map(\.slot), ["My autosave_1 copy"])
     }
+
+    // S9-3: tapping ground items with a full inventory reported "Nothing there" (the UI showed nothing at all).
+
+    func testPickUpGroundWithFullInventoryReportsInventoryFull() {
+        let w = TestWorld.make()
+        w.player.position = Vec2(10.5, 10.5)
+        let stone = w.item("stone")
+        while w.player.give(stone, 50) > 0 {}
+        let p = TilePos(11, 11)
+        XCTAssertEqual(w.ground.add(item: w.item("iron_plate"), count: 3, at: p), 3)
+        XCTAssertEqual(w.execute(.pickUpGround(p)), .failed(.inventoryFull))
+        XCTAssertEqual(w.ground.count(at: p), 3, "nothing lost")
+        XCTAssertEqual(w.execute(.pickUpGround(TilePos(12, 12))), .failed(.nothingThere))
+    }
+
+    // Case-only rename ("base" → "Base") must work on a case-insensitive file system (iOS/APFS default):
+    // the existence check used to see the file itself and refuse.
+
+    func testCaseOnlyRenameKeepsTheSave() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("gf-s9c-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let sm = SaveManager(directory: dir)
+        try sm.save(GameSession(world: TestWorld.make(), mode: .freeplay), slot: "base")
+        try sm.rename(slot: "base", to: "Base")
+        XCTAssertEqual(sm.listSaves().map(\.slot), ["Base"])
+        XCTAssertEqual(sm.listSaves().first?.displayName, "Base")
+        XCTAssertNoThrow(try sm.load(slot: "Base"))
+    }
+
+    // S9-4 (flaky QATests.testClosedLoopSaveLoadContinuesIdentically, "SETT"): WorldSettings.resourceSettings is a
+    // dictionary and was JSON-encoded without sorted keys, so the same world could serialize to different bytes.
+
+    func testWorldSettingsEncodeDeterministically() throws {
+        var s = WorldSettings()
+        for (k, id) in ["iron_ore", "copper_ore", "coal", "stone", "uranium_ore", "crude_oil", "a", "b", "c", "d"].enumerated() {
+            s.resourceSettings[id] = ResourceGenSetting(frequency: Double(k), size: 1, richness: 1)
+        }
+        s.width = 64; s.height = 64
+        let w = World(settings: s)
+        let first = WorldCodec.encode(w)
+        for _ in 0..<12 {
+            let (b, _) = try WorldCodec.decode(first)
+            XCTAssertTrue(WorldCodec.encode(b) == first, "re-encoding a loaded world gives the same bytes")
+        }
+    }
 }

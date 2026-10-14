@@ -471,7 +471,11 @@ final class GameController {
     func pickUpGround(at tile: TilePos) -> Bool {
         guard world.ground.count(at: tile) > 0 else { return false }
         let r = execute(.pickUpGround(tile), silent: true)
-        if r.isOK { haptic(.light) } else if case .failed(.outOfReach) = r, settings.tapToWalk { _ = walkTo(tile) }
+        switch r {
+        case .ok: haptic(.light)
+        case .failed(.outOfReach): if settings.tapToWalk { _ = walkTo(tile) } else { show(PlacementError.outOfReach.message) }
+        case .failed(let e): show(e.message); haptic(.error)
+        }
         return true
     }
 

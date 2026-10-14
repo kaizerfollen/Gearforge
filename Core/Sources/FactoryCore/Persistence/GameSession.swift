@@ -100,7 +100,7 @@ public final class GameSession {
         SaveFile.encodeMode(mode, into: &s)
         s.write(playTime)
         s.write(level != nil)
-        if let l = level { s.writeBytes([UInt8]((try? JSONEncoder().encode(l)) ?? Data())) }
+        if let l = level { s.writeBytes([UInt8]((try? WorldCodec.jsonEncoder.encode(l)) ?? Data())) }
         objectives.serialize(to: &s)
         s.write(victoryShown)
         s.write(lastAutosaveTick)

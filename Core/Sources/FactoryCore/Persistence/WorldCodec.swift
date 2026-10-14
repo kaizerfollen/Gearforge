@@ -12,12 +12,15 @@ public enum WorldCodec {
 
     // MARK: Encode
 
+    /// Sorted keys: the same world must always serialize to the same bytes (QA S9-4; WorldSettings holds a dictionary).
+    static var jsonEncoder: JSONEncoder { let e = JSONEncoder(); e.outputFormatting = [.sortedKeys]; return e }
+
     public static func encode(_ world: World, extra: [(UInt32, [UInt8])] = []) -> [UInt8] {
         var w = BinaryWriter(reserve: 1 << 20)
         w.write(payloadVersion)
         w.write(UInt32(world.db.items.count)); w.write(UInt32(world.db.entities.count)); w.write(UInt32(world.db.recipes.count))
         w.writeSection(tag: fourCC("SETT")) { s in
-            let json = (try? JSONEncoder().encode(world.settings)) ?? Data()
+            let json = (try? WorldCodec.jsonEncoder.encode(world.settings)) ?? Data()
             s.writeBytes([UInt8](json))
         }
         w.writeSection(tag: fourCC("CORE")) { s in
@@ -64,7 +67,7 @@ public enum WorldCodec {
             for k in keys {
                 let (gen, gs) = world.ghostSettings[k]!
                 s.write(k); s.write(gen)
-                s.writeBytes([UInt8]((try? JSONEncoder().encode(gs)) ?? Data()))
+                s.writeBytes([UInt8]((try? WorldCodec.jsonEncoder.encode(gs)) ?? Data()))
             }
         }
         for (tag, bytes) in extra { w.writeSection(tag: tag) { $0.writeRaw(bytes) } }
