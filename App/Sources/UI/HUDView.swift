@@ -228,10 +228,11 @@ struct HUDView: View {
             HStack(spacing: 8) {
                 SpriteImage(name: "ui_research", size: 20)
                 if hud.researchName.isEmpty {
-                    Text("Choose research").font(.caption.bold()).foregroundStyle(Theme.warn).lineLimit(1).minimumScaleFactor(0.8)
+                    Text("Choose research").font(.caption.bold()).foregroundStyle(Theme.warn)
+                        .lineLimit(2).multilineTextAlignment(.leading).minimumScaleFactor(0.85)
                 } else {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(hud.researchName).font(.caption.bold()).foregroundStyle(Theme.text).lineLimit(1)
+                        Text(hud.researchName).font(.caption.bold()).foregroundStyle(Theme.text).lineLimit(1).minimumScaleFactor(0.8)
                         BarView(fraction: hud.researchProgress, height: 4).frame(minWidth: 50, maxWidth: 160)
                     }
                     Text("\(Int(hud.researchProgress * 100))%").font(.caption2).monospacedDigit().foregroundStyle(Theme.textDim)
