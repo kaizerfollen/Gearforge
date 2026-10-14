@@ -140,7 +140,7 @@ struct InventoryPanel: View {
             HStack {
                 Text(db.recipeName(r)).font(.headline).foregroundStyle(Theme.text)
                 Spacer()
-                Text(String(format: "%.1f s", db.recipes[r].time)).font(.caption).foregroundStyle(Theme.textDim)
+                Text(LF("%@ s", String(format: "%.1f", db.recipes[r].time))).font(.caption).foregroundStyle(Theme.textDim)
             }
             HStack(spacing: 10) {
                 ForEach(Array(rr.itemIngredients.enumerated()), id: \.offset) { _, ing in
@@ -152,7 +152,7 @@ struct InventoryPanel: View {
                 }
                 Spacer()
                 Button("×5") { controller.execute(.craft(recipe: r, count: min(5, n))) }.buttonStyle(.bordered).disabled(n == 0)
-                Button("Max (\(n))") { controller.execute(.craft(recipe: r, count: n)) }.buttonStyle(.borderedProminent).tint(Theme.accent).disabled(n == 0)
+                Button(LF("Max (%@)", "\(n)")) { controller.execute(.craft(recipe: r, count: n)) }.buttonStyle(.borderedProminent).tint(Theme.accent).disabled(n == 0)
             }
         }
         .padding(10)

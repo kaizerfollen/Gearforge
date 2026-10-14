@@ -181,8 +181,8 @@ extension EntityStatus {
 }
 
 func formatWatts(_ w: Double) -> String {
-    if w >= 1e9 { return String(format: "%.1f GW", w / 1e9) }
-    if w >= 1e6 { return String(format: "%.1f MW", w / 1e6) }
-    if w >= 1e3 { return String(format: "%.0f kW", w / 1e3) }
-    return String(format: "%.0f W", w)
+    if w >= 1e9 { return LF("%@ GW", String(format: "%.1f", w / 1e9)) }
+    if w >= 1e6 { return LF("%@ MW", String(format: "%.1f", w / 1e6)) }
+    if w >= 1e3 { return LF("%@ kW", String(format: "%.0f", w / 1e3)) }
+    return LF("%@ W", String(format: "%.0f", w))
 }

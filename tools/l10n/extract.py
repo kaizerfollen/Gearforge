@@ -337,6 +337,13 @@ def extract_ui() -> tuple[set, list]:
                 if LETTER.search(s):
                     keys.add(s)
     issues.sort()
+    # Plain L("…") anywhere (also nested inside other calls, e.g. LF("Limit: %@", x ?? L("none"))).
+    for path in _swift_files(APP_SOURCES):
+        if path.endswith("Localization.swift"):
+            continue
+        for m in re.finditer(r'(?<![A-Za-z0-9_])L\("((?:[^"\\]|\\.)*)"\)', open(path, encoding="utf-8").read()):
+            if "\\(" not in m.group(1):
+                keys.add(_unescape(m.group(1)))
     return keys, issues
 
 

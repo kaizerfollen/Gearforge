@@ -83,7 +83,7 @@ struct ResearchPanel: View {
                 HStack(spacing: 6) {
                     Text("\(r.unitCount(of: t)) ×").font(.caption).foregroundStyle(Theme.text)
                     ForEach(Array(tp.ingredients.enumerated()), id: \.offset) { _, ing in ItemIcon(item: db.item(ing.id), db: db, size: 24) }
-                    Text(String(format: "%.0f s", tp.time)).font(.caption).foregroundStyle(Theme.textDim)
+                    Text(LF("%@ s", String(format: "%.0f", tp.time))).font(.caption).foregroundStyle(Theme.textDim)
                 }
                 if r.progress(of: t) > 0 && !r.isResearched(t) { BarView(fraction: r.progress(of: t), height: 6).frame(width: 260) }
                 if !db.techPrereqs[t].isEmpty {
@@ -148,7 +148,7 @@ struct StatsPanel: View {
         return PanelChrome(title: "Production", onClose: { controller.panel = nil }) {
             VStack(alignment: .leading, spacing: 12) {
                 Picker("Window", selection: $window) {
-                    ForEach(StatsWindow.allCases, id: \.self) { w in Text(w.label).tag(w) }
+                    ForEach(StatsWindow.allCases, id: \.self) { w in Text(L(w.label)).tag(w) }
                 }.pickerStyle(.segmented).frame(width: 300)
                 HStack(alignment: .top, spacing: 30) {
                     column("Produced / min", produced, db)
@@ -161,7 +161,7 @@ struct StatsPanel: View {
                         ForEach(pol.bySource.sorted { $0.value > $1.value }.prefix(4), id: \.key) { kv in
                             HStack(spacing: 6) {
                                 SpriteImage(name: "i_\(db.items[max(0, db.entityItem[kv.key])].id)", size: 18)
-                                Text(String(format: "%.1f / min", kv.value)).font(.caption).foregroundStyle(Theme.textDim)
+                                Text(LF("%@ / min", String(format: "%.1f", kv.value))).font(.caption).foregroundStyle(Theme.textDim)
                             }
                         }
                         let net = controller.world.power.network(at: controller.world.player.position)

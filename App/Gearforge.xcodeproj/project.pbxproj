@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		017E511213C406D813161AD7 /* GameData.strings in Resources */ = {isa = PBXBuildFile; fileRef = FACEBD3821B259E64007FD60 /* GameData.strings */; };
 		0F2C3A1A2125259513111590 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D2EF0B49EA01824F4EDA3250 /* Assets.xcassets */; };
 		1668ADE4B497B09B6777D327 /* OtherPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DFA53DD0EC14A5227833C59 /* OtherPanels.swift */; };
 		2C50E6DFBF38AD7E18BA4BB2 /* InventoryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64CB6F58F91E7BED429525FA /* InventoryPanel.swift */; };
@@ -34,6 +35,7 @@
 		1F33BAC76A9D0347E182D8D4 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		24697E0782FE1E9E1E1C82ED /* EntityPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityPanel.swift; sourceTree = "<group>"; };
 		338534F74D12A4AB190B1BB8 /* Gearforge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gearforge.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		37D719325A90A23132C0662C /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/GameData.strings; sourceTree = "<group>"; };
 		3864A4EFF5804D899D426818 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		6292FE1CDC4C36DA4A10FFEF /* GearforgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GearforgeApp.swift; sourceTree = "<group>"; };
 		64CB6F58F91E7BED429525FA /* InventoryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryPanel.swift; sourceTree = "<group>"; };
@@ -50,6 +52,7 @@
 		D2EF0B49EA01824F4EDA3250 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D8DBDC8AC494E38F5404F1A7 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		DC2785D25BAD05C8473EA863 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		FA4A0197D28D66D121F75EEC /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/GameData.strings; sourceTree = "<group>"; };
 		FBFD0F262D319C53E9C49828 /* SaveCompression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveCompression.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -127,6 +130,7 @@
 				D2EF0B49EA01824F4EDA3250 /* Assets.xcassets */,
 				67B011019FF0374ED0CAA576 /* sprite_manifest.json */,
 				7551B2D381E4C1228326DB74 /* Sprites.atlas */,
+				FACEBD3821B259E64007FD60 /* GameData.strings */,
 				03C608477711F56CE040B909 /* Localizable.strings */,
 			);
 			path = Resources;
@@ -221,6 +225,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0F2C3A1A2125259513111590 /* Assets.xcassets in Resources */,
+				017E511213C406D813161AD7 /* GameData.strings in Resources */,
 				40DE273DCCE27B38613910CD /* Localizable.strings in Resources */,
 				AE076C695F20F4C934664FF6 /* sprite_manifest.json in Resources */,
 				630B2BA91194F9944500E4A0 /* Sprites.atlas in Resources */,
@@ -262,6 +267,15 @@
 				1F33BAC76A9D0347E182D8D4 /* ru */,
 			);
 			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		FACEBD3821B259E64007FD60 /* GameData.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				FA4A0197D28D66D121F75EEC /* en */,
+				37D719325A90A23132C0662C /* ru */,
+			);
+			name = GameData.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

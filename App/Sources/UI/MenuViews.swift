@@ -19,7 +19,7 @@ struct MainMenuView: View {
                         model.load(slot: SaveManager.backgroundSlot)
                     }
                 }
-                MenuButton(title: "Continue", subtitle: model.saves.first.map { "\($0.displayName) · \(formatPlayTime($0.playTimeSeconds))" },
+                MenuButton(title: "Continue", subtitle: model.saves.first.map { "\(L($0.displayName)) · \(formatPlayTime($0.playTimeSeconds))" },
                            enabled: model.canContinue) { model.continueLatest() }
                 MenuButton(title: "New Game") { model.screen = .newGame }
                 MenuButton(title: "Load Game", enabled: model.canContinue) { model.refreshSaves(); model.screen = .load }
@@ -32,7 +32,7 @@ struct MainMenuView: View {
 
 func formatPlayTime(_ s: Double) -> String {
     let m = Int(s) / 60
-    return m >= 60 ? "\(m / 60) h \(m % 60) min" : "\(m) min"
+    return m >= 60 ? LF("%@ h %@ min", "\(m / 60)", "\(m % 60)") : LF("%@ min", "\(m)")
 }
 
 // MARK: - New game
@@ -187,7 +187,7 @@ struct LoadGameView: View {
                     ForEach(model.saves) { m in
                         HStack(spacing: 14) {
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(m.displayName).font(.headline).foregroundStyle(Theme.text)
+                                Text(L(m.displayName)).font(.headline).foregroundStyle(Theme.text)
                                 Text(describe(m)).font(.caption).foregroundStyle(Theme.textDim)
                             }
                             Spacer()
@@ -216,11 +216,11 @@ struct LoadGameView: View {
     private func describe(_ m: SaveMetadata) -> String {
         var s: String
         switch m.mode {
-        case .freeplay: s = "Freeplay"
-        case .campaign: s = "Campaign · \(m.levelTitle ?? "")"
+        case .freeplay: s = L("Freeplay")
+        case .campaign(let id): s = L("Campaign") + " · " + (Campaign.levels.first { $0.id == id }.map(Names.levelTitle) ?? m.levelTitle ?? "")
         }
         s += " · \(formatPlayTime(m.playTimeSeconds)) · \(m.mapWidth)×\(m.mapHeight)"
-        if m.isAutosave { s += " · autosave" }
+        if m.isAutosave { s += " · " + L("autosave") }
         return s
     }
 }
@@ -239,7 +239,7 @@ struct SettingsView: View {
                         Picker("Autosave", selection: $model.settings.autosaveMinutes) {
                             Text("Off").tag(0); Text("2 min").tag(2); Text("5 min").tag(5); Text("10 min").tag(10); Text("15 min").tag(15)
                         }.pickerStyle(.segmented)
-                        Stepper("Autosave slots: \(model.settings.autosaveSlots)", value: $model.settings.autosaveSlots, in: 1...5)
+                        Stepper(LF("Autosave slots: %@", "\(model.settings.autosaveSlots)"), value: $model.settings.autosaveSlots, in: 1...5)
                         Toggle("Auto-build ghosts in reach", isOn: $model.settings.autoBuildGhosts)
                     }
                     section("Interface") {
@@ -271,7 +271,7 @@ struct SettingsView: View {
 
     private func section<C: View>(_ title: String, @ViewBuilder _ c: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(title.uppercased()).font(.caption.bold()).foregroundStyle(Theme.accent)
+            Text(L(title).uppercased()).font(.caption.bold()).foregroundStyle(Theme.accent)
             c()
         }
     }

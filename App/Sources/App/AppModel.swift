@@ -57,7 +57,7 @@ final class AppModel {
     }
 
     func startCampaign(_ level: LevelDefinition) {
-        start(label: "Landing on \(level.title)…") { GameSession.newCampaign(level: level) }
+        start(label: LF("Landing on %@…", Names.levelTitle(level))) { GameSession.newCampaign(level: level) }
     }
 
     func continueLatest() {

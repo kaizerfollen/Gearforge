@@ -103,7 +103,7 @@ struct EntityPanel: View {
                     Text(r >= 0 ? db.recipeName(r) : L("No recipe")).font(.headline).foregroundStyle(Theme.text)
                     BarView(fraction: w.crafting.progress(of: e), height: 8).frame(width: 260)
                     HStack {
-                        Text(String(format: "Speed %.2f", w.crafting.craftingSpeed(of: e))).font(.caption).foregroundStyle(Theme.textDim)
+                        Text(LF("Speed %@", String(format: "%.2f", w.crafting.craftingSpeed(of: e)))).font(.caption).foregroundStyle(Theme.textDim)
                         if w.crafting.effects(of: e).productivity > 0 {
                             Text("Productivity").font(.caption).foregroundStyle(Theme.accent)
                             BarView(fraction: w.crafting.productivityBar(of: e), color: Theme.good, height: 5).frame(width: 80)
@@ -168,7 +168,7 @@ struct EntityPanel: View {
                 HStack {
                     Button("Take all") { controller.execute(.takeAll(entity: e)) }.buttonStyle(.bordered).tint(Theme.accent)
                     Spacer()
-                    Stepper("Limit: \(inv.bar.map(String.init) ?? "none")", onIncrement: {
+                    Stepper(LocalizedStringKey(LF("Limit: %@", inv.bar.map(String.init) ?? L("none"))), onIncrement: {
                         let b = (inv.bar ?? inv.size)
                         controller.execute(.setChestBar(entity: e, bar: b + 1 >= inv.size ? nil : b + 1))
                     }, onDecrement: {
@@ -203,7 +203,7 @@ struct EntityPanel: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(LF("Output: %@", "\(formatWatts(w.power.powerOutput(of: e)))")).foregroundStyle(Theme.text)
             if rec.kind == .accumulator {
-                Text(String(format: "Charge: %.1f / 5 MJ", w.power.accumulatorCharge(of: e) / 1e6)).foregroundStyle(Theme.textDim)
+                Text(LF("Charge: %@ / 5 MJ", String(format: "%.1f", w.power.accumulatorCharge(of: e) / 1e6))).foregroundStyle(Theme.textDim)
             }
             if w.fluids.boxCount(e) > 0 { fluidInfo(e) }
             networkInfo(e)
@@ -261,7 +261,7 @@ struct EntityPanel: View {
                     .font(.caption).foregroundStyle(Theme.textDim)
                 BarView(fraction: st.satisfaction, color: Theme.powerColor(st.satisfaction), height: 8).frame(width: 300)
                 if st.accumulatorCapacity > 0 {
-                    Text(String(format: "Accumulators %.0f%%", st.accumulatorCharge / st.accumulatorCapacity * 100)).font(.caption).foregroundStyle(Theme.textDim)
+                    Text(LF("Accumulators %@%%", String(format: "%.0f", st.accumulatorCharge / st.accumulatorCapacity * 100))).font(.caption).foregroundStyle(Theme.textDim)
                 }
             }
         } else {

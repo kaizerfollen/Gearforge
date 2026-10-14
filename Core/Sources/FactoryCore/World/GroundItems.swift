@@ -71,7 +71,7 @@ public final class GroundItems {
             r += 1
         }
         let lost = pending.reduce(0) { $0 + Int($1.count) }
-        if lost > 0 { world.emit(.alert("\(lost) items lost — no room on the ground")) }
+        if lost > 0 { world.emit(.alert("Items lost — no room on the ground")) }
         return lost
     }
 
