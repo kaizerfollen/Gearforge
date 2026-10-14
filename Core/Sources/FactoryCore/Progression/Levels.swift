@@ -83,8 +83,21 @@ public enum Campaign {
         return h
     }
 
-    static func settings(_ seedName: String, size: Int, richness: Double = 1, techPrice: Double = 1) -> WorldSettings {
+    /// Tutorial layout: the four starting patches close to spawn (edges ~8–12 tiles away) so a new player finds
+    /// them on screen without a map. Angles keep the default spread (the lake keeps its own slot).
+    static func nearLayout(_ dist: Double) -> MapLayoutOverride {
+        MapLayoutOverride(startingPatches: [
+            StartingPatchSpec(resource: "iron_ore", total: 180_000, distance: dist),
+            StartingPatchSpec(resource: "copper_ore", total: 120_000, distance: dist + 2),
+            StartingPatchSpec(resource: "coal", total: 120_000, distance: dist - 1),
+            StartingPatchSpec(resource: "stone", total: 60_000, distance: dist - 3),
+        ])
+    }
+
+    static func settings(_ seedName: String, size: Int, richness: Double = 1, techPrice: Double = 1,
+                         layout: MapLayoutOverride? = nil) -> WorldSettings {
         var w = WorldSettings()
+        w.layout = layout
         w.seed = seed(seedName)
         w.width = size; w.height = size
         w.techPriceMultiplier = techPrice
@@ -142,7 +155,7 @@ public enum Campaign {
         LevelDefinition(
             id: "L1", title: "Landfall", subtitle: "Burner age",
             teaches: "Moving, hand mining, crafting, burner drills, furnaces, fuel, chests",
-            settings: settings("GF-L1", size: 160), startingItems: items([("iron_plate", 8), ("wood", 10), ("burner_mining_drill", 1), ("stone_furnace", 1)]),
+            settings: settings("GF-L1", size: 160, layout: nearLayout(20)), startingItems: items([("iron_plate", 8), ("wood", 10), ("burner_mining_drill", 1), ("stone_furnace", 1)]),
             researched: [], availableTechs: [], researchEnabled: false,
             objectives: [
                 o(1, "Hand-mine 10 stone", .handMine(item: "stone", count: 10), "Press and hold on a stone patch to mine it."),
@@ -159,7 +172,7 @@ public enum Campaign {
         LevelDefinition(
             id: "L2", title: "First Light", subtitle: "Steam power & research",
             teaches: "Offshore pump, boiler, steam engines, poles, labs, research, electric drills, inserters, first assembler",
-            settings: settings("GF-L2", size: 192), startingItems: items(l2Kit),
+            settings: settings("GF-L2", size: 192, layout: nearLayout(24)), startingItems: items(l2Kit),
             researched: [], availableTechs: ["automation", "logistics", "electronics", "optics", "steel_processing", "fast_inserter", "steel_axe"], researchEnabled: true,
             objectives: [
                 o(1, "Build an offshore pump, boiler and 2 steam engines", .buildEntity(entity: "steam_engine", count: 2), "Place the offshore pump at the water's edge, then the boiler and engines."),

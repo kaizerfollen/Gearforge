@@ -221,4 +221,26 @@ final class ProgressionTests: XCTestCase {
         print("PERF save: \(bytes.count / 1024) KB, encode \(Double(t1 - t0) / 1e6) ms, decode \(Double(t2 - t1) / 1e6) ms, entities \(w.entities.liveCount)")
         XCTAssertLessThan(bytes.count, 20 << 20)
     }
+
+    /// Tutorial levels put every starting resource within a short walk of spawn (no map needed), and the layout
+    /// override is saved so chunks generated after a load are identical.
+    func testTutorialPatchesNearSpawnAndLayoutSurvivesLoad() throws {
+        for (id, maxDist) in [("L1", 16.0), ("L2", 22.0)] {
+            let level = Campaign.levels.first { $0.id == id }!
+            let s = GameSession.newCampaign(level: level)
+            let w = s.world
+            for res in ["iron_ore", "copper_ore", "coal", "stone"] {
+                let r = w.db.resource(res)
+                var best = Double.infinity
+                for y in -30...30 { for x in -30...30 {
+                    let (rr, amt) = w.surface.resource(at: TilePos(Int32(x), Int32(y)))
+                    if rr == r && amt > 0 { best = min(best, Double(x * x + y * y).squareRoot()) }
+                } }
+                XCTAssertLessThan(best, maxDist, "\(id): \(res) nearest tile \(best) from spawn")
+            }
+            let b = try GameSession.decode(payload: s.encodePayload())
+            XCTAssertEqual(b.world.settings.layout, level.settings.layout)
+            XCTAssertEqual(b.world.mapGen.startingPatches, w.mapGen.startingPatches, "\(id): layout restored after load")
+        }
+    }
 }

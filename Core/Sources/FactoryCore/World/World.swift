@@ -57,6 +57,9 @@ public struct WorldSettings: Codable, Equatable, Sendable {
     public var researchQueue: Bool = true
     /// "standard" | "extended"
     public var startingKit: String = "standard"
+    /// Campaign override of the guaranteed starting layout (closer patches on tutorial levels). Saved with the
+    /// settings so chunks generated after a load match a fresh game.
+    public var layout: MapLayoutOverride? = nil
     public init() {}
 }
 
@@ -134,6 +137,7 @@ public final class World {
         player = Character(world: self)
         stats = ProductionStats(world: self)
         mapGen = MapGenerator(world: self)
+        if let layout = settings.layout { mapGen.configure(layout) }
         ground = GroundItems(world: self)
         pollution = PollutionStats(world: self)
 
