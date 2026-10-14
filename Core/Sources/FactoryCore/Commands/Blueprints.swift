@@ -208,7 +208,7 @@ public extension World {
             guard p >= 0 else { continue }
             let o = TilePos(origin.x + e.dx, origin.y + e.dy)
             if let ex = entity(at: o), Int(entities[ex].proto) == p, entities[ex].origin == o { continue }
-            guard canPlace(proto: p, origin: o, direction: e.direction) == nil else { continue }
+            guard placementError(proto: p, origin: o, direction: e.direction) == nil else { continue }
             let g = createEntity(proto: p, origin: o, direction: e.direction, flags: [.playerBuilt, .ghost])
             setGhostSettings(e.settings, for: g)
             placed += 1

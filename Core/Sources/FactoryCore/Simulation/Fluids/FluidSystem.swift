@@ -103,6 +103,8 @@ public final class FluidSystem: EntitySystem {
                 let share = segments[Int(s)].capacity > 0 ? segments[Int(s)].amount * boxes[Int(b)].volume / segments[Int(s)].capacity : 0
                 segments[Int(s)].amount -= share
                 segments[Int(s)].capacity -= boxes[Int(b)].volume
+                // The freed box may be reused before the next rebuild: it must not inherit a share (QA BUG 13).
+                segments[Int(s)].members.removeAll { $0 == b }
             }
             boxes[Int(b)] = FBox()
             freeBoxes.append(b)
@@ -363,27 +365,46 @@ public final class FluidSystem: EntitySystem {
     // MARK: Placement helpers (used by Commands)
 
     /// True if placing `proto` at origin/direction would connect fluid boxes holding different fluids.
-    public func wouldMixFluids(proto: Int, origin: TilePos, direction: Direction) -> Bool {
+    public func wouldMixFluids(proto: Int, origin: TilePos, direction: Direction, ignoring: Int32? = nil) -> Bool {
         ensureTopology()
         let p = world.db.entities[proto]
         guard let fbs = p.fluidBoxes else { return false }
         let (w, h) = world.footprint(proto, direction)
         let rect = TileRect(origin: origin, w: w, h: h)
+        func contentOf(_ ob: Int32, into fluids: inout Set<Int32>) {
+            let box = boxes[Int(ob)]
+            if box.isMember, box.segment >= 0 {
+                let s = segments[Int(box.segment)]
+                if s.amount > 1e-9 { fluids.insert(s.fluid) } else if s.filter >= 0 { fluids.insert(s.filter) }
+            } else if box.amount > 1e-9 { fluids.insert(box.fluid) } else if box.filter >= 0 { fluids.insert(box.filter) }
+        }
         for bi in fbs.indices {
             var fluids = Set<Int32>()
             if let f = fbs[bi].filter { fluids.insert(Int32(world.db.fluid(f))) }
-            for (nt, _, ug) in connections(proto: proto, origin: origin, direction: direction, box: bi) where !ug {
-                guard let o = world.entity(at: nt), world.entities[o].fluidSlot >= 0 else { continue }
+            for (nt, _, ug) in connections(proto: proto, origin: origin, direction: direction, box: bi) {
+                if ug {
+                    // pipe-to-ground: the partner found by the same search the topology uses (QA BUG 9)
+                    let back = direction.opposite
+                    var k: Int32 = 1
+                    while k <= 10 {
+                        if let o = world.entity(at: origin.offset(back, k)), o != ignoring,
+                           world.entities[o].kind == .pipeToGround, Int(world.entities[o].proto) == proto {
+                            if world.entities[o].direction == back, world.entities[o].fluidSlot >= 0 {
+                                contentOf(entityBoxes[Int(world.entities[o].fluidSlot)][0], into: &fluids)
+                            }
+                            if world.entities[o].direction == back || world.entities[o].direction == direction { break }
+                        }
+                        k += 1
+                    }
+                    continue
+                }
+                guard let o = world.entity(at: nt), o != ignoring, world.entities[o].fluidSlot >= 0 else { continue }
                 let orec = world.entities[o]
                 for (obi, ob) in entityBoxes[Int(orec.fluidSlot)].enumerated() {
                     let faces = connections(proto: Int(orec.proto), origin: orec.origin, direction: orec.direction, box: obi)
                         .contains { !$0.2 && rect.contains($0.0) && abs($0.0.x - nt.x) + abs($0.0.y - nt.y) == 1 }
                     guard faces else { continue }
-                    let box = boxes[Int(ob)]
-                    if box.isMember, box.segment >= 0 {
-                        let s = segments[Int(box.segment)]
-                        if s.amount > 1e-9 { fluids.insert(s.fluid) } else if s.filter >= 0 { fluids.insert(s.filter) }
-                    } else if box.amount > 1e-9 { fluids.insert(box.fluid) } else if box.filter >= 0 { fluids.insert(box.filter) }
+                    contentOf(ob, into: &fluids)
                 }
             }
             if fluids.count > 1 && (p.kind == .pipe || p.kind == .pipeToGround || p.kind == .storageTank || fbs[bi].productionType == "input-output" || fbs[bi].productionType == "none") {

@@ -88,6 +88,9 @@ public final class EntityStore {
         liveCount -= 1
     }
 
+    /// True when `i` indexes a live entity (safe to subscript). Commands validate ids with this.
+    @inlinable public func isLive(_ i: Int32) -> Bool { i >= 0 && Int(i) < records.count && records[Int(i)].isAlive }
+
     public func handle(_ i: Int32) -> EntityHandle { EntityHandle(index: i, generation: records[Int(i)].generation) }
 
     /// Resolve a handle; nil if the entity was removed.

@@ -1,5 +1,5 @@
-// Gearforge — QA findings: one repro per open bug. EVERY test here FAILS on the current code (da78b27) and should
-// pass once the bug is fixed. Details, severity and suspected cause: docs/team/qa.md.
+// Gearforge — QA findings (S8 QA review): one repro per bug found by the independent QA agent. All 15 were FIXED
+// by the lead in S8; these tests now guard against regressions. Details: docs/team/qa.md.
 // Crash repros run the command in a forked child (QA.survives) so a trap does not take the test process down.
 
 import XCTest
@@ -211,7 +211,10 @@ final class QAFindingsTests: XCTestCase {
         let w = TestWorld.make(size: 32)
         w.player.position = Vec2(10.5, 10.5)
         let d = w.proto("electric_mining_drill")
-        XCTAssertTrue(w.execute(.buildGhost(entityProto: d, origin: TilePos(10, 12), direction: .north)).isOK)
+        // Ghosts now obey placement rules (BUG 4 fix), so create one that became invalid later (e.g. ore mined out,
+        // or an old blueprint) directly.
+        XCTAssertEqual(w.execute(.buildGhost(entityProto: d, origin: TilePos(10, 12), direction: .north)), .failed(.noResourceUnderDrill))
+        w.createEntity(proto: d, origin: TilePos(10, 12), direction: .north, flags: [.playerBuilt, .ghost])
         w.player.give(w.item("electric_mining_drill"), 1)
         XCTAssertEqual(w.execute(.build(item: w.item("electric_mining_drill"), origin: TilePos(10, 12), direction: .north)),
                        .failed(.noResourceUnderDrill))

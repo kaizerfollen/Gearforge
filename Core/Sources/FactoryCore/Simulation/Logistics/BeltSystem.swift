@@ -210,7 +210,9 @@ public final class BeltSystem: EntitySystem {
     var splitters: [SplitterNode] = []
     private var splitterOfTile: [Int32] = []
     private var dirty = true
-    private var pendingItems: [(tile: Int32, lane: UInt8, frac: Float, item: Int32)] = []
+    /// Items waiting to be placed by the next rebuild: tile, lane, exact distance from the tile's front end in lane
+    /// units (`within`, -1 = unknown → use `frac`, only for saves written before belt save v2), item.
+    private var pendingItems: [(tile: Int32, lane: UInt8, frac: Float, within: Int32, item: Int32)] = []
     /// Items that could not be re-placed after a topology rebuild (should be ~never).
     public private(set) var lostItems: Int = 0
 
@@ -377,7 +379,7 @@ public final class BeltSystem: EntitySystem {
                     let t = line.tiles[j]
                     let len = tileLen(t, l)
                     let frac = 1 - Float(acc - segFront) / Float(max(1, len))
-                    saved.append((t, UInt8(l), max(0, min(1, frac)), lane.items[i]))
+                    saved.append((t, UInt8(l), max(0, min(1, frac)), acc - segFront, lane.items[i]))
                     i -= 1
                 }
             }
@@ -576,7 +578,8 @@ public final class BeltSystem: EntitySystem {
             let lane = lines[Int(tiles[t].line)].lanes[l]
             let len = tiles[t].len(l)
             let base = tiles[t].endDist(l)
-            let d = base + Int32((1 - s.frac) * Float(len))
+            // exact position (QA BUG 14): integer offset; the float fraction only for old saves
+            let d = base + (s.within >= 0 ? min(s.within, len) : Int32((1 - s.frac) * Float(len)))
             if lane.insert(s.item, at: min(d, lane.length)) { continue }
             // search nearby free spot within the tile
             var placed = false
@@ -928,7 +931,7 @@ public final class BeltSystem: EntitySystem {
 
     public func serialize(to w: inout BinaryWriter) {
         ensureTopology()
-        w.write(UInt8(1)) // version
+        w.write(UInt8(2)) // version 2: item positions as exact integer offsets
         w.writeVarInt(tiles.count)
         for i in tiles.indices {
             let t = tiles[i]
@@ -945,7 +948,7 @@ public final class BeltSystem: EntitySystem {
         w.writeVarInt(splitterSecond.count)
         for (a, b) in splitterSecond.sorted(by: { $0.key < $1.key }) { w.write(a); w.write(b) }
         // items
-        var saved: [(Int32, UInt8, Float, Int32)] = []
+        var saved: [(Int32, UInt8, Int32, Int32)] = []
         for line in lines {
             for l in 0..<2 {
                 let lane = line.lanes[l]
@@ -958,7 +961,8 @@ public final class BeltSystem: EntitySystem {
                     while j > 0 && acc >= segFront + tileLen(line.tiles[j], l) { segFront += tileLen(line.tiles[j], l); j -= 1 }
                     let t = line.tiles[j]
                     let len = tileLen(t, l)
-                    saved.append((t, UInt8(l), 1 - Float(acc - segFront) / Float(max(1, len)), lane.items[i]))
+                    _ = len
+                    saved.append((t, UInt8(l), acc - segFront, lane.items[i]))
                     i -= 1
                 }
             }
@@ -969,7 +973,7 @@ public final class BeltSystem: EntitySystem {
     }
 
     public func deserialize(from r: inout BinaryReader) throws {
-        _ = try r.read(UInt8.self)
+        let version = try r.read(UInt8.self)
         let n = try r.readVarInt()
         tiles = []; undergroundIsEntrance = []; splitterSettingsByTile = []; freeTiles = []
         tiles.reserveCapacity(n)
@@ -997,8 +1001,13 @@ public final class BeltSystem: EntitySystem {
         pendingItems.reserveCapacity(ni)
         for _ in 0..<ni {
             let t = try r.read(Int32.self); let l = try r.read(UInt8.self)
-            let f = try r.readFloat(); let it = try r.read(Int32.self)
-            pendingItems.append((t, l, f, it))
+            if version >= 2 {
+                let within = try r.read(Int32.self); let it = try r.read(Int32.self)
+                pendingItems.append((t, l, 0, max(0, within), it))
+            } else {
+                let f = try r.readFloat(); let it = try r.read(Int32.self)
+                pendingItems.append((t, l, f, -1, it))
+            }
         }
         lostItems = Int(try r.read(UInt64.self))
         lines = []

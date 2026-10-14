@@ -78,3 +78,20 @@ Severity scale:
 | A6 | Minor | `App/Sources/Bridge/GameController.swift:202, 433` | `w.player!` / `world.player!` force-unwraps. They are safe while `World.init` always creates the player, but a nil player would crash. |
 
 There are no `try!`, `as!` or unchecked `.first!` uses in `GameController.swift` or `GameView.swift`. Array subscripts on `db.*` arrays are guarded by `>= 0` checks except in A1.
+
+## Resolution (lead, S8)
+All 15 core bugs are **fixed**; `QAFindingsTests` now passes and stays as regression coverage (152 tests green).
+- BUG 1/2: `World.execute` validates entity ids (`EntityStore.isLive`), item ids, prototype/recipe/tech ids up front.
+- BUG 3: `pickUpBeltItems` only for belt kinds.
+- BUG 4: ghosts (`buildGhost`, blueprint paste, auto-build) use the full `placementError` rule set; auto-build validates before removing the ghost.
+- BUG 5/6/7: every give path that can overflow uses `giveOrAlert`/`giveOrSpill`; `GroundItems.spillAll` searches the whole map, so player items never vanish.
+- BUG 8: undo/redo resolve stale handles by prototype + origin.
+- BUG 9: `wouldMixFluids(…, ignoring:)` also checks pipe-to-ground partners and runs for fast-replace.
+- BUG 10: reach checks on setRecipe / insertModule / removeModule.
+- BUG 11: walkAndMine steps to the tile centre when already on the best tile.
+- BUG 12: build-over-ghost validates first; the ghost survives a failed build.
+- BUG 13: a freed fluid box is removed from its segment's member list.
+- BUG 14: belt items saved/restored as exact integer offsets (belt save v2; v1 still loads).
+- BUG 15: walk path + pending walk-and-mine target saved (character save v2).
+- App A1/A2: context menu keeps an `EntityHandle` and resolves it on every action; `pipette` guards dead ids.
+- Open: A3 (drag re-orients an existing belt without an undo entry), pathfinding to unreachable targets ~150 ms in debug builds.

@@ -19,7 +19,8 @@ struct GameView: View {
     @State private var contextMenu: ContextMenuState? = nil
     @State private var touchID = 0
 
-    struct ContextMenuState: Equatable { var entity: Int32; var point: CGPoint }
+    /// Holds a generation-checked handle: the entity may be removed (undo, mining…) while the menu is open (QA A1).
+    struct ContextMenuState: Equatable { var handle: EntityHandle; var point: CGPoint }
 
     var body: some View {
         GeometryReader { geo in
@@ -139,7 +140,7 @@ struct GameView: View {
                 holding = controller.walkAndMine(at: t)
                 if !holding { controller.show("Can't get there") }
             } else if w.entities[e].flags.contains(.playerBuilt) {
-                contextMenu = ContextMenuState(entity: e, point: p)
+                contextMenu = ContextMenuState(handle: w.entities.handle(e), point: p)
                 controller.haptic(.medium)
                 touchStart = nil
             }
@@ -188,15 +189,24 @@ struct GameView: View {
 
     private func contextMenuView(_ cm: ContextMenuState, in size: CGSize) -> some View {
         let w = controller.world
-        let alive = w.entities[cm.entity].isAlive
+        let live = w.entities.resolve(cm.handle)
         return VStack(spacing: 6) {
-            if alive {
-                Text(w.db.entityName(Int(w.entities[cm.entity].proto))).font(.caption.bold()).foregroundStyle(Theme.text)
+            if let e = live {
+                Text(w.db.entityName(Int(w.entities[e].proto))).font(.caption.bold()).foregroundStyle(Theme.text)
                 HStack(spacing: 8) {
-                    HUDButton(glyph: "ui_inventory", size: 46) { controller.openEntity(w.entities.handle(cm.entity)); contextMenu = nil }
-                    HUDButton(glyph: "ui_rotate", size: 46) { controller.execute(.rotate(entity: cm.entity, clockwise: true)); contextMenu = nil }
-                    HUDButton(glyph: "ui_pipette", size: 46) { controller.pipette(cm.entity); contextMenu = nil }
-                    HUDButton(glyph: "ui_remove", size: 46) { controller.execute(.remove(entity: cm.entity)); contextMenu = nil }
+                    HUDButton(glyph: "ui_inventory", size: 46) { controller.openEntity(cm.handle); contextMenu = nil }
+                    HUDButton(glyph: "ui_rotate", size: 46) {
+                        if let e = w.entities.resolve(cm.handle) { controller.execute(.rotate(entity: e, clockwise: true)) }
+                        contextMenu = nil
+                    }
+                    HUDButton(glyph: "ui_pipette", size: 46) {
+                        if let e = w.entities.resolve(cm.handle) { controller.pipette(e) }
+                        contextMenu = nil
+                    }
+                    HUDButton(glyph: "ui_remove", size: 46) {
+                        if let e = w.entities.resolve(cm.handle) { controller.execute(.remove(entity: e)) }
+                        contextMenu = nil
+                    }
                 }
             }
         }

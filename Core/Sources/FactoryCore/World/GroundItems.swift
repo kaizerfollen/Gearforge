@@ -52,12 +52,21 @@ public final class GroundItems {
 
     /// Spills stacks around a point, spiralling outwards (radius ≤ 12). Returns items that could not be placed.
     @discardableResult
-    public func spill(_ stacks: [ItemStack], near pos: Vec2) -> Int {
+    public func spill(_ stacks: [ItemStack], near pos: Vec2) -> Int { spill(stacks, near: pos, maxRadius: 12) }
+
+    /// Spill that keeps searching outward over the whole map (player-owned items must never vanish: removing a full
+    /// chest with a full inventory in a built-up area, QA BUG 7). Returns the count that found no room at all.
+    @discardableResult
+    public func spillAll(_ stacks: [ItemStack], near pos: Vec2) -> Int {
+        spill(stacks, near: pos, maxRadius: Int32(max(world.surface.bounds.w, world.surface.bounds.h)))
+    }
+
+    public func spill(_ stacks: [ItemStack], near pos: Vec2, maxRadius: Int32) -> Int {
         var pending = stacks.filter { !$0.isEmpty }
         guard !pending.isEmpty else { return 0 }
         let c = pos.tile
         var r: Int32 = 0
-        while r <= 12 && !pending.isEmpty {
+        while r <= maxRadius && !pending.isEmpty {
             for p in ring(c, r) where !pending.isEmpty {
                 guard canHold(p) else { continue }
                 var i = 0

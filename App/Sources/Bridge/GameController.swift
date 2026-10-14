@@ -412,6 +412,7 @@ final class GameController {
 
     /// Pipette: select the item that builds this entity.
     func pipette(_ e: Int32) {
+        guard world.entities.isLive(e) else { return }
         let item = world.db.entityItem[Int(world.entities[e].proto)]
         guard item >= 0 else { return }
         buildDirection = world.entities[e].direction

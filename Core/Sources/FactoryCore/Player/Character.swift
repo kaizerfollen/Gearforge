@@ -237,7 +237,7 @@ public final class Character {
         let g = craftGroups.remove(at: group)
         for (item, n) in g.pool where n > 0 {
             let fit = give(Int(item), Int(n))
-            if fit < Int(n) { world.ground.spill([ItemStack(item: item, count: n - Int32(fit))], near: position) }
+            if fit < Int(n) { world.ground.spillAll([ItemStack(item: item, count: n - Int32(fit))], near: position) }
         }
         return true
     }
@@ -258,7 +258,7 @@ public final class Character {
         var g = craftGroups[0]
         guard let ji = g.jobs.firstIndex(where: { $0.remaining > 0 }) else {
             // group finished: leftover pool (excess intermediates) → inventory
-            for (item, n) in g.pool where n > 0 { give(Int(item), Int(n)) }
+            for (item, n) in g.pool where n > 0 { giveOrSpill(Int(item), Int(n)) }   // QA BUG 6: never delete leftovers
             craftGroups.removeFirst()
             return
         }
@@ -282,13 +282,19 @@ public final class Character {
             for res in rr.itemResults {
                 let n = Int(res.amount)
                 world.stats.producedByHand(item: res.index, count: n)
-                if final { give(res.index, n); world.emit(.craftFinished(item: res.index, count: n)) }
+                if final { giveOrSpill(res.index, n); world.emit(.craftFinished(item: res.index, count: n)) }
                 else { g.pool[Int32(res.index), default: 0] += Int32(n) }
             }
             g.jobs[ji].progress = 0
             g.jobs[ji].remaining -= 1
         }
         craftGroups[0] = g
+    }
+
+    /// Gives items; whatever does not fit is dropped on the ground next to the character.
+    func giveOrSpill(_ item: Int, _ n: Int) {
+        let fit = give(item, n)
+        if fit < n { world.ground.spillAll([ItemStack(item: Int32(item), count: Int32(n - fit))], near: position) }
     }
 
     // MARK: Hand mining
@@ -331,7 +337,12 @@ public final class Character {
                 if best == nil || d < best!.d { best = (d, t) }
             }
         }
-        guard let goal = best?.t, walk(to: goal) else { return .outOfReach }
+        guard let goal = best?.t else { return .outOfReach }
+        if goal == position.tile {
+            walkPath = [goal]                    // already on the tile, just off-centre: step to its centre (QA BUG 11)
+        } else if !walk(to: goal) {
+            return .outOfReach
+        }
         miningTarget = nil; miningProgress = 0
         pendingMine = p
         return nil
@@ -431,9 +442,11 @@ public final class Character {
             let item = world.db.entityItem[Int(rec.proto)]
             guard item >= 0, count(of: item) > 0 else { continue }
             let proto = Int(rec.proto), origin = rec.origin, dir = rec.direction
+            // Full placement rules, validated BEFORE the ghost is removed (a ghost that cannot be built stays).
+            guard world.placementError(proto: proto, origin: origin, direction: dir, ignoring: e) == nil else { continue }
             let gs = world.takeGhostSettings(e)
             world.removeEntity(e)
-            if world.canPlace(proto: proto, origin: origin, direction: dir) == nil {
+            do {
                 inventory.remove(item: item, count: 1)
                 let n = world.createEntity(proto: proto, origin: origin, direction: dir)
                 world.ground.clear(world.entities[n].rect)
@@ -445,7 +458,7 @@ public final class Character {
     // MARK: Persistence
 
     public func serialize(to w: inout BinaryWriter) {
-        w.write(UInt8(1))
+        w.write(UInt8(2))                       // v2: + walk path and pending walk-and-mine target
         w.write(position)
         inventory.serialize(to: &w)
         w.writeArray(quickbar) { $0.write($1) }
@@ -464,10 +477,14 @@ public final class Character {
         case .entity(let e)?: w.write(UInt8(2)); w.write(e)
         }
         w.write(miningProgress)
+        w.writeVarInt(walkPath.count)
+        for p in walkPath { w.write(p) }
+        w.write(pendingMine != nil)
+        if let p = pendingMine { w.write(p) }
     }
 
     public func deserialize(from r: inout BinaryReader) throws {
-        _ = try r.read(UInt8.self)
+        let version = try r.read(UInt8.self)
         position = try r.readVec2()
         inventory = try Inventory(from: &r)
         quickbar = try r.readArray { try $0.read(Int32.self) }
@@ -492,6 +509,13 @@ public final class Character {
         default: miningTarget = nil
         }
         miningProgress = try r.readDouble()
+        walkPath = []; pendingMine = nil
+        if version >= 2 {
+            let n = try r.readVarInt()
+            guard n <= 1_000_000 else { throw BinaryCodingError.invalidValue("walk path length") }
+            for _ in 0..<n { walkPath.append(try r.readTilePos()) }
+            if try r.readBool() { pendingMine = try r.readTilePos() }
+        }
         undoStack = []; redoStack = []
     }
 }

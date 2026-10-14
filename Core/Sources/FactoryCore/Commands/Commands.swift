@@ -71,6 +71,30 @@ public enum PlayerCommand: Sendable {
     case dequeueResearch(tech: Int)
 }
 
+extension PlayerCommand {
+    /// Entity ids the command refers to (validated by `World.execute` before use).
+    var entityRefs: [Int32] {
+        switch self {
+        case .remove(let e), .rotate(let e, _), .setRecipe(let e, _), .insertModule(let e, _), .removeModule(let e, _),
+             .setInserterFilter(let e, _, _), .setSplitter(let e, _), .setChestBar(let e, _), .launchRocket(let e),
+             .transferToEntity(let e, _, _), .transferFromEntity(let e, _, _), .takeAll(let e), .pickUpBeltItems(let e):
+            return [e]
+        case .pasteSettings(let a, let b): return [a, b]
+        default: return []
+        }
+    }
+    /// Item ids the command refers to (must index the item table; -1 is allowed only as "clear" for filters).
+    var itemRefs: [Int] {
+        switch self {
+        case .build(let i, _, _), .placeTiles(let i, _), .insertModule(_, let i),
+             .transferToEntity(_, let i, _), .transferFromEntity(_, let i, _):
+            return [i]
+        case .setInserterFilter(_, _, let i): return i < 0 ? [] : [i]
+        default: return []
+        }
+    }
+}
+
 public enum CommandResult: Equatable, Sendable {
     case ok
     case failed(PlacementError)
@@ -127,7 +151,7 @@ public extension World {
         if p.kind == .miningDrill && !mining.hasResource(proto: proto, origin: origin, direction: direction) {
             return .noResourceUnderDrill
         }
-        if p.fluidBoxes != nil && ignoring == nil && fluids.wouldMixFluids(proto: proto, origin: origin, direction: direction) {
+        if p.fluidBoxes != nil && fluids.wouldMixFluids(proto: proto, origin: origin, direction: direction, ignoring: ignoring) {
             return .wouldMixFluids
         }
         return nil
@@ -139,12 +163,17 @@ public extension World {
     @discardableResult
     func execute(_ cmd: PlayerCommand) -> CommandResult {
         let pl = player!
+        // Reject stale / out-of-range ids up front (QA BUG 1/2): commands come from UI state that may lag the world.
+        for e in cmd.entityRefs where !entities.isLive(e) { return .failed(.nothingThere) }
+        for i in cmd.itemRefs where i < 0 || i >= db.items.count { return .failed(.notAllowed) }
         switch cmd {
         case .build(let item, let origin, let dir):
             return build(item: item, origin: origin, direction: dir, recordUndo: true)
 
         case .buildGhost(let proto, let origin, let dir):
-            if let e = canPlace(proto: proto, origin: origin, direction: dir) { return .failed(e) }
+            guard proto >= 0, proto < db.entities.count, db.entityItem[proto] >= 0 else { return .failed(.notAllowed) }
+            // Ghosts obey the same placement rules as real buildings (shoreline, ore under drills, fluid mixing).
+            if let e = placementError(proto: proto, origin: origin, direction: dir) { return .failed(e) }
             createEntity(proto: proto, origin: origin, direction: dir, flags: [.playerBuilt, .ghost])
             return .ok
 
@@ -203,6 +232,8 @@ public extension World {
 
         case .setRecipe(let e, let r):
             guard entities[e].isAlive else { return .failed(.nothingThere) }
+            guard pl.canReach(entities[e].rect) else { return .failed(.outOfReach) }
+            guard r < db.recipes.count else { return .failed(.notAllowed) }
             if r >= 0 {
                 guard research.isRecipeUnlocked(r) else { return .failed(.notResearched) }
                 guard db.canCraft(entity: Int(entities[e].proto), recipe: r) else { return .failed(.notAllowed) }
@@ -211,6 +242,7 @@ public extension World {
             return .ok
 
         case .insertModule(let e, let item):
+            guard pl.canReach(entities[e].rect) else { return .failed(.outOfReach) }
             guard pl.count(of: item) > 0 else { return .failed(.notInInventory) }
             let ok: Bool
             switch entities[e].kind {
@@ -225,6 +257,7 @@ public extension World {
             return .ok
 
         case .removeModule(let e, let slot):
+            guard pl.canReach(entities[e].rect) else { return .failed(.outOfReach) }
             let s: ItemStack?
             switch entities[e].kind {
             case .assemblingMachine, .furnace, .rocketSilo: s = crafting.removeModule(e, slot: slot)
@@ -313,6 +346,10 @@ public extension World {
             return moved > 0 ? .ok : .failed(.nothingThere)
 
         case .pickUpBeltItems(let e):
+            switch entities[e].kind {
+            case .transportBelt, .undergroundBelt, .splitter: break
+            default: return .failed(.notAllowed)              // QA BUG 3: component index is only a belt index for belts
+            }
             guard pl.canReach(entities[e].rect) else { return .failed(.outOfReach) }
             let items = belts.removeAllItems(on: e)
             guard !items.isEmpty else { return .failed(.nothingThere) }
@@ -330,6 +367,7 @@ public extension World {
             return pl.pickUpGround(p) > 0 ? .ok : .failed(.nothingThere)
 
         case .craft(let r, let count):
+            guard count > 0 else { return .failed(.notAllowed) }
             guard pl.canHandcraft(r) else { return .failed(.notResearched) }
             return pl.queueCraft(r, count: count) ? .ok : .failed(.notInInventory)
 
@@ -355,9 +393,11 @@ public extension World {
             return .ok
 
         case .setResearch(let t):
+            guard t >= 0, t < db.technologies.count else { return .failed(.notAllowed) }
             research.setCurrent(t)
             return research.current == t ? .ok : .failed(.notAllowed)
         case .enqueueResearch(let t):
+            guard t >= 0, t < db.technologies.count else { return .failed(.notAllowed) }
             research.enqueue(t)
             return .ok
         case .dequeueResearch(let t):
@@ -376,7 +416,7 @@ public extension World {
         guard let a = player.undoStack.popLast() else { return .failed(.nothingThere) }
         switch a {
         case .built(let h, let proto, let origin, let dir):
-            guard let e = entities.resolve(h) else { return .failed(.nothingThere) }
+            guard let e = resolveUndoTarget(h, proto: proto, origin: origin) else { return .failed(.nothingThere) }
             let recipe = crafting.recipe(of: e)
             let r = remove(entity: e, recordUndo: false)
             if r.isOK { player.redoStack.append(.removed(proto: proto, origin: origin, direction: dir, recipe: recipe)) }
@@ -397,7 +437,7 @@ public extension World {
         guard let a = player.redoStack.popLast() else { return .failed(.nothingThere) }
         switch a {
         case .built(let h, let proto, let origin, let dir):
-            guard let e = entities.resolve(h) else { return .failed(.nothingThere) }
+            guard let e = resolveUndoTarget(h, proto: proto, origin: origin) else { return .failed(.nothingThere) }
             let recipe = crafting.recipe(of: e)
             let r = remove(entity: e, recordUndo: false)
             if r.isOK { pushUndo(.removed(proto: proto, origin: origin, direction: dir, recipe: recipe), clearRedo: false) }
@@ -412,6 +452,16 @@ public extension World {
         }
     }
 
+    /// The entity an undo entry refers to: its handle, or — after an undo/redo re-created it with a new
+    /// generation — the player-built entity of the same prototype at the same origin.
+    private func resolveUndoTarget(_ h: EntityHandle, proto: Int, origin: TilePos) -> Int32? {
+        if let e = entities.resolve(h) { return e }
+        guard let e = entity(at: origin) else { return nil }
+        let r = entities[e]
+        guard Int(r.proto) == proto, r.origin == origin, r.flags.contains(.playerBuilt), !r.flags.contains(.ghost) else { return nil }
+        return e
+    }
+
     internal func pushUndo(_ a: UndoAction, clearRedo: Bool = true) {
         player.undoStack.append(a)
         if player.undoStack.count > 50 { player.undoStack.removeFirst(player.undoStack.count - 50) }
@@ -423,7 +473,7 @@ public extension World {
     private func giveOrAlert(_ s: ItemStack) {
         guard !s.isEmpty else { return }
         let fit = player.give(Int(s.item), Int(s.count))
-        if fit < Int(s.count) { ground.spill([ItemStack(item: s.item, count: s.count - Int32(fit))], near: player.position) }
+        if fit < Int(s.count) { ground.spillAll([ItemStack(item: s.item, count: s.count - Int32(fit))], near: player.position) }
     }
 
     /// Fast-replace target: a single entity exactly under the footprint, same replace group, different prototype or
@@ -466,7 +516,7 @@ public extension World {
             let contents = removeEntity(old)
             let oldItem = db.entityItem[oldProto]
             pl.inventory.remove(item: item, count: 1)
-            if oldItem >= 0 { pl.give(oldItem, 1) }
+            if oldItem >= 0 { giveOrAlert(ItemStack(item: Int32(oldItem), count: 1)) }
             let e = createEntity(proto: proto, origin: origin, direction: dir)
             if recipe >= 0 && entities[e].kind != .furnace { _ = crafting.setRecipe(e, recipe) }
             for (i, f) in filters.enumerated() { inserters.setFilter(e, slot: i, item: f) }
@@ -474,7 +524,7 @@ public extension World {
                 containers.setBar(e, bar)
                 for (it, n) in chestContents {
                     let ins = containers.insert(e, item: it, count: n, source: .player)
-                    if ins < n { pl.give(it, n - ins) }
+                    if ins < n { giveOrAlert(ItemStack(item: Int32(it), count: Int32(n - ins))) }
                 }
                 // chest contents were returned by removeEntity → do not give them twice
                 for s in contents where chestContents.contains(where: { $0.item == Int(s.item) }) { _ = s }
@@ -488,6 +538,7 @@ public extension World {
         if let e = placementError(proto: proto, origin: origin, direction: dir) {
             // building over a ghost of the same entity replaces the ghost
             if e == .blocked, let g = entity(at: origin), entities[g].flags.contains(.ghost), Int(entities[g].proto) == proto {
+                if let e2 = placementError(proto: proto, origin: origin, direction: dir, ignoring: g) { return .failed(e2) }
                 let gs = takeGhostSettings(g)
                 removeEntity(g)
                 let r = build(item: item, origin: origin, direction: dir, recordUndo: recordUndo)
@@ -522,7 +573,7 @@ public extension World {
             let fit = pl.give(Int(s.item), Int(s.count))
             if fit < Int(s.count) { spill.append(ItemStack(item: s.item, count: s.count - Int32(fit))) }
         }
-        if !spill.isEmpty { ground.spill(spill, near: rec.rect.center); emit(.alert("Inventory full — items dropped on the ground")) }
+        if !spill.isEmpty { ground.spillAll(spill, near: rec.rect.center); emit(.alert("Inventory full — items dropped on the ground")) }
         if recordUndo { pushUndo(.removed(proto: proto, origin: rec.origin, direction: rec.direction, recipe: recipe)) }
         return .ok
     }
