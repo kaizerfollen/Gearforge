@@ -19,10 +19,19 @@ from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ATLAS = os.path.normpath(os.path.join(HERE, '..', '..', 'App', 'Resources', 'Sprites.atlas'))
+TERRAIN = os.path.join(os.path.dirname(ATLAS), 'Terrain.atlas')
+
+
+def _dir(name):
+    return TERRAIN if name.startswith(('tile_', 'ore_')) else ATLAS
+
+
+def _all_names():
+    return [f for d in (ATLAS, TERRAIN) if os.path.isdir(d) for f in os.listdir(d)]
 
 
 def load(name):
-    return Image.open(os.path.join(ATLAS, name + '.png')).convert('RGBA')
+    return Image.open(os.path.join(_dir(name), name + '.png')).convert('RGBA')
 
 
 def background(w, h, bg):
@@ -186,7 +195,7 @@ def scene(out, scale=0.5, frame=0):
 def select(pattern, exclude=None):
     import re
     pats = pattern.split(',')
-    names = sorted(f[:-4] for f in os.listdir(ATLAS) if f.endswith('.png') and any(fnmatch.fnmatch(f[:-4], p) for p in pats))
+    names = sorted(f[:-4] for f in _all_names() if f.endswith('.png') and any(fnmatch.fnmatch(f[:-4], p) for p in pats))
     if exclude:
         names = [n for n in names if not re.search(exclude, n)]
     return names
@@ -243,7 +252,7 @@ def main():
         belt_layout(a.belt, a.out, a.frame, a.scale)
         return
     pats = a.pattern.split(',')
-    names = sorted(f[:-4] for f in os.listdir(ATLAS) if f.endswith('.png') and any(fnmatch.fnmatch(f[:-4], p) for p in pats))
+    names = sorted(f[:-4] for f in _all_names() if f.endswith('.png') and any(fnmatch.fnmatch(f[:-4], p) for p in pats))
     if a.exclude:
         import re
         names = [n for n in names if not re.search(a.exclude, n)]

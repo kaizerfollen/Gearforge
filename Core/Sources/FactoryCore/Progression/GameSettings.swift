@@ -38,6 +38,8 @@ public struct GameSettings: Codable, Equatable, Sendable {
     public var reduceMotion: Bool = false
     // Help
     public var tutorialHints: Bool = true
+    /// The "How to play" guide was shown once (it opens by itself on the first game start).
+    public var guideSeen: Bool = false
     public init() {}
 
     /// Decodes settings saved by any app version: keys missing in `data` (added later) keep their defaults,

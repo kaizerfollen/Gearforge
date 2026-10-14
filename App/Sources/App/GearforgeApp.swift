@@ -36,6 +36,8 @@ struct RootView: View {
                 LoadGameView(model: model)
             case .settings:
                 SettingsView(model: model)
+            case .guide:
+                GuidePanel(onClose: { model.screen = .menu })
             case .loading(let text):
                 LoadingView(text: text)
             case .game:

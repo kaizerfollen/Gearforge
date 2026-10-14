@@ -22,6 +22,7 @@ sys.path.insert(0, HERE)
 ROOT = os.path.normpath(os.path.join(HERE, '..', '..'))
 DATA = os.path.join(ROOT, 'Core', 'Sources', 'FactoryCore', 'Resources', 'GameData.json')
 ATLAS = os.path.join(ROOT, 'App', 'Resources', 'Sprites.atlas')
+TERRAIN_ATLAS = os.path.join(ROOT, 'App', 'Resources', 'Terrain.atlas')   # tile_* / ore_* (see gfart/registry.py)
 MANIFEST = os.path.join(ROOT, 'App', 'Resources', 'sprite_manifest.json')
 XCASSETS = os.path.join(ROOT, 'App', 'Resources', 'Assets.xcassets')
 
@@ -61,8 +62,9 @@ def main():
     only = set(a.only.split(',')) if a.only else None
     full = only is None
     if full:
-        for f in glob.glob(os.path.join(ATLAS, '*.png')):
-            os.remove(f)
+        for d in (ATLAS, TERRAIN_ATLAS):
+            for f in glob.glob(os.path.join(d, '*.png')):
+                os.remove(f)
     reg = Registry(ATLAS)
     t0 = time.time()
     for name, fn in CATEGORIES:
@@ -76,7 +78,7 @@ def main():
         print('appicon written')
     if full:
         reg.write_manifest(MANIFEST)
-        total = sum(os.path.getsize(f) for f in glob.glob(os.path.join(ATLAS, '*.png')))
+        total = sum(os.path.getsize(f) for d in (ATLAS, TERRAIN_ATLAS) for f in glob.glob(os.path.join(d, '*.png')))
         print(f'total {len(reg.sprites)} sprites, {total / 1e6:.2f} MB PNG, {time.time() - t0:.1f}s')
 
 

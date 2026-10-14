@@ -6,7 +6,7 @@ import SwiftUI
 import FactoryCore
 
 enum AppScreen: Equatable {
-    case menu, newGame, load, settings, game
+    case menu, newGame, load, settings, game, guide
     case loading(String)
 }
 

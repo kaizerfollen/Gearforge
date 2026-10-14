@@ -20,6 +20,7 @@ enum GamePanel: Equatable, Identifiable {
     case pause
     case map
     case codex
+    case guide
     var id: String {
         switch self {
         case .inventory: return "inventory"
@@ -29,6 +30,7 @@ enum GamePanel: Equatable, Identifiable {
         case .pause: return "pause"
         case .map: return "map"
         case .codex: return "codex"
+        case .guide: return "guide"
         }
     }
 }

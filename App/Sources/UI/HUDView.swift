@@ -36,6 +36,15 @@ struct HUDView: View {
                     Spacer(minLength: 8)
                     HStack(alignment: .top, spacing: 8) {
                         MinimapView(controller: controller)
+                        Button { controller.panel = .guide } label: {
+                            Text(verbatim: "?").font(.system(size: 22 * Theme.uiScale, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white)
+                                .frame(width: 44 * Theme.uiScale, height: 44 * Theme.uiScale)
+                                .background(Circle().fill(Color.black.opacity(0.55)))
+                                .overlay(Circle().stroke(Color.white.opacity(0.25), lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text("How to play"))
                         HUDButton(glyph: "ui_altmode", active: controller.altMode, size: 44) { controller.altMode.toggle() }
                         HUDButton(glyph: "ui_stats", size: 44) { controller.panel = .stats }
                         HUDButton(glyph: "ui_pause", size: 44) { controller.panel = .pause }

@@ -12,13 +12,16 @@ final class SpriteCatalog {
     static let shared = SpriteCatalog()
 
     private let atlas = SKTextureAtlas(named: "Sprites")
+    /// Ground + ore textures in their own atlas: Sprites.atlas is too big for one texture page, and SKTileMapNode
+    /// renders nothing for a chunk whose tile textures sit on different pages (black ground next to lakes, S10).
+    private let terrain = SKTextureAtlas(named: "Terrain")
     private var cache: [String: SKTexture] = [:]
     private var imageCache: [String: UIImage] = [:]
     private(set) var names: Set<String> = []
     private var placeholder: SKTexture?
 
     private init() {
-        for n in atlas.textureNames { names.insert((n as NSString).deletingPathExtension) }
+        for n in atlas.textureNames + terrain.textureNames { names.insert((n as NSString).deletingPathExtension) }
         if names.isEmpty, let url = Bundle.main.url(forResource: "sprite_manifest", withExtension: "json"),
            let data = try? Data(contentsOf: url),
            let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
@@ -33,7 +36,7 @@ final class SpriteCatalog {
         if let t = cache[name] { return t }
         let t: SKTexture
         if names.isEmpty || names.contains(name) {
-            t = atlas.textureNamed(name)
+            t = (name.hasPrefix("tile_") || name.hasPrefix("ore_")) ? terrain.textureNamed(name) : atlas.textureNamed(name)
         } else {
             t = placeholderTexture()
         }
@@ -49,7 +52,7 @@ final class SpriteCatalog {
     }
 
     func preload(_ done: @escaping () -> Void) {
-        atlas.preload { DispatchQueue.main.async { done() } }
+        SKTextureAtlas.preloadTextureAtlases([atlas, terrain]) { DispatchQueue.main.async { done() } }
     }
 
     private func placeholderTexture() -> SKTexture {

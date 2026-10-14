@@ -260,6 +260,7 @@ final class GameScene: SKScene {
                 if let v = views[id] { configure(v, id, w, force: true) }
             case .tilesChanged(let cp), .chunkGenerated(let cp):
                 if let n = chunkNodes[cp] { n.ground.removeFromParent(); n.ore.removeFromParent(); chunkNodes[cp] = nil }
+                syncTimer = 1          // re-bake in this same frame (sync runs right after the events), no blank frames
             default: break
             }
         }

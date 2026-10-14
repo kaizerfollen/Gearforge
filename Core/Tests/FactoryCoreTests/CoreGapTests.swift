@@ -330,4 +330,21 @@ final class CoreGapTests: XCTestCase {
         XCTAssertEqual(w.pasteBlueprint(bp, at: TilePos(50, 50)), 1)
         XCTAssertEqual(w.player.count(of: w.item("wood")), 4)
     }
+
+    // MARK: Map bounds (S10)
+
+    func testEveryInBoundsTileHasAChunkOnOddChunkCounts() {
+        for side in [160, 224, 256] {
+            var st = WorldSettings(); st.width = side; st.height = side
+            let w = World(settings: st)
+            let b = w.surface.bounds
+            XCTAssertEqual(Int(b.w), side)
+            for x in [b.x, b.x + b.w - 1] { for y in [b.y, b.y + b.h - 1] {
+                XCTAssertNotNil(w.surface.chunk(at: TilePos(x, y)), "corner \(x),\(y) of a \(side) map")
+            } }
+            XCTAssertNil(w.surface.chunk(at: TilePos(b.x - 1, 0)))
+            XCTAssertNil(w.surface.chunk(at: TilePos(b.x + b.w, 0)))
+            XCTAssertTrue(b.contains(TilePos(0, 0)), "spawn stays inside")
+        }
+    }
 }

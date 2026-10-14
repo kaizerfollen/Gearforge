@@ -81,7 +81,8 @@ for t in d['tiles']:
     for v in range(4):
         need(f"tile_{t['id']}_v{v}", 64, 64)
 atlas = os.path.join(ROOT, 'App', 'Resources', 'Sprites.atlas')
-on_disk = {f[:-4] for f in os.listdir(atlas) if f.endswith('.png')}
+on_disk = {f[:-4] for d in (atlas, os.path.join(os.path.dirname(atlas), 'Terrain.atlas')) if os.path.isdir(d)
+           for f in os.listdir(d) if f.endswith('.png')}
 if on_disk != set(m):
     miss.append(f'manifest/atlas mismatch: {sorted(on_disk ^ set(m))[:10]}')
 print(f'{len(m)} sprites in manifest; problems: {len(miss)}')

@@ -49,7 +49,11 @@ public final class Surface {
         self.width = width; self.height = height
         chunksX = width / chunkSize; chunksY = height / chunkSize
         chunks = Array(repeating: nil, count: chunksX * chunksY)
-        bounds = TileRect(x: Int32(-width / 2), y: Int32(-height / 2), w: Int32(width), h: Int32(height))
+        // Bounds = exactly the tiles the chunk grid covers. With an odd chunk count (L1: 160 = 5 chunks) the old
+        // centred bounds (-80..<80) included 16 columns no chunk backs (black void you could walk into) and left out
+        // 16 that a chunk does back; chunk slots run from -(chunks/2), so the bounds start there too.
+        bounds = TileRect(x: Int32(-(chunksX / 2) * chunkSize), y: Int32(-(chunksY / 2) * chunkSize),
+                          w: Int32(width), h: Int32(height))
     }
 
     @inlinable public func isInBounds(_ p: TilePos) -> Bool { bounds.contains(p) }

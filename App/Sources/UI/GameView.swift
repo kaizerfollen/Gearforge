@@ -43,6 +43,13 @@ struct GameView: View {
                 if controller.showVictory { VictoryView(model: model, controller: controller) }
             }
         }
+        .onAppear {
+            // first game ever: open "How to play" once
+            if !model.settings.guideSeen {
+                model.settings.guideSeen = true
+                controller.panel = .guide
+            }
+        }
     }
 
     // MARK: Touch layer
@@ -272,6 +279,7 @@ struct GameView: View {
                 case .pause: PauseMenu(model: model, controller: controller)
                 case .map: MapPanel(controller: controller)
                 case .codex: CodexPanel(controller: controller)
+                case .guide: GuidePanel(onClose: { controller.panel = nil })
                 }
             }
         }

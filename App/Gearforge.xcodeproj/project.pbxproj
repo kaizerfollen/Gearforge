@@ -18,10 +18,12 @@
 		5FF248CA80894C7D9DDC2D37 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC2785D25BAD05C8473EA863 /* GameView.swift */; };
 		62F8DC3089D1E0382B72A96F /* HUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD32A38A0176DBDEBEF3FCE /* HUDView.swift */; };
 		630B2BA91194F9944500E4A0 /* Sprites.atlas in Resources */ = {isa = PBXBuildFile; fileRef = 7551B2D381E4C1228326DB74 /* Sprites.atlas */; };
+		7B728790D3254DF77CB566FA /* Terrain.atlas in Resources */ = {isa = PBXBuildFile; fileRef = 8EB2B78DAA61894F688335F9 /* Terrain.atlas */; };
 		8B0D33EEDD20AE0750D4E790 /* FactoryCore in Frameworks */ = {isa = PBXBuildFile; productRef = E747426F531CAABC3CD62DC7 /* FactoryCore */; };
 		8BF8C7365434F5FF8062F9D0 /* SaveCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBFD0F262D319C53E9C49828 /* SaveCompression.swift */; };
 		8E1CD7E08464C243DB951E91 /* EntityPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24697E0782FE1E9E1E1C82ED /* EntityPanel.swift */; };
 		9C28D68782DB4A945528ABE5 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C656D52BB0CBFCA4F652AF45 /* Theme.swift */; };
+		A365CCFB3EC3AC5679BE8FFF /* GuidePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64CC7806D60BA71BB32B8550 /* GuidePanel.swift */; };
 		A5E4CC0013CF3B1455C0D324 /* GameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B7EB56E528E1A51D10A3C7 /* GameController.swift */; };
 		A957E043A96F617A5B4D0183 /* MenuViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 662CC3E2A879DEB90A9680AB /* MenuViews.swift */; };
 		AE076C695F20F4C934664FF6 /* sprite_manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 67B011019FF0374ED0CAA576 /* sprite_manifest.json */; };
@@ -43,11 +45,13 @@
 		3864A4EFF5804D899D426818 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		6292FE1CDC4C36DA4A10FFEF /* GearforgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GearforgeApp.swift; sourceTree = "<group>"; };
 		64CB6F58F91E7BED429525FA /* InventoryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryPanel.swift; sourceTree = "<group>"; };
+		64CC7806D60BA71BB32B8550 /* GuidePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuidePanel.swift; sourceTree = "<group>"; };
 		662CC3E2A879DEB90A9680AB /* MenuViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuViews.swift; sourceTree = "<group>"; };
 		67B011019FF0374ED0CAA576 /* sprite_manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sprite_manifest.json; sourceTree = "<group>"; };
 		7551B2D381E4C1228326DB74 /* Sprites.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; path = Sprites.atlas; sourceTree = "<group>"; };
 		7A48154A452651EB67C8B10B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		821FBC5C05A97B9D89394732 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		8EB2B78DAA61894F688335F9 /* Terrain.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; path = Terrain.atlas; sourceTree = "<group>"; };
 		9DFA53DD0EC14A5227833C59 /* OtherPanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtherPanels.swift; sourceTree = "<group>"; };
 		A8B7EB56E528E1A51D10A3C7 /* GameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameController.swift; sourceTree = "<group>"; };
 		B1C0A2DBCF7FB22D1EF143F8 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
@@ -104,6 +108,7 @@
 				079ADFD8EA2FCAF0A876CBF5 /* CodexPanel.swift */,
 				24697E0782FE1E9E1E1C82ED /* EntityPanel.swift */,
 				DC2785D25BAD05C8473EA863 /* GameView.swift */,
+				64CC7806D60BA71BB32B8550 /* GuidePanel.swift */,
 				CCD32A38A0176DBDEBEF3FCE /* HUDView.swift */,
 				64CB6F58F91E7BED429525FA /* InventoryPanel.swift */,
 				BD51ACDAC24D83DDDF570BD9 /* MapPanel.swift */,
@@ -146,6 +151,7 @@
 				D2E1E2D3D13EE04F1E7F7CEA /* Sounds */,
 				67B011019FF0374ED0CAA576 /* sprite_manifest.json */,
 				7551B2D381E4C1228326DB74 /* Sprites.atlas */,
+				8EB2B78DAA61894F688335F9 /* Terrain.atlas */,
 				FACEBD3821B259E64007FD60 /* GameData.strings */,
 				03C608477711F56CE040B909 /* Localizable.strings */,
 			);
@@ -247,6 +253,7 @@
 				2D167E87D10F28225A69D103 /* Sounds in Resources */,
 				AE076C695F20F4C934664FF6 /* sprite_manifest.json in Resources */,
 				630B2BA91194F9944500E4A0 /* Sprites.atlas in Resources */,
+				7B728790D3254DF77CB566FA /* Terrain.atlas in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -265,6 +272,7 @@
 				CB7C00B739B03AA34D72A6FC /* GameScene.swift in Sources */,
 				5FF248CA80894C7D9DDC2D37 /* GameView.swift in Sources */,
 				FA4DC36481094E81064A2213 /* GearforgeApp.swift in Sources */,
+				A365CCFB3EC3AC5679BE8FFF /* GuidePanel.swift in Sources */,
 				62F8DC3089D1E0382B72A96F /* HUDView.swift in Sources */,
 				2C50E6DFBF38AD7E18BA4BB2 /* InventoryPanel.swift in Sources */,
 				F1CD419557BA6D9F8E56DC89 /* Localization.swift in Sources */,
