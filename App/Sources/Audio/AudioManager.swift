@@ -116,6 +116,8 @@ final class AudioManager {
     private var paused = false
     private var interrupted = false
     private var musicWanted = false
+    /// The engine was (or may have been) stopped behind our back: player nodes must be re-scheduled on resume.
+    private var needsRearm = false
 
     private var rampTask: Task<Void, Never>?
     private var musicTask: Task<Void, Never>?
@@ -138,9 +140,8 @@ final class AudioManager {
         if !enabled && wasEnabled {
             silenceLoopsImmediately()
             if engine.isRunning { engine.pause() }
-        } else if enabled && !wasEnabled && (musicWanted || loops.values.contains { $0.target > 0 }) {
-            _ = ensureRunning()
-            resumeAfterEngineRestart()
+        } else if enabled && !wasEnabled && musicWanted {
+            resume()
         }
     }
 
@@ -222,11 +223,12 @@ final class AudioManager {
         if p {
             rampTask?.cancel(); rampTask = nil
             if engine.isRunning { engine.pause() }
-        } else if enabled && !interrupted {
-            #if os(iOS) || GEARFORGE_TYPECHECK
-            try? AVAudioSession.sharedInstance().setActive(true)
-            #endif
-            if ensureRunning() { resumeAfterEngineRestart() }
+        } else {
+            // An interruption's "ended" notification is not guaranteed; becoming active again ends it. iOS may also
+            // have stopped the engine while we were in the background, so always re-arm the players.
+            interrupted = false
+            needsRearm = true
+            resume()
         }
     }
 
@@ -383,22 +385,35 @@ final class AudioManager {
     }
 
     private func handleInterruption(began: Bool) {
+        needsRearm = true
         if began {
             interrupted = true
             rampTask?.cancel(); rampTask = nil
         } else {
             interrupted = false
-            guard isSetUp, enabled, !paused else { return }
-            #if os(iOS) || GEARFORGE_TYPECHECK
-            try? AVAudioSession.sharedInstance().setActive(true)
-            #endif
-            if ensureRunning() { resumeAfterEngineRestart() }
+            resume()
         }
     }
 
     private func handleEngineReset() {
+        needsRearm = true
+        resume()
+    }
+
+    /// Restarts output after a pause / interruption / reset / re-enable. Every `play()` on a player node is
+    /// guarded by a running engine (AVAudioPlayerNode raises an exception otherwise).
+    private func resume() {
         guard isSetUp, canSound else { return }
-        if ensureRunning() { resumeAfterEngineRestart() }
+        #if os(iOS) || GEARFORGE_TYPECHECK
+        try? AVAudioSession.sharedInstance().setActive(true)
+        #endif
+        guard ensureRunning() else { return }
+        if needsRearm {
+            needsRearm = false
+            resumeAfterEngineRestart()
+        } else {
+            startRamp()
+        }
     }
 
     // MARK: Ambience ramp
