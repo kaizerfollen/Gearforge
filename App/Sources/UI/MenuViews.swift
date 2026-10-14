@@ -5,15 +5,21 @@ import FactoryCore
 
 struct MainMenuView: View {
     @Bindable var model: AppModel
+    @Environment(\.verticalSizeClass) private var vClass
 
     var body: some View {
-        HStack(spacing: 40) {
+        let compact = vClass == .compact
+        HStack(spacing: compact ? 24 : 40) {
             VStack(alignment: .leading, spacing: 8) {
-                SpriteImage(name: "i_assembling_machine_2", size: 96)
-                Text("GEARFORGE").font(.system(size: 54, weight: .heavy, design: .rounded)).foregroundStyle(Theme.accent)
+                SpriteImage(name: "i_assembling_machine_2", size: compact ? 72 : 96)
+                Text("GEARFORGE").font(.system(size: compact ? 44 : 54, weight: .heavy, design: .rounded)).foregroundStyle(Theme.accent)
+                    .lineLimit(1).minimumScaleFactor(0.6)
                 Text("Build. Automate. Launch.").font(.title3).foregroundStyle(Theme.textDim)
+                    .lineLimit(2).minimumScaleFactor(0.8)
             }
-            VStack(spacing: 12) {
+            .frame(maxWidth: 360, alignment: .leading)
+            ScrollView {
+            VStack(spacing: compact ? 10 : 12) {
                 if model.offerRecovery {
                     MenuButton(title: "Restore last session", subtitle: "The game was closed unexpectedly") {
                         model.load(slot: SaveManager.backgroundSlot)
@@ -25,8 +31,12 @@ struct MainMenuView: View {
                 MenuButton(title: "Load Game", enabled: model.canContinue) { model.refreshSaves(); model.screen = .load }
                 MenuButton(title: "Settings") { model.screen = .settings }
             }
+            .padding(.vertical, 8)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .fixedSize(horizontal: true, vertical: false)
         }
-        .padding(40)
+        .padding(.horizontal, compact ? 20 : 40).padding(.vertical, compact ? 8 : 40)
     }
 }
 
@@ -52,7 +62,7 @@ struct NewGameView: View {
     private let sizes = [256, 512, 1024, 2048]
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
             HStack {
                 Button { model.screen = .menu } label: { SpriteImage(name: "ui_close", size: 30) }.buttonStyle(.plain)
                 Spacer()
@@ -61,13 +71,14 @@ struct NewGameView: View {
                     Text("Freeplay").tag(1)
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 320)
+                .frame(maxWidth: 320)
                 Spacer()
                 Color.clear.frame(width: 30, height: 30)
             }
             if tab == 0 { campaign } else { freeplay }
         }
-        .padding(24)
+        .padding(.horizontal, 16).padding(.vertical, 12)
+        .frame(maxWidth: 1000)
     }
 
     private var campaign: some View {
@@ -97,8 +108,8 @@ struct NewGameView: View {
                                 if let b = entry?.bestSeconds, b.isFinite { Text(LF("Best %@ min", "\(Int(b) / 60)")).font(.caption2) }
                             }.foregroundStyle(Theme.textDim)
                         }
-                        .padding(16)
-                        .frame(width: 220, height: 260)
+                        .padding(14)
+                        .frame(width: 210, height: 240)
                         .background(RoundedRectangle(cornerRadius: 14).fill(unlocked ? Theme.panelLight : Theme.panel))
                         .overlay(RoundedRectangle(cornerRadius: 14).stroke(unlocked ? Theme.accent.opacity(0.5) : Color.clear, lineWidth: 1))
                         .overlay(alignment: .bottomTrailing) {
@@ -114,47 +125,60 @@ struct NewGameView: View {
     }
 
     private var freeplay: some View {
-        HStack(alignment: .top, spacing: 24) {
-            VStack(alignment: .leading, spacing: 14) {
-                row("Seed") { TextField("Seed", text: $seedText).textFieldStyle(.roundedBorder).frame(width: 180) }
-                row("Map size") {
-                    Picker("Size", selection: $sizeIndex) {
-                        Text("Small").tag(0); Text("Medium").tag(1); Text("Large").tag(2); Text("Huge").tag(3)
-                    }.pickerStyle(.segmented).frame(width: 320)
+        HStack(alignment: .top, spacing: 20) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    row("Seed") { TextField("Seed", text: $seedText).textFieldStyle(.roundedBorder).frame(maxWidth: 220) }
+                    row("Map size") {
+                        FitPicker("Map size", selection: $sizeIndex, options: [("Small", 0), ("Medium", 1), ("Large", 2), ("Huge", 3)])
+                    }
+                    row("Resource richness") { slider($richness, 0.5...3, fmt: "%.0f%%", scale: 100) }
+                    row("Tech price") {
+                        FitPicker("Tech price", selection: $techPrice, options: [("×0.5", 0.5), ("×1", 1.0), ("×2", 2.0), ("×4", 4.0)])
+                    }
+                    row("Trees") { slider($trees, 0...2, fmt: "%.0f%%", scale: 100) }
                 }
-                row("Resource richness") { slider($richness, 0.5...3, fmt: "%.0f%%", scale: 100) }
-                row("Tech price") {
-                    Picker("Tech price", selection: $techPrice) {
-                        Text("×0.5").tag(0.5); Text("×1").tag(1.0); Text("×2").tag(2.0); Text("×4").tag(4.0)
-                    }.pickerStyle(.segmented).frame(width: 320)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            VStack(alignment: .leading, spacing: 12) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Toggle("Extended starting kit", isOn: $extendedKit)
+                        Toggle("Casual reach (build anywhere on screen)", isOn: $casualReach)
+                        Toggle("Perpetual day", isOn: $perpetualDay)
+                    }
+                    .tint(Theme.accent)
                 }
-                row("Trees") { slider($trees, 0...2, fmt: "%.0f%%", scale: 100) }
+                .scrollBounceBehavior(.basedOnSize)
+                Button { model.startFreeplay(makeSettings()) } label: {
+                    Text("Start Freeplay").font(.system(size: 18, weight: .semibold, design: .rounded))
+                        .frame(maxWidth: .infinity).frame(height: 48)
+                        .foregroundStyle(Theme.text)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Theme.panelLight))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.accent.opacity(0.6), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
             }
-            VStack(alignment: .leading, spacing: 14) {
-                Toggle("Extended starting kit", isOn: $extendedKit)
-                Toggle("Casual reach (build anywhere on screen)", isOn: $casualReach)
-                Toggle("Perpetual day", isOn: $perpetualDay)
-                Spacer()
-                MenuButton(title: "Start Freeplay") { model.startFreeplay(makeSettings()) }
-            }
-            .frame(width: 340)
+            .frame(minWidth: 220, maxWidth: 340)
         }
         .foregroundStyle(Theme.text)
-        .padding(20)
+        .padding(16)
         .background(RoundedRectangle(cornerRadius: 14).fill(Theme.panel))
     }
 
+    /// Label on its own line above the control, so long (Russian) labels never push controls off screen.
     private func row<C: View>(_ title: String, @ViewBuilder _ c: () -> C) -> some View {
-        HStack {
-            Text(LocalizedStringKey(title)).frame(width: 170, alignment: .leading).foregroundStyle(Theme.textDim)
+        VStack(alignment: .leading, spacing: 4) {
+            Text(LocalizedStringKey(title)).font(.subheadline).foregroundStyle(Theme.textDim)
             c()
         }
     }
 
     private func slider(_ v: Binding<Double>, _ r: ClosedRange<Double>, fmt: String, scale: Double) -> some View {
         HStack {
-            Slider(value: v, in: r).frame(width: 240)
-            Text(String(format: fmt, v.wrappedValue * scale)).monospacedDigit().frame(width: 60)
+            Slider(value: v, in: r).frame(maxWidth: 300)
+            Text(String(format: fmt, v.wrappedValue * scale)).monospacedDigit().frame(width: 60, alignment: .trailing)
         }
     }
 
@@ -208,8 +232,7 @@ struct LoadGameView: View {
                 .padding(16)
             }
         }
-        .frame(maxWidth: 760, maxHeight: 520)
-        .padding(30)
+        .panelFrame(maxWidth: 760, maxHeight: 560)
         .alert("Rename save", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
             TextField("Save name", text: $newName)
             Button("Rename") {
@@ -252,9 +275,8 @@ struct SettingsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     section("Gameplay") {
-                        Picker("Autosave", selection: $model.settings.autosaveMinutes) {
-                            Text("Off").tag(0); Text("2 min").tag(2); Text("5 min").tag(5); Text("10 min").tag(10); Text("15 min").tag(15)
-                        }.pickerStyle(.segmented)
+                        FitPicker("Autosave", selection: $model.settings.autosaveMinutes,
+                                  options: [("Off", 0), ("2 min", 2), ("5 min", 5), ("10 min", 10), ("15 min", 15)])
                         Stepper(LF("Autosave slots: %@", "\(model.settings.autosaveSlots)"), value: $model.settings.autosaveSlots, in: 1...5)
                         Toggle("Auto-build ghosts in reach", isOn: $model.settings.autoBuildGhosts)
                     }
@@ -273,9 +295,8 @@ struct SettingsView: View {
                             Slider(value: $model.settings.uiScale, in: 0.8...1.4, step: 0.1)
                             Text(verbatim: "\(Int((model.settings.uiScale * 100).rounded()))%").monospacedDigit().frame(width: 52)
                         }
-                        Picker("Grid", selection: $model.settings.showGrid) {
-                            Text("Grid off").tag("off"); Text("Grid when building").tag("build"); Text("Grid always").tag("always")
-                        }.pickerStyle(.segmented)
+                        FitPicker("Grid", selection: $model.settings.showGrid,
+                                  options: [("Grid off", "off"), ("Grid when building", "build"), ("Grid always", "always")])
                     }
                     section("Accessibility") {
                         Picker("Colour-blind palette", selection: $model.settings.colorblindMode) {
@@ -286,9 +307,7 @@ struct SettingsView: View {
                     }
                     section("Graphics & performance") {
                         Toggle("Day/night lighting", isOn: $model.settings.dayNightLighting)
-                        Picker("Frame rate", selection: $model.settings.frameRateCap) {
-                            Text("30").tag(30); Text("60").tag(60); Text("120").tag(120)
-                        }.pickerStyle(.segmented)
+                        FitPicker("Frame rate", selection: $model.settings.frameRateCap, options: [("30", 30), ("60", 60), ("120", 120)])
                         Toggle("Battery saver (30 FPS rendering)", isOn: $model.settings.batterySaver)
                         Toggle("Show FPS", isOn: $model.settings.showFPS)
                     }
@@ -303,8 +322,7 @@ struct SettingsView: View {
                 .foregroundStyle(Theme.text)
             }
         }
-        .frame(maxWidth: 680, maxHeight: 560)
-        .padding(30)
+        .panelFrame(maxWidth: 680, maxHeight: 560)
     }
 
     private func section<C: View>(_ title: String, @ViewBuilder _ c: () -> C) -> some View {

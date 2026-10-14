@@ -344,6 +344,28 @@ def extract_ui() -> tuple[set, list]:
         for m in re.finditer(r'(?<![A-Za-z0-9_])L\("((?:[^"\\]|\\.)*)"\)', open(path, encoding="utf-8").read()):
             if "\\(" not in m.group(1):
                 keys.add(_unescape(m.group(1)))
+    # FitPicker("Title", selection: …, options: [("Label", value), …]) — title and every tuple label are keys.
+    for path in _swift_files(APP_SOURCES):
+        src = open(path, encoding="utf-8").read()
+        for m in re.finditer(r'(?<![A-Za-z0-9_])FitPicker\(', src):
+            depth, i = 1, m.end()
+            while i < len(src) and depth:
+                c = src[i]
+                if c == '"':
+                    i += 1
+                    while i < len(src) and src[i] != '"':
+                        i += 2 if src[i] == "\\" else 1
+                elif c in "([":
+                    depth += 1
+                elif c in ")]":
+                    depth -= 1
+                i += 1
+            call = src[m.end():i]
+            first = re.match(r'\s*' + STR, call)
+            labels = ([first.group(1)] if first else []) + re.findall(r'\(\s*' + STR + r'\s*,', call)
+            for lab in labels:
+                if "\\(" not in lab and LETTER.search(lab):
+                    keys.add(_unescape(lab))
     return keys, issues
 
 

@@ -9,6 +9,13 @@ struct HUDView: View {
     @Bindable var controller: GameController
 
     private var leftHanded: Bool { controller.settings.leftHanded }
+    @Environment(\.verticalSizeClass) private var vClass
+    /// iPhone in landscape (~750 × 370 pt inside the safe area): narrower info column, smaller joystick area and
+    /// the quickbar laid out between the joystick and the mode buttons instead of under them.
+    private var compact: Bool { vClass == .compact }
+    private var joystickSide: CGFloat { compact ? 150 : 180 }
+    /// Width the mode-button column takes at the screen edge (2 × 52 pt buttons + gap + edge padding, scaled).
+    private var modeColumnWidth: CGFloat { (48 + 8 + 48) * Theme.uiScale + 16 }
 
     var body: some View {
         let hud = controller.hud
@@ -23,10 +30,10 @@ struct HUDView: View {
                         if let hint = hud.hint { hintBubble(hint, hud.hintObjective) }
                         if !hud.selectedName.isEmpty { selectionCard(hud, db) }
                     }
-                    .frame(width: 250, alignment: .leading)
-                    Spacer()
-                    researchBar(hud)
-                    Spacer()
+                    .frame(width: compact ? 210 : 250, alignment: .leading)
+                    Spacer(minLength: 8)
+                    researchBar(hud).layoutPriority(-1)
+                    Spacer(minLength: 8)
                     HStack(alignment: .top, spacing: 8) {
                         MinimapView(controller: controller)
                         HUDButton(glyph: "ui_altmode", active: controller.altMode, size: 44) { controller.altMode.toggle() }
@@ -100,9 +107,15 @@ struct HUDView: View {
                     BarView(fraction: hud.miningProgress, color: Theme.good, height: 8).frame(width: 160)
                 }
                 if !hud.craftQueue.isEmpty { craftQueue(hud, db) }
-                quickbar(hud, db)
+                ViewThatFits(in: .horizontal) {
+                    quickbar(hud, db)
+                    ScrollView(.horizontal, showsIndicators: false) { quickbar(hud, db) }
+                }
             }
             .padding(.bottom, 10)
+            // keep the bottom bar clear of the joystick and the mode column on narrow screens
+            .padding(.leading, compact ? (leftHanded ? modeColumnWidth : joystickSide + 8) : 0)
+            .padding(.trailing, compact ? (leftHanded ? joystickSide + 8 : modeColumnWidth) : 0)
 
             // Joystick (bottom-left; bottom-right in the left-handed layout)
             VStack {
@@ -113,8 +126,8 @@ struct HUDView: View {
                         controller.world.player.moveInput = Vec2(Double(v.dx), Double(v.dy))
                         if v.dx != 0 || v.dy != 0 { controller.cameraFollowsPlayer = true }
                     }
-                    .frame(width: 180, height: 180)
-                    .padding(leftHanded ? .trailing : .leading, 20).padding(.bottom, 16)
+                    .frame(width: joystickSide, height: joystickSide)
+                    .padding(leftHanded ? .trailing : .leading, compact ? 8 : 20).padding(.bottom, compact ? 6 : 16)
                     if !leftHanded { Spacer() }
                 }
             }
@@ -206,11 +219,11 @@ struct HUDView: View {
             HStack(spacing: 8) {
                 SpriteImage(name: "ui_research", size: 20)
                 if hud.researchName.isEmpty {
-                    Text("Choose research").font(.caption.bold()).foregroundStyle(Theme.warn)
+                    Text("Choose research").font(.caption.bold()).foregroundStyle(Theme.warn).lineLimit(1).minimumScaleFactor(0.8)
                 } else {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(hud.researchName).font(.caption.bold()).foregroundStyle(Theme.text)
-                        BarView(fraction: hud.researchProgress, height: 4).frame(width: 160)
+                        Text(hud.researchName).font(.caption.bold()).foregroundStyle(Theme.text).lineLimit(1)
+                        BarView(fraction: hud.researchProgress, height: 4).frame(minWidth: 50, maxWidth: 160)
                     }
                     Text("\(Int(hud.researchProgress * 100))%").font(.caption2).monospacedDigit().foregroundStyle(Theme.textDim)
                 }
@@ -239,7 +252,8 @@ struct HUDView: View {
     }
 
     private func quickbar(_ hud: HUDState, _ db: PrototypeDB) -> some View {
-        HStack(spacing: 4) {
+        let slot: CGFloat = compact ? 40 : 48
+        return HStack(spacing: compact ? 3 : 4) {
             ForEach(0..<10, id: \.self) { i in
                 let item = controller.quickbarItem(i)
                 let count = hud.quickbarCounts[i]
@@ -250,15 +264,15 @@ struct HUDView: View {
                         else { controller.show(LF("No %@ — craft some first", db.itemName(item))) }
                     }
                 } label: {
-                    SlotView(highlighted: controller.mode == .build && controller.buildItem == item && item >= 0, size: 48) {
-                        if item >= 0 { ItemIcon(item: item, db: db, count: count, size: 36).opacity(count > 0 ? 1 : 0.35) }
+                    SlotView(highlighted: controller.mode == .build && controller.buildItem == item && item >= 0, size: slot) {
+                        if item >= 0 { ItemIcon(item: item, db: db, count: count, size: slot * 0.75).opacity(count > 0 ? 1 : 0.35) }
                     }
                 }
                 .buttonStyle(.plain)
             }
             Button { controller.quickbarPage = 1 - controller.quickbarPage } label: {
                 Text("\(controller.quickbarPage + 1)").font(.caption.bold()).foregroundStyle(Theme.textDim)
-                    .frame(width: 22, height: 48)
+                    .frame(width: 22, height: slot)
             }.buttonStyle(.plain)
         }
         .padding(6)

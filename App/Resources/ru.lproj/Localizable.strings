@@ -160,6 +160,7 @@
 "Not connected to a network" = "Не подключено к сети";
 "Not in inventory" = "Нет в инвентаре";
 "Not researched" = "Не исследовано";
+"Nothing here yet" = "Пока ничего нет";
 "Nothing there" = "Здесь ничего нет";
 "Nothing to copy here" = "Здесь нечего копировать";
 "Nothing yet" = "Пока ничего";
@@ -219,7 +220,6 @@
 "Settings" = "Настройки";
 "Show FPS" = "Показывать FPS";
 "Show reach circle" = "Показывать радиус досягаемости";
-"Size" = "Размер";
 "Slots %@" = "Ячеек: %@";
 "Small" = "Маленькая";
 "Some ghosts skipped: trees or rocks out of reach — walk closer and paste again" = "Часть призраков пропущена: деревья или камни слишком далеко — подойдите и вставьте снова";

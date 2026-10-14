@@ -7,6 +7,9 @@ struct ResearchPanel: View {
     @Bindable var controller: GameController
     @State private var filter = 0      // 0 available, 1 researched, 2 all
     @State private var selected: Int? = nil
+    @Environment(\.verticalSizeClass) private var vClass
+    /// iPhone in landscape: narrower detail column, tighter padding.
+    private var compact: Bool { vClass == .compact }
 
     var body: some View {
         let _ = controller.hud
@@ -20,19 +23,22 @@ struct ResearchPanel: View {
             default: return true
             }
         }.sorted { (db.technologies[$0].order ?? db.technologies[$0].id) < (db.technologies[$1].order ?? db.technologies[$1].id) }
-        let cols = Array(repeating: GridItem(.fixed(72), spacing: 8), count: 8)
+        // as many 72 pt columns as the width allows (5 on an iPhone in landscape, 8+ on iPad)
+        let cols = [GridItem(.adaptive(minimum: 72, maximum: 84), spacing: 8)]
+        let shown = selected ?? r.current
         return PanelChrome(title: "Research", onClose: { controller.panel = nil }) {
             HStack(alignment: .top, spacing: 0) {
                 VStack(alignment: .leading, spacing: 10) {
-                    Picker("Filter", selection: $filter) {
-                        Text("Available").tag(0); Text("Researched").tag(1); Text("All").tag(2)
-                    }.pickerStyle(.segmented).frame(width: 360)
+                    FitPicker("Filter", selection: $filter, options: [("Available", 0), ("Researched", 1), ("All", 2)])
+                        .frame(maxWidth: 360)
                     if !r.queue.isEmpty {
-                        HStack(spacing: 6) {
-                            Text("Queue").font(.caption).foregroundStyle(Theme.textDim)
-                            ForEach(r.queue, id: \.self) { t in
-                                Image(uiImage: SpriteCatalog.shared.techIcon(t, db: db)).resizable().frame(width: 32, height: 32)
-                                    .onTapGesture { controller.execute(.dequeueResearch(tech: t)) }
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 6) {
+                                Text("Queue").font(.caption).foregroundStyle(Theme.textDim)
+                                ForEach(r.queue, id: \.self) { t in
+                                    Image(uiImage: SpriteCatalog.shared.techIcon(t, db: db)).resizable().frame(width: 32, height: 32)
+                                        .onTapGesture { controller.execute(.dequeueResearch(tech: t)) }
+                                }
                             }
                         }
                     }
@@ -54,17 +60,37 @@ struct ResearchPanel: View {
                                 .onTapGesture { selected = t }
                             }
                         }
+                        if techs.isEmpty {
+                            Text("Nothing here yet").font(.caption).foregroundStyle(Theme.textDim).padding(.top, 20)
+                        }
                     }
                 }
-                .padding(14)
-                .frame(width: 640)
+                .padding(compact ? 10 : 14)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 Divider().background(Color.white.opacity(0.1))
-                detail(selected ?? r.current)
-                    .padding(14)
+                VStack(alignment: .leading, spacing: 8) {
+                    ScrollView { detail(shown) }.scrollBounceBehavior(.basedOnSize)
+                    actions(shown)
+                }
+                .padding(compact ? 10 : 14)
+                .frame(width: compact ? 250 : 320)
             }
         }
-        .frame(maxWidth: 1020, maxHeight: 620)
-        .padding(20)
+        .panelFrame(maxWidth: 1020, maxHeight: 620)
+    }
+
+    @ViewBuilder private func actions(_ t: Int) -> some View {
+        let db = controller.world.db, r = controller.world.research!
+        if t >= 0 && (!r.isResearched(t) || db.technologies[t].isInfinite) {
+            VStack(spacing: 6) {
+                Button { controller.execute(.setResearch(tech: t)) } label: {
+                    Text("Research now").frame(maxWidth: .infinity)
+                }.buttonStyle(.borderedProminent).tint(Theme.accent)
+                Button { controller.execute(.enqueueResearch(tech: t)) } label: {
+                    Text("Add to queue").frame(maxWidth: .infinity)
+                }.buttonStyle(.bordered)
+            }
+        }
     }
 
     @ViewBuilder private func detail(_ t: Int) -> some View {
@@ -76,6 +102,7 @@ struct ResearchPanel: View {
                     Image(uiImage: SpriteCatalog.shared.techIcon(t, db: db)).resizable().frame(width: 52, height: 52)
                     VStack(alignment: .leading) {
                         Text(db.techName(t) + (tp.maxLevel != nil && tp.maxLevel != 1 ? " \(r.level(of: t))" : "")).font(.headline).foregroundStyle(Theme.text)
+                            .fixedSize(horizontal: false, vertical: true)
                         Text(r.isResearched(t) ? "Researched" : (r.isAvailable(t) ? "Available" : "Locked")).font(.caption)
                             .foregroundStyle(r.isResearched(t) ? Theme.good : (r.isAvailable(t) ? Theme.accent : Theme.textDim))
                     }
@@ -85,38 +112,35 @@ struct ResearchPanel: View {
                     ForEach(Array(tp.ingredients.enumerated()), id: \.offset) { _, ing in ItemIcon(item: db.item(ing.id), db: db, size: 24) }
                     Text(LF("%@ s", String(format: "%.0f", tp.time))).font(.caption).foregroundStyle(Theme.textDim)
                 }
-                if r.progress(of: t) > 0 && !r.isResearched(t) { BarView(fraction: r.progress(of: t), height: 6).frame(width: 260) }
+                if r.progress(of: t) > 0 && !r.isResearched(t) { BarView(fraction: r.progress(of: t), height: 6) }
                 if !db.techPrereqs[t].isEmpty {
                     Text("Requires").font(.caption).foregroundStyle(Theme.textDim)
-                    HStack(spacing: 4) {
-                        ForEach(db.techPrereqs[t], id: \.self) { p in
-                            Image(uiImage: SpriteCatalog.shared.techIcon(p, db: db)).resizable().frame(width: 28, height: 28)
-                                .opacity(r.isResearched(p) ? 1 : 0.5)
-                                .onTapGesture { selected = p }
-                        }
+                    iconWrap(db.techPrereqs[t]) { p in
+                        Image(uiImage: SpriteCatalog.shared.techIcon(p, db: db)).resizable().frame(width: 28, height: 28)
+                            .opacity(r.isResearched(p) ? 1 : 0.5)
+                            .onTapGesture { selected = p }
                     }
                 }
                 let unlocks = db.techUnlocks[t]
                 if !unlocks.isEmpty {
                     Text("Unlocks").font(.caption).foregroundStyle(Theme.textDim)
-                    HStack(spacing: 4) {
-                        ForEach(unlocks, id: \.self) { u in Image(uiImage: SpriteCatalog.shared.recipeIcon(u, db: db)).resizable().frame(width: 28, height: 28) }
-                    }
+                    iconWrap(unlocks) { u in Image(uiImage: SpriteCatalog.shared.recipeIcon(u, db: db)).resizable().frame(width: 28, height: 28) }
                 }
                 ForEach(Array(tp.effects.filter { $0.type != "unlock-recipe" }.enumerated()), id: \.offset) { _, ef in
                     Text(verbatim: "• \(effectText(ef))").font(.caption).foregroundStyle(Theme.text)
-                }
-                Spacer()
-                if !r.isResearched(t) || tp.isInfinite {
-                    HStack {
-                        Button("Research now") { controller.execute(.setResearch(tech: t)) }.buttonStyle(.borderedProminent).tint(Theme.accent)
-                        Button("Add to queue") { controller.execute(.enqueueResearch(tech: t)) }.buttonStyle(.bordered)
-                    }
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .frame(width: 300, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-            Text("Pick a technology").foregroundStyle(Theme.textDim).frame(width: 300)
+            Text("Pick a technology").foregroundStyle(Theme.textDim).frame(maxWidth: .infinity)
+        }
+    }
+
+    /// Icons that wrap onto more lines instead of running off the column.
+    private func iconWrap<V: View>(_ ids: [Int], @ViewBuilder _ icon: @escaping (Int) -> V) -> some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 28, maximum: 28), spacing: 4)], alignment: .leading, spacing: 4) {
+            ForEach(ids, id: \.self) { icon($0) }
         }
     }
 
@@ -147,35 +171,37 @@ struct StatsPanel: View {
         let consumed = st.top(.consumed, window: window, limit: 14)
         return PanelChrome(title: "Production", onClose: { controller.panel = nil }) {
             VStack(alignment: .leading, spacing: 12) {
-                Picker("Window", selection: $window) {
-                    ForEach(StatsWindow.allCases, id: \.self) { w in Text(L(w.label)).tag(w) }
-                }.pickerStyle(.segmented).frame(width: 300)
-                HStack(alignment: .top, spacing: 30) {
-                    column("Produced / min", produced, db)
-                    column("Consumed / min", consumed, db)
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(LF("Rockets launched: %@", "\(st.rocketsLaunched)")).foregroundStyle(Theme.text)
-                        let pol = controller.world.pollution!
-                        Text("Pollution").font(.caption).foregroundStyle(Theme.textDim).padding(.top, 6)
-                        Text(LF("%@ / min · total %@", "\(Int(pol.perMinute.rounded()))", "\(Int(pol.total.rounded()))")).foregroundStyle(Theme.text)
-                        ForEach(pol.bySource.sorted { $0.value > $1.value }.prefix(4), id: \.key) { kv in
-                            HStack(spacing: 6) {
-                                SpriteImage(name: "i_\(db.items[max(0, db.entityItem[kv.key])].id)", size: 18)
-                                Text(LF("%@ / min", String(format: "%.1f", kv.value))).font(.caption).foregroundStyle(Theme.textDim)
+                FitPicker("Window", selection: $window, options: StatsWindow.allCases.map { (L($0.label), $0) })
+                    .frame(maxWidth: 360)
+                ScrollView {
+                    HStack(alignment: .top, spacing: 16) {
+                        column("Produced / min", produced, db)
+                        column("Consumed / min", consumed, db)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(LF("Rockets launched: %@", "\(st.rocketsLaunched)")).foregroundStyle(Theme.text)
+                            let pol = controller.world.pollution!
+                            Text("Pollution").font(.caption).foregroundStyle(Theme.textDim).padding(.top, 6)
+                            Text(LF("%@ / min · total %@", "\(Int(pol.perMinute.rounded()))", "\(Int(pol.total.rounded()))")).foregroundStyle(Theme.text)
+                            ForEach(pol.bySource.sorted { $0.value > $1.value }.prefix(4), id: \.key) { kv in
+                                HStack(spacing: 6) {
+                                    SpriteImage(name: "i_\(db.items[max(0, db.entityItem[kv.key])].id)", size: 18)
+                                    Text(LF("%@ / min", String(format: "%.1f", kv.value))).font(.caption).foregroundStyle(Theme.textDim)
+                                }
+                            }
+                            let net = controller.world.power.network(at: controller.world.player.position)
+                            if net >= 0, let ps = controller.world.power.stats(network: net) {
+                                Text("Power here").font(.caption).foregroundStyle(Theme.textDim)
+                                Text("\(formatWatts(ps.demandW)) / \(formatWatts(ps.capacityW))").foregroundStyle(Theme.text)
                             }
                         }
-                        let net = controller.world.power.network(at: controller.world.player.position)
-                        if net >= 0, let ps = controller.world.power.stats(network: net) {
-                            Text("Power here").font(.caption).foregroundStyle(Theme.textDim)
-                            Text("\(formatWatts(ps.demandW)) / \(formatWatts(ps.capacityW))").foregroundStyle(Theme.text)
-                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
+                .scrollBounceBehavior(.basedOnSize)
             }
-            .padding(16)
+            .padding(14)
         }
-        .frame(maxWidth: 900, maxHeight: 600)
-        .padding(20)
+        .panelFrame(maxWidth: 900, maxHeight: 600)
     }
 
     private func column(_ title: String, _ rows: [StatEntry], _ db: PrototypeDB) -> some View {
@@ -189,13 +215,14 @@ struct StatsPanel: View {
                     case .fluid(let f): Image(uiImage: SpriteCatalog.shared.fluidIcon(f, db: db)).resizable().frame(width: 24, height: 24)
                     default: EmptyView()
                     }
-                    BarView(fraction: r.perMinute / max(maxV, 1e-9), height: 6).frame(width: 120)
+                    BarView(fraction: r.perMinute / max(maxV, 1e-9), height: 6).frame(minWidth: 30, maxWidth: 120)
                     Text(String(format: r.perMinute >= 100 ? "%.0f" : "%.1f", r.perMinute)).font(.caption).monospacedDigit().foregroundStyle(Theme.text)
+                        .fixedSize()
                 }
             }
             if rows.isEmpty { Text("Nothing yet").font(.caption).foregroundStyle(Theme.textDim) }
         }
-        .frame(width: 240, alignment: .leading)
+        .frame(maxWidth: 240, alignment: .leading)
     }
 }
 

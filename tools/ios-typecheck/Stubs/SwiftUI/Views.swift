@@ -461,3 +461,9 @@ extension TimelineView: View where Content: View {
     public var body: Never { _stub() }
     public init(_ schedule: Schedule, @ViewBuilder content: @escaping (TimelineViewDefaultContext) -> Content) { _stub() }
 }
+
+public struct ViewThatFits<Content: View>: View {
+    public typealias Body = Never
+    public var body: Never { _stub() }
+    public init(in axes: Axis.Set = [.horizontal, .vertical], @ViewBuilder content: () -> Content) { _stub() }
+}

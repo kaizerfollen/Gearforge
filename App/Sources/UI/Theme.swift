@@ -159,6 +159,43 @@ struct MenuButton: View {
     }
 }
 
+/// Segmented picker that becomes a compact menu picker when its segments don't fit the width it is given
+/// (long Russian labels on an iPhone in landscape). Labels are localization keys (or already-localized text).
+struct FitPicker<T: Hashable>: View {
+    let title: String
+    @Binding var selection: T
+    let options: [(String, T)]
+
+    init(_ title: String, selection: Binding<T>, options: [(String, T)]) {
+        self.title = title
+        self._selection = selection
+        self.options = options
+    }
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            picker.pickerStyle(.segmented)
+            picker.pickerStyle(.menu).tint(Theme.accent)
+        }
+    }
+
+    private var picker: some View {
+        Picker(LocalizedStringKey(title), selection: $selection) {
+            ForEach(Array(options.enumerated()), id: \.offset) { _, o in Text(LocalizedStringKey(o.0)).tag(o.1) }
+        }
+    }
+}
+
+extension View {
+    /// Panel sizing shared by every in-game panel and menu screen: never larger than `maxWidth`×`maxHeight`,
+    /// never larger than the safe area minus `margin` (iPhone in landscape: notch / Dynamic Island on one side).
+    func panelFrame(maxWidth: CGFloat, maxHeight: CGFloat, margin: CGFloat = 12) -> some View {
+        self.frame(maxWidth: maxWidth, maxHeight: maxHeight)
+            .padding(margin)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
 /// Thin progress bar.
 struct BarView: View {
     let fraction: Double

@@ -10,6 +10,9 @@ struct CodexPanel: View {
     @State private var group = 0
     @State private var selected: Int? = nil
     @State private var query = ""
+    @Environment(\.verticalSizeClass) private var vClass
+    /// iPhone in landscape: 6-column browser so the detail column keeps enough room.
+    private var compact: Bool { vClass == .compact }
 
     private var db: PrototypeDB { controller.world.db }
     private var groups: [ItemGroupProto] { db.data.itemGroups.filter { $0.id != "combat" } }
@@ -17,7 +20,7 @@ struct CodexPanel: View {
     var body: some View {
         PanelChrome(title: "Codex", onClose: { controller.panel = nil }) {
             HStack(alignment: .top, spacing: 0) {
-                browser.frame(width: 430)
+                browser.frame(width: compact ? 300 : 430)
                 Divider().background(Color.white.opacity(0.1))
                 ScrollView {
                     if let i = selected { detail(i) } else {
@@ -26,8 +29,7 @@ struct CodexPanel: View {
                 }
             }
         }
-        .frame(maxWidth: 1060, maxHeight: 620)
-        .padding(16)
+        .panelFrame(maxWidth: 1060, maxHeight: 620)
     }
 
     // MARK: Browser
@@ -45,11 +47,12 @@ struct CodexPanel: View {
     }
 
     private var browser: some View {
-        // 8 × 44 + 7 × 4 = 380 pt fits the 430 pt browser minus its 2 × 12 pt padding (9 columns overflowed by 22 pt)
-        let cols = Array(repeating: GridItem(.fixed(44), spacing: 4), count: 8)
+        // 8 × 44 + 7 × 4 = 380 pt fits the 430 pt browser minus its 2 × 12 pt padding; 6 columns (284 pt) in 300 pt
+        let cols = Array(repeating: GridItem(.fixed(44), spacing: 4), count: compact ? 6 : 8)
         return VStack(alignment: .leading, spacing: 8) {
             TextField("Search", text: $query).textFieldStyle(.roundedBorder)
             if query.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
                     ForEach(Array(groups.enumerated()), id: \.offset) { i, g in
                         Button { group = i } label: {
@@ -59,6 +62,7 @@ struct CodexPanel: View {
                                 .background(Capsule().fill(group == i ? Theme.accent : Theme.panelLight))
                         }.buttonStyle(.plain)
                     }
+                }
                 }
             }
             ScrollView {
@@ -109,8 +113,7 @@ struct CodexPanel: View {
             }
             if !uses.isEmpty {
                 section("Used in")
-                let cols = Array(repeating: GridItem(.fixed(40), spacing: 4), count: 8)
-                LazyVGrid(columns: cols, alignment: .leading, spacing: 4) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 38, maximum: 38), spacing: 4)], alignment: .leading, spacing: 4) {
                     ForEach(uses, id: \.self) { r in
                         Image(uiImage: SpriteCatalog.shared.recipeIcon(r, db: db)).resizable().frame(width: 34, height: 34)
                             .onTapGesture { if let res = db.resolvedRecipes[r].itemResults.first { selected = res.index } }
@@ -158,12 +161,13 @@ struct CodexPanel: View {
                 ForEach(machines.prefix(6), id: \.self) { e in
                     ItemIcon(item: db.entityItem[e], db: db, size: 22)
                 }
-                Spacer()
-                if let t = tech {
-                    let done = research.isResearched(t)
-                    Text(done ? LF("Unlocked by %@", db.techName(t)) : LF("Needs research: %@", db.techName(t)))
-                        .font(.caption2).foregroundStyle(done ? Theme.textDim : Theme.warn)
-                }
+                Spacer(minLength: 0)
+            }
+            if let t = tech {
+                let done = research.isResearched(t)
+                Text(done ? LF("Unlocked by %@", db.techName(t)) : LF("Needs research: %@", db.techName(t)))
+                    .font(.caption2).foregroundStyle(done ? Theme.textDim : Theme.warn)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(10)

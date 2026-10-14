@@ -30,8 +30,7 @@ struct EntityPanel: View {
                 }
                 .scrollBounceBehavior(.basedOnSize)
             }
-            .frame(maxWidth: 820, maxHeight: 620)
-            .padding(20)
+            .panelFrame(maxWidth: 820, maxHeight: 620)
             .sheet(isPresented: $pickingRecipe) { RecipePicker(controller: controller, entity: e) { pickingRecipe = false } }
         }
     }
@@ -101,7 +100,7 @@ struct EntityPanel: View {
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(r >= 0 ? db.recipeName(r) : L("No recipe")).font(.headline).foregroundStyle(Theme.text)
-                    BarView(fraction: w.crafting.progress(of: e), height: 8).frame(width: 260)
+                    BarView(fraction: w.crafting.progress(of: e), height: 8).frame(maxWidth: 260)
                     HStack {
                         Text(LF("Speed %@", String(format: "%.2f", w.crafting.craftingSpeed(of: e)))).font(.caption).foregroundStyle(Theme.textDim)
                         if w.crafting.effects(of: e).productivity > 0 {
@@ -132,7 +131,7 @@ struct EntityPanel: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading) {
                 Text(LF("Rocket parts %@/100", "\(parts)")).font(.subheadline).foregroundStyle(Theme.text)
-                BarView(fraction: Double(parts) / 100, color: Theme.good, height: 8).frame(width: 240)
+                BarView(fraction: Double(parts) / 100, color: Theme.good, height: 8).frame(maxWidth: 240)
             }
             itemsRow("Payload", w.crafting.rocketInventory(of: e)?.slots.filter { !$0.isEmpty } ?? []) { _ in }
             Button("LAUNCH") { controller.execute(.launchRocket(entity: e)) }
@@ -142,7 +141,7 @@ struct EntityPanel: View {
 
     @ViewBuilder private func drill(_ e: Int32) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            BarView(fraction: w.mining.progress(of: e), height: 8).frame(width: 260)
+            BarView(fraction: w.mining.progress(of: e), height: 8).frame(maxWidth: 260)
             Text(LF("Resources left: %@", "\(w.mining.remainingResources(of: e))")).font(.caption).foregroundStyle(Theme.textDim)
             if let f = w.mining.fuel(of: e) { fuelRow(e, f) }
             if let m = w.mining.modules(of: e) { modulesRow(e, m) }
@@ -151,7 +150,7 @@ struct EntityPanel: View {
 
     @ViewBuilder private func chest(_ e: Int32) -> some View {
         if let inv = w.containers.inventory(of: e) {
-            let cols = Array(repeating: GridItem(.fixed(44), spacing: 4), count: 12)
+            let cols = [GridItem(.adaptive(minimum: 44, maximum: 44), spacing: 4)]
             VStack(alignment: .leading, spacing: 6) {
                 LazyVGrid(columns: cols, spacing: 4) {
                     ForEach(0..<inv.size, id: \.self) { i in
@@ -174,7 +173,7 @@ struct EntityPanel: View {
                     }, onDecrement: {
                         controller.execute(.setChestBar(entity: e, bar: max(0, (inv.bar ?? inv.size) - 1)))
                     })
-                    .frame(width: 220).foregroundStyle(Theme.text)
+                    .frame(maxWidth: 240).foregroundStyle(Theme.text)
                 }
             }
         }
@@ -185,7 +184,7 @@ struct EntityPanel: View {
             itemsRow("Data cards", w.labs.cards(of: e)?.slots.filter { !$0.isEmpty } ?? []) { s in
                 controller.execute(.transferFromEntity(entity: e, item: Int(s.item), count: Int(s.count)))
             }
-            BarView(fraction: w.labs.progress(of: e), height: 8).frame(width: 260)
+            BarView(fraction: w.labs.progress(of: e), height: 8).frame(maxWidth: 260)
             let cur = w.research.current
             Text(cur >= 0 ? LF("Researching %@", db.techName(cur)) : L("No research selected")).font(.caption).foregroundStyle(Theme.textDim)
             if let m = w.labs.modules(of: e) { modulesRow(e, m) }
@@ -217,6 +216,7 @@ struct EntityPanel: View {
             let filters = w.inserters.filters(of: e)
             if !filters.isEmpty {
                 Text("Filters (tap an inventory item below to set the first empty filter)").font(.caption).foregroundStyle(Theme.textDim)
+                    .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 6) {
                     ForEach(Array(filters.enumerated()), id: \.offset) { i, f in
                         SlotView(size: 44) { if f >= 0 { ItemIcon(item: f, db: db, size: 32) } }
@@ -237,16 +237,17 @@ struct EntityPanel: View {
                 SlotView(size: 44) { if s.filter >= 0 { ItemIcon(item: Int(s.filter), db: db, size: 32) } }
                     .onTapGesture { var n = s; n.filter = -1; controller.execute(.setSplitter(entity: e, settings: n)) }
                 Text("tap an inventory item below to set").font(.caption2).foregroundStyle(Theme.textDim)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
 
     private func prioPicker(_ title: String, _ v: Int8, _ set: @escaping (Int8) -> Void) -> some View {
         HStack {
-            Text(LocalizedStringKey(title)).frame(width: 130, alignment: .leading).foregroundStyle(Theme.textDim)
-            Picker(LocalizedStringKey(title), selection: Binding(get: { v }, set: { set($0) })) {
-                Text("Left").tag(Int8(0)); Text("None").tag(Int8(-1)); Text("Right").tag(Int8(1))
-            }.pickerStyle(.segmented).frame(width: 260)
+            Text(LocalizedStringKey(title)).frame(width: 150, alignment: .leading).foregroundStyle(Theme.textDim)
+            FitPicker(title, selection: Binding(get: { v }, set: { set($0) }),
+                      options: [("Left", Int8(0)), ("None", Int8(-1)), ("Right", Int8(1))])
+                .frame(maxWidth: 280)
         }
     }
 
@@ -258,8 +259,8 @@ struct EntityPanel: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(LF("Electric network #%@", "\(n)")).font(.subheadline.bold()).foregroundStyle(Theme.text)
                 Text(LF("Demand %@ · Production %@ · Capacity %@", "\(formatWatts(st.demandW))", "\(formatWatts(st.productionW))", "\(formatWatts(st.capacityW))"))
-                    .font(.caption).foregroundStyle(Theme.textDim)
-                BarView(fraction: st.satisfaction, color: Theme.powerColor(st.satisfaction), height: 8).frame(width: 300)
+                    .font(.caption).foregroundStyle(Theme.textDim).fixedSize(horizontal: false, vertical: true)
+                BarView(fraction: st.satisfaction, color: Theme.powerColor(st.satisfaction), height: 8).frame(maxWidth: 300)
                 if st.accumulatorCapacity > 0 {
                     Text(LF("Accumulators %@%%", String(format: "%.0f", st.accumulatorCharge / st.accumulatorCapacity * 100))).font(.caption).foregroundStyle(Theme.textDim)
                 }
@@ -369,7 +370,7 @@ struct RecipePicker: View {
         let recipes = db.recipes.indices.filter { r in
             !db.recipes[r].hidden && db.recipes[r].phase == "mvp" && db.canCraft(entity: proto, recipe: r) && w.research.isRecipeUnlocked(r)
         }
-        let cols = Array(repeating: GridItem(.fixed(56), spacing: 6), count: 10)
+        let cols = [GridItem(.adaptive(minimum: 56, maximum: 56), spacing: 6)]
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Choose recipe").font(.title3.bold())

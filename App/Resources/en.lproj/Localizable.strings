@@ -160,6 +160,7 @@
 "Not connected to a network" = "Not connected to a network";
 "Not in inventory" = "Not in inventory";
 "Not researched" = "Not researched";
+"Nothing here yet" = "Nothing here yet";
 "Nothing there" = "Nothing there";
 "Nothing to copy here" = "Nothing to copy here";
 "Nothing yet" = "Nothing yet";
@@ -219,7 +220,6 @@
 "Settings" = "Settings";
 "Show FPS" = "Show FPS";
 "Show reach circle" = "Show reach circle";
-"Size" = "Size";
 "Slots %@" = "Slots %@";
 "Small" = "Small";
 "Some ghosts skipped: trees or rocks out of reach — walk closer and paste again" = "Some ghosts skipped: trees or rocks out of reach — walk closer and paste again";

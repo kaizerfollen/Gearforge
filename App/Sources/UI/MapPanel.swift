@@ -71,7 +71,6 @@ struct MapPanel: View {
                 }
             }
         }
-        .frame(maxWidth: 900, maxHeight: 700)
-        .padding(16)
+        .panelFrame(maxWidth: 900, maxHeight: 700)
     }
 }

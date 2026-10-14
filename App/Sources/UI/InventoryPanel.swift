@@ -38,8 +38,7 @@ struct InventoryPanel: View {
                     }
                 }
             }
-            .frame(maxWidth: 1060, maxHeight: 600)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .panelFrame(maxWidth: 1060, maxHeight: 600, margin: 0)
         }
         .padding(geoPadding)
         .onAppear(perform: recompute)
@@ -51,12 +50,13 @@ struct InventoryPanel: View {
 
     private var inventoryGrid: some View {
         let inv = controller.world.player.inventory
-        let cols = Array(repeating: GridItem(.fixed(44), spacing: 4), count: 10)
+        let cols = [GridItem(.adaptive(minimum: 44, maximum: 44), spacing: 4)]
         return VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("Inventory").font(.headline).foregroundStyle(Theme.text)
                 Spacer()
                 Button("Codex") { controller.panel = .codex }.buttonStyle(.bordered)
+                    .lineLimit(1)
                 Button("Sort") { controller.execute(.sortInventory) }.buttonStyle(.bordered).tint(Theme.accent)
             }
             ScrollView {
@@ -112,7 +112,7 @@ struct InventoryPanel: View {
             HStack(spacing: 8) {
                 ForEach(Array(groups.enumerated()), id: \.offset) { i, g in
                     Button { group = i } label: {
-                        Text(Names.group(g)).font(.caption.bold())
+                        Text(Names.group(g)).font(.caption.bold()).lineLimit(1)
                             .padding(.horizontal, 10).padding(.vertical, 6)
                             .foregroundStyle(group == i ? Color.black : Theme.text)
                             .background(Capsule().fill(group == i ? Theme.accent : Theme.panelLight))
@@ -122,8 +122,10 @@ struct InventoryPanel: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(rows(), id: \.0) { _, recipes in
-                        HStack(spacing: 4) {
-                            ForEach(recipes, id: \.self) { r in recipeButton(r) }
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 4) {
+                                ForEach(recipes, id: \.self) { r in recipeButton(r) }
+                            }
                         }
                     }
                 }
