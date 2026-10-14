@@ -33,15 +33,12 @@ struct GameView: View {
                         .ignoresSafeArea()
                 }
                 touchLayer
-                HUDView(model: model, controller: controller)
-                    .padding(.leading, geo.safeAreaInsets.leading)
-                    .padding(.trailing, geo.safeAreaInsets.trailing)
-                if let cm = contextMenu { contextMenuView(cm, in: geo.size) }
+                HUDView(model: model, controller: controller)          // respects the safe area (notch / Dynamic Island)
+                if let cm = contextMenu { contextMenuView(cm, in: geo.size).ignoresSafeArea() }   // touch points are screen-based
                 panelOverlay
                 if controller.showVictory { VictoryView(model: model, controller: controller) }
             }
         }
-        .ignoresSafeArea()
     }
 
     // MARK: Touch layer
