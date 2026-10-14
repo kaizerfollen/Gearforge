@@ -15,6 +15,23 @@ All names/art/text are original. This file is the single source of truth for "wh
 Open `project/App/Gearforge.xcodeproj` in Xcode 15+ → target Gearforge → Signing & Capabilities → pick your Team → choose an iPad/iPhone simulator (landscape) → Run. Details: `docs/team/platform.md`.
 Typecheck on Linux: `tools/ios-typecheck/run.sh --app-only`. Regenerate project after adding files: `python3 tools/ios/gen_xcodeproj.py`.
 
+## Toolchain in a fresh container (download.swift.org is BLOCKED by the egress policy)
+Install Swift 6.0.3 from Ubuntu 25.10 "questing" (archive.ubuntu.com is allowed), pinned low so nothing else upgrades:
+```
+cat > /etc/apt/sources.list.d/questing.sources <<'X'
+Types: deb
+URIs: http://archive.ubuntu.com/ubuntu/
+Suites: questing
+Components: main universe
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+X
+printf 'Package: *\nPin: release n=questing\nPin-Priority: 100\n' > /etc/apt/preferences.d/questing-pin
+grep -l docker /etc/apt/sources.list.d/* | xargs -r rm -f     # docker repo is blocked → apt update fails
+apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq -t questing swiftlang
+```
+Restore the repo: newest `Gearforge-<TS>.bundle` from `/mnt/user-data/outputs/gearforge/` (if the container kept it) or
+stage it from the Mac `checkpoints/` → `git clone <bundle> /home/claude/Gearforge`.
+
 ## How to resume in a new session
 1. If `/home/claude/Gearforge` is missing: stage `checkpoints/Gearforge.bundle` from the Mac
    (`device_stage_files`) and `git clone <staged bundle> /home/claude/Gearforge`.
@@ -71,8 +88,9 @@ Typecheck on Linux: `tools/ios-typecheck/run.sh --app-only`. Regenerate project 
   auto-exit build mode), pause/entity panel scrolling, craftable counts per tab, campaign lock icon; new minimap + map
   screen (tap to walk), pollution in stats. Then: **Russian localization** (l10n agent: 1000+ keys, tooling
   tools/l10n), **independent QA agent** (15 core bugs found → all fixed, 152 tests green), tutorial hint bubbles,
-  left-handed layout, save thumbnails, tolerant settings decoding. Mac went offline ~12:50 (screen locked):
-  last Mac sync = patch-20261014-124930 (localization tables); later commits only in container / sent as files.
+  left-handed layout, save thumbnails, tolerant settings decoding. Mac went offline ~12:50 (screen locked).
+- **S9 (2026-10-14 evening):** new container (repo + Swift gone). Restored repo from bundle 1321, installed Swift
+  from Ubuntu questing (see Toolchain), 152 tests + app typecheck green; synced checkpoint 1321 to the Mac.
 
 ## Honest audit
 See **docs/AUDIT.md** (what is done / partial / missing, saves, agents, priority backlog). Keep it updated.
