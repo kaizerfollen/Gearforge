@@ -78,6 +78,35 @@ final class GameplayTests: XCTestCase {
         XCTAssertNil(w.entity(at: TilePos(20, 20)))
     }
 
+    func testWalkAndMineOutOfReach() {
+        let w = playerWorld()
+        let start = w.player.position
+        let p = TilePos(Int32(start.x) + 9, Int32(start.y) + 3)
+        w.surface.setResource(at: p, w.db.resource("stone"), amount: 5)
+        XCTAssertEqual(w.execute(.startMining(p)), .failed(.outOfReach))
+        XCTAssertTrue(w.execute(.walkAndMine(p)).isOK)
+        XCTAssertNotNil(w.player.pendingMine)
+        w.step(60 * 4)
+        XCTAssertNil(w.player.pendingMine, "arrived and started mining")
+        XCTAssertEqual(w.player.miningTarget, .tile(p))
+        XCTAssertGreaterThan(w.player.count(of: w.item("stone")), 0)
+        // A tree (not walkable itself) is reached from a neighbouring tile.
+        let tree = w.place("tree_01", Int(start.x) - 8, Int(start.y))
+        w.entities.update(tree) { $0.flags = [] }
+        w.player.stopMining()
+        XCTAssertTrue(w.execute(.walkAndMine(TilePos(Int32(start.x) - 8, Int32(start.y)))).isOK)
+        w.step(60 * 4)
+        XCTAssertGreaterThan(w.player.count(of: w.item("wood")), 0)
+        // Joystick input cancels the pending walk.
+        let q = TilePos(Int32(start.x) + 12, Int32(start.y) - 6)
+        w.surface.setResource(at: q, w.db.resource("stone"), amount: 5)
+        XCTAssertTrue(w.execute(.walkAndMine(q)).isOK)
+        w.player.moveInput = Vec2(-1, 0)
+        w.step(2)
+        XCTAssertNil(w.player.pendingMine)
+        XCTAssertFalse(w.player.isWalkingPath)
+    }
+
     func testChainCraftBurnerDrill() {
         let w = playerWorld()
         let drillR = w.db.recipe("burner_mining_drill")

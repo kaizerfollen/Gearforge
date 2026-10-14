@@ -61,6 +61,8 @@ public enum PlayerCommand: Sendable {
     case craft(recipe: Int, count: Int)
     case cancelCraft(queueIndex: Int)
     case startMining(TilePos)
+    /// Start mining, walking into reach first if needed.
+    case walkAndMine(TilePos)
     case stopMining
     case sortInventory
     // Research
@@ -334,6 +336,9 @@ public extension World {
         case .cancelCraft(let i):
             return pl.cancelCraft(group: i) ? .ok : .failed(.nothingThere)
 
+        case .walkAndMine(let p):
+            if let e = pl.walkAndMine(p) { return .failed(e) }
+            return .ok
         case .startMining(let p):
             if let e = pl.startMining(p) { return .failed(e) }
             return .ok

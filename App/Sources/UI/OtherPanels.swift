@@ -202,8 +202,9 @@ struct PauseMenu: View {
         if showSettings {
             SettingsView(model: model, onClose: { showSettings = false })
         } else {
-            VStack(spacing: 12) {
-                Text("Paused").font(.system(size: 34, weight: .heavy, design: .rounded)).foregroundStyle(Theme.accent)
+            ScrollView {
+            VStack(spacing: 10) {
+                Text("Paused").font(.system(size: 28, weight: .heavy, design: .rounded)).foregroundStyle(Theme.accent)
                 if let l = controller.session.level { Text("\(l.id) · \(l.title)").foregroundStyle(Theme.textDim) }
                 MenuButton(title: "Resume") { controller.panel = nil }
                 HStack {
@@ -218,8 +219,12 @@ struct PauseMenu: View {
                 MenuButton(title: "Settings") { showSettings = true }
                 MenuButton(title: "Save & quit to menu") { model.quitToMenu(save: true) }
             }
-            .padding(28)
+            .padding(22)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .fixedSize(horizontal: true, vertical: false)
             .background(RoundedRectangle(cornerRadius: 18).fill(Theme.panel))
+            .padding(.vertical, 12)
         }
     }
 }

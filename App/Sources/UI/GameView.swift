@@ -136,16 +136,16 @@ struct GameView: View {
         if let e = w.entity(at: t) {
             let k = w.entities[e].kind
             if k == .tree || k == .rock {
-                holding = controller.startMining(at: t)
-                if !holding { controller.show("Too far — walk closer") }
+                holding = controller.walkAndMine(at: t)
+                if !holding { controller.show("Can't get there") }
             } else if w.entities[e].flags.contains(.playerBuilt) {
                 contextMenu = ContextMenuState(entity: e, point: p)
                 controller.haptic(.medium)
                 touchStart = nil
             }
         } else if w.surface.resource(at: t).1 > 0 {
-            holding = controller.startMining(at: t)
-            if !holding { controller.show("Too far — walk closer") }
+            holding = controller.walkAndMine(at: t)
+            if !holding { controller.show("Can't get there") }
         }
     }
 

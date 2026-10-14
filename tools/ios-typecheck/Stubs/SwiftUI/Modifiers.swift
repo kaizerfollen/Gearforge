@@ -18,6 +18,7 @@ extension View {
     public func position(_ position: CGPoint) -> some View { _modified() }
     public func position(x: CGFloat = 0, y: CGFloat = 0) -> some View { _modified() }
     public func fixedSize() -> some View { _modified() }
+    public func scrollBounceBehavior(_ behavior: ScrollBounceBehavior, axes: Axis.Set = [.vertical]) -> some View { _modified() }
     public func fixedSize(horizontal: Bool, vertical: Bool) -> some View { _modified() }
     public func aspectRatio(_ aspectRatio: CGFloat? = nil, contentMode: ContentMode) -> some View { _modified() }
     public func aspectRatio(_ aspectRatio: CGSize, contentMode: ContentMode) -> some View { _modified() }
@@ -207,4 +208,10 @@ public struct SensoryFeedback: Equatable, Sendable {
     public enum Flexibility: Equatable, Sendable { case rigid, solid, soft }
     public static func impact(weight: SensoryFeedback.Weight = .medium, intensity: Double = 1.0) -> SensoryFeedback { _stub() }
     public static func impact(flexibility: SensoryFeedback.Flexibility, intensity: Double = 1.0) -> SensoryFeedback { _stub() }
+}
+
+public struct ScrollBounceBehavior: Sendable {
+    public static let automatic = ScrollBounceBehavior()
+    public static let always = ScrollBounceBehavior()
+    public static let basedOnSize = ScrollBounceBehavior()
 }

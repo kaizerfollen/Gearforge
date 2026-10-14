@@ -34,6 +34,8 @@ public final class Character {
     public private(set) var isMoving = false
     /// Remaining tap-to-walk waypoints (not saved).
     public internal(set) var walkPath: [TilePos] = []
+    /// Target to mine once the character has walked into reach (transient, not saved: it only lives while held).
+    public internal(set) var pendingMine: TilePos? = nil
     /// Quickbar: 2 pages × 10 item filters (-1 empty).
     public var quickbar: [Int32] = Array(repeating: -1, count: 20)
 
@@ -97,6 +99,7 @@ public final class Character {
     public func update() {
         syncInventorySize()
         move()
+        updatePendingMine()
         updateCrafting()
         updateMining()
         if world.tick % 30 == 0 { autoBuildGhosts() }
@@ -125,7 +128,7 @@ public final class Character {
 
     private func move() {
         var input = moveInput
-        if input.length > 1e-6 { walkPath = [] } else if let s = pathSteering() { input = s }
+        if input.length > 1e-6 { walkPath = []; pendingMine = nil } else if let s = pathSteering() { input = s }
         let len = input.length
         guard len > 1e-6 else { isMoving = false; return }
         let dir = Vec2(input.x / max(1, len), input.y / max(1, len))
@@ -306,7 +309,46 @@ public final class Character {
         return nil
     }
 
-    public func stopMining() { miningTarget = nil; miningProgress = 0 }
+    public func stopMining() { miningTarget = nil; miningProgress = 0; pendingMine = nil }
+
+    /// Like `startMining`, but when the target is out of reach the character walks (A*) to the nearest tile from
+    /// which it can mine and starts mining on arrival (mobile hold-to-mine, GDD §4.4). Joystick input cancels it.
+    public func walkAndMine(_ p: TilePos) -> PlacementError? {
+        let err = startMining(p)
+        guard err == .outOfReach else { return err }
+        let rect: TileRect
+        if let e = world.entity(at: p) { rect = world.entities[e].rect } else { rect = TileRect(origin: p, w: 1, h: 1) }
+        // Candidate standing tiles around the target, nearest to the character first.
+        var best: (d: Double, t: TilePos)? = nil
+        let r: Int32 = 2
+        for y in (rect.y - r)...(rect.y + rect.h - 1 + r) {
+            for x in (rect.x - r)...(rect.x + rect.w - 1 + r) {
+                let t = TilePos(x, y)
+                guard isWalkableTile(t) else { continue }
+                let c = Vec2(Double(x) + 0.5, Double(y) + 0.5)
+                guard Self.distance(from: c, to: rect) <= Self.resourceReach - 0.3 else { continue }
+                let d = (c - position).length
+                if best == nil || d < best!.d { best = (d, t) }
+            }
+        }
+        guard let goal = best?.t, walk(to: goal) else { return .outOfReach }
+        miningTarget = nil; miningProgress = 0
+        pendingMine = p
+        return nil
+    }
+
+    /// Euclidean distance from a point to the nearest point of a tile rectangle.
+    static func distance(from c: Vec2, to r: TileRect) -> Double {
+        let dx = max(Double(r.x) - c.x, 0, c.x - Double(r.x + r.w))
+        let dy = max(Double(r.y) - c.y, 0, c.y - Double(r.y + r.h))
+        return (dx * dx + dy * dy).squareRoot()
+    }
+
+    private func updatePendingMine() {
+        guard let p = pendingMine else { return }
+        if startMining(p) == nil { pendingMine = nil; cancelWalk(); return }
+        if !isWalkingPath { pendingMine = nil }        // arrived (or path cancelled) but still unreachable
+    }
 
     private func updateMining() {
         guard let t = miningTarget else { return }

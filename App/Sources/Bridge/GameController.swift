@@ -286,7 +286,11 @@ final class GameController {
     func startMining(at tile: TilePos) -> Bool {
         execute(.startMining(tile), silent: true).isOK
     }
-    func stopMining() { world.player.stopMining() }
+    /// Hold-to-mine: mines at once when in reach, otherwise walks into reach first.
+    func walkAndMine(at tile: TilePos) -> Bool {
+        execute(.walkAndMine(tile), silent: true).isOK
+    }
+    func stopMining() { world.player.stopMining(); world.player.cancelWalk() }
 
     /// Pipette: select the item that builds this entity.
     func pipette(_ e: Int32) {

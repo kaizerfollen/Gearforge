@@ -101,7 +101,9 @@ struct NewGameView: View {
                         .frame(width: 220, height: 260)
                         .background(RoundedRectangle(cornerRadius: 14).fill(unlocked ? Theme.panelLight : Theme.panel))
                         .overlay(RoundedRectangle(cornerRadius: 14).stroke(unlocked ? Theme.accent.opacity(0.5) : Color.clear, lineWidth: 1))
-                        .overlay { if !unlocked { Text("🔒").font(.largeTitle) } }
+                        .overlay(alignment: .bottomTrailing) {
+                            if !unlocked { Image(systemName: "lock.fill").font(.title3).foregroundStyle(Theme.textDim).padding(14) }
+                        }
                         .opacity(unlocked ? 1 : 0.6)
                     }
                     .buttonStyle(.plain)
