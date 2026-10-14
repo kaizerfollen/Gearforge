@@ -139,4 +139,20 @@ final class QAS9Tests: XCTestCase {
             XCTAssertTrue(WorldCodec.encode(b) == first, "re-encoding a loaded world gives the same bytes")
         }
     }
+
+    // S9-5: an existing building of the same type but facing another way was shown as "already done" (green) in
+    // the paste preview, so a mis-rotated belt silently stayed in the pasted layout.
+
+    func testPastePreviewFlagsSameEntityWithWrongDirection() {
+        let w = TestWorld.make()
+        w.place("transport_belt", 1, 1, .north)
+        let bp = w.captureBlueprint(TileRect(x: 0, y: 0, w: 3, h: 3))
+        w.place("transport_belt", 20, 20, .east)
+        XCTAssertFalse(w.blueprintPreview(bp, at: TilePos(20, 20)).first!.ok, "east belt where the blueprint wants north")
+        w.place("transport_belt", 30, 30, .north)
+        XCTAssertTrue(w.blueprintPreview(bp, at: TilePos(30, 30)).first!.ok, "identical building counts as done")
+        w.place("stone_furnace", 1, 5)
+        let fb = w.captureBlueprint(TileRect(x: 0, y: 5, w: 3, h: 3))
+        XCTAssertTrue(w.blueprintPreview(fb.rotated(1, db: w.db), at: TilePos(1, 5)).first!.ok, "non-rotatable: direction irrelevant")
+    }
 }

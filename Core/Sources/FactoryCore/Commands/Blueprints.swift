@@ -194,7 +194,7 @@ public extension World {
             let p = db.entity(e.entity)
             guard p >= 0 else { return nil }
             let o = TilePos(origin.x + e.dx, origin.y + e.dy)
-            if let ex = entity(at: o), Int(entities[ex].proto) == p, entities[ex].origin == o { return (p, o, e.direction, true) }
+            if alreadyBuilt(proto: p, origin: o, direction: e.direction) { return (p, o, e.direction, true) }
             // Trees/rocks don't make the preview red — but only when everything else about the spot is valid.
             let ok = placementError(proto: p, origin: o, direction: e.direction, ignoringNatural: true) == nil
             return (p, o, e.direction, ok)
@@ -215,6 +215,13 @@ public extension World {
             } else { other = true }
         }
         return other || out.isEmpty ? nil : out
+    }
+
+    /// The same building (or its ghost) already stands there, facing the same way when that matters (QA S9-5).
+    internal func alreadyBuilt(proto: Int, origin: TilePos, direction: Direction) -> Bool {
+        guard let ex = entity(at: origin) else { return false }
+        let r = entities[ex]
+        return Int(r.proto) == proto && r.origin == origin && (r.direction == direction || !db.entities[proto].rotatable)
     }
 
     /// A tree or rock that was not built by the player.
@@ -250,7 +257,7 @@ public extension World {
             let p = db.entity(e.entity)
             guard p >= 0 else { continue }
             let o = TilePos(origin.x + e.dx, origin.y + e.dy)
-            if let ex = entity(at: o), Int(entities[ex].proto) == p, entities[ex].origin == o { continue }
+            if alreadyBuilt(proto: p, origin: o, direction: e.direction) { continue }
             // Validate as if trees/rocks were gone first, so nothing is cut down for a ghost that can't go there
             // (water, no ore under a drill, shoreline, fluid mixing…). QA S9-1.
             guard placementError(proto: p, origin: o, direction: e.direction, ignoringNatural: true) == nil else { continue }
