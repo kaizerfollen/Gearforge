@@ -129,6 +129,10 @@ final class AudioManager {
     // MARK: Public API
 
     /// Volumes 0…1. `enabled == false` silences everything and pauses the engine.
+    /// Loads every buffer and builds the graph now (call while a menu is on screen) so the first in-game sound
+    /// doesn't hitch.
+    func prewarm() { setUpIfNeeded() }
+
     func configure(master: Double, music: Double, sfx: Double, enabled: Bool) {
         masterVolume = Float(min(max(master, 0), 1))
         musicVolume = Float(min(max(music, 0), 1))

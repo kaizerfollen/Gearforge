@@ -51,6 +51,7 @@ final class AppModel {
     private func applyAudioSettings() {
         AudioManager.shared.configure(master: settings.masterVolume, music: settings.musicVolume,
                                       sfx: settings.sfxVolume, enabled: settings.masterVolume > 0.001)
+        DispatchQueue.main.async { AudioManager.shared.prewarm() }   // load sounds behind the main menu
     }
 
     func refreshSaves() { saves = saveManager.listSaves() }
