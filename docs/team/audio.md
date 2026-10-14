@@ -59,8 +59,9 @@ Behaviour details:
   `play`, `updateAmbience` or `startMusic`.
 - **Session.** The category is `.ambient`, so the game mixes with other apps and respects the silent switch. The
   session is set up under `#if os(iOS) || GEARFORGE_TYPECHECK`.
-- **System events.** The engine handles interruptions, `mediaServicesWereReset` and
-  `AVAudioEngineConfigurationChange` (for example a route change or headphones) by re-arming the players.
+- **System events.** The engine handles interruptions and `AVAudioEngineConfigurationChange` (for example a route
+  change or headphones) by re-arming the players. `mediaServicesWereReset` orphans every AVAudio object, so the
+  engine, mixers, players and buffers are rebuilt from scratch (and music restarted if it was wanted).
 - **Robustness.**
   - A missing, unreadable or wrong-format file is logged once (`[Audio] …`) and then skipped.
   - `play()` on a player node is only called while the engine is running. AVFoundation raises an exception

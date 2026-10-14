@@ -91,11 +91,12 @@ final class AudioManager {
         init(buffer: AVAudioPCMBuffer) { self.buffer = buffer }
     }
 
-    private let engine = AVAudioEngine()
-    private let sfxMixer = AVAudioMixerNode()
-    private let ambienceMixer = AVAudioMixerNode()
-    private let musicMixer = AVAudioMixerNode()
-    private let musicNode = AVAudioPlayerNode()
+    // `var`: after a media-services reset every AVAudio object is invalid and the graph is rebuilt from scratch.
+    private var engine = AVAudioEngine()
+    private var sfxMixer = AVAudioMixerNode()
+    private var ambienceMixer = AVAudioMixerNode()
+    private var musicMixer = AVAudioMixerNode()
+    private var musicNode = AVAudioPlayerNode()
 
     private var isSetUp = false
     private var voices: [Voice] = []
@@ -320,7 +321,7 @@ final class AudioManager {
             MainActor.assumeIsolated { self?.handleInterruption(began: began) }
         })
         observers.append(nc.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.handleEngineReset() }
+            MainActor.assumeIsolated { self?.rebuildAfterMediaReset() }
         })
         #endif
         observers.append(nc.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
@@ -397,6 +398,25 @@ final class AudioManager {
             interrupted = false
             resume()
         }
+    }
+
+    /// Media services were reset: the engine, its nodes and the session setup are orphaned (restarting the old
+    /// engine fails and audio would stay dead for the rest of the session). Rebuild everything. QA S9.
+    private func rebuildAfterMediaReset() {
+        guard isSetUp else { return }
+        rampTask?.cancel(); rampTask = nil
+        musicTask?.cancel(); musicTask = nil
+        for o in observers { NotificationCenter.default.removeObserver(o) }
+        observers = []
+        engine = AVAudioEngine()
+        sfxMixer = AVAudioMixerNode(); ambienceMixer = AVAudioMixerNode(); musicMixer = AVAudioMixerNode()
+        musicNode = AVAudioPlayerNode()
+        voices = []; voiceFormat = nil; buffers = [:]; lastPlayed = [:]; loops = [:]
+        musicTracks = []; musicFormat = nil; currentMusic = nil; musicLevel = 0
+        needsRearm = false
+        isSetUp = false
+        setUpIfNeeded()                  // new graph + observers; loops pick up their targets on the next update
+        if musicWanted { startMusic() }
     }
 
     private func handleEngineReset() {
