@@ -117,3 +117,14 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
   between the joystick and the mode buttons), research, production stats, map, pause, Codex, furnace screen
   (inventory column beside the machine).
 - Not seen yet on a small phone (iPhone SE / mini) or with Interface size > 100 %.
+
+## S10b — black ground fixed, "How to play" guide (2026-10-15)
+- **Black ground** (half the screen, next to lakes): Sprites.atlas no longer fits one texture page (Xcode splits it into
+  3) and SKTileMapNode drew nothing for a chunk whose tile textures sat on different pages (grass + water/sand).
+  Fix: tile_* / ore_* moved to their own `Terrain.atlas` (93 textures, one page); art tools write there.
+  Verified on the simulator with the user's save (lake + grass now drawn).
+- Map bounds now follow the chunk grid (L1 160×160 = 5 chunks had 16 columns of walkable void). Test added (166 green).
+- **Guide «Как играть»**: 13 sections (goal, first steps, controls, resources with icons, mining, smelting, crafting,
+  building, belts & inserters, electricity, research, automation, campaign & saves); main menu, pause menu, HUD «?»;
+  opens once by itself on the first game start. en + ru (339 UI keys, 100 %).
+- Still to do: water/shore transition tiles (lake edges are stair-stepped), playtest the guide's first steps on L1.

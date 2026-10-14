@@ -92,6 +92,9 @@ stage it from the Mac `checkpoints/` → `git clone <bundle> /home/claude/Gearfo
   screen (tap to walk), pollution in stats. Then: **Russian localization** (l10n agent: 1000+ keys, tooling
   tools/l10n), **independent QA agent** (15 core bugs found → all fixed, 152 tests green), tutorial hint bubbles,
   left-handed layout, save thumbnails, tolerant settings decoding. Mac went offline ~12:50 (screen locked).
+- **S10 (2026-10-15 night):** layout pass — every screen fits iPhone landscape (FitPicker, panelFrame, compact
+  columns); black-ground fix (Terrain.atlas, see AUDIT S10b); map bounds = chunk grid; «Как играть» guide.
+  GitHub push still refused for this session (Claude GitHub App lacks access) — newest bundle in checkpoints/.
 - **S9 (2026-10-14 evening):** new container (repo + Swift gone). Restored repo from bundle 1321, installed Swift
   from Ubuntu questing (see Toolchain), 152 tests + app typecheck green; synced checkpoint 1321 to the Mac. Then: ground items rendering + tap pickup,
   copy/paste area UI (paste clears trees), save rename, HUD safe-area fix — built & checked in Xcode simulator (153 tests).
