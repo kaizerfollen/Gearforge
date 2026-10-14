@@ -22,8 +22,12 @@ Typecheck on Linux: `tools/ios-typecheck/run.sh --app-only`. Regenerate project 
 3. `cd Core && swift build && swift test` must be green before starting new work.
 4. Checkpoint after every merged milestone: `tools/checkpoint.sh`, then `device_commit_files` the two files in
    `/mnt/user-data/outputs/gearforge/` to `/Users/new_ivan/Claude/Gearforge/checkpoints/`, then on the device:
-   `cd $HOME/mnt/Claude/Gearforge && rm -rf .unpack && mkdir .unpack && tar -xzf checkpoints/Gearforge-src-<TS>.tar.gz -C .unpack && rsync -a --delete .unpack/ project/ && rm -rf .unpack`
-   (needs delete permission: device_request_delete_permission on /Users/new_ivan/Claude).
+   `cd $HOME/mnt/Claude/Gearforge && mkdir -p .unpack && tar --overwrite -xzf checkpoints/Gearforge-src-<TS>.tar.gz -C .unpack && rsync -a --exclude xcuserdata .unpack/ project/`
+   (no --delete / rm: deleting needs a permission prompt; Xcode keeps its workspace files in project/).
+   Quick iteration: `tools/patch.sh <since-commit>` → tar of changed files only → device_commit_files to
+   checkpoints/patch-<TS>.tar.gz → `tar --overwrite -xzf checkpoints/patch-<TS>.tar.gz -C .patch && rsync -a .patch/ project/`.
+5. Xcode on the Mac (computer use, Xcode granted at "click" tier: no keyboard): rebuild+run via menu Product → Run
+   (menu bar "Product" ≈ (358,12), "Run" ≈ (368,40) in the 1372×887 frame). Simulator window ≈ x 450–1150, y 90–430.
 
 ## Team process (agents)
 - Specialists run as agents in isolated git worktrees, each owning a set of files (ARCHITECTURE §1 table).
@@ -44,7 +48,7 @@ Typecheck on Linux: `tools/ios-typecheck/run.sh --app-only`. Regenerate project 
 | Power networks, fluids | **done** (11 tests; steam 1.8 MW verified) |
 | Character (movement, crafting queue, hand mining), Commands (build/remove/undo) | **done** (17 tests) |
 | GameSession fixed-step driver, SaveManager, levels/objectives, stats | **done** (10 tests; save→load→continue identical) |
-| iOS app: Xcode project, renderer, HUD, menus, screens | **first full pass** — passes Linux typecheck harness; NOT yet run on a device/simulator |
+| iOS app: Xcode project, renderer, HUD, menus, screens | **builds in Xcode, runs on iPhone 17 Pro simulator**; L1 loop hand-playtested (S8), minimap + map screen |
 | Art: python sprite generators | **done** — 852 sprites, 16.8 MB (`python3 tools/art/generate.py`) |
 
 ## Session log
@@ -60,6 +64,12 @@ Typecheck on Linux: `tools/ios-typecheck/run.sh --app-only`. Regenerate project 
 - **S6 (2026-10-14):** lead wrote logistics directly (belts/undergrounds/splitters/inserters/chests), 35 tests green. Then production (crafting/furnaces/silo/drills) — 48 tests green. Then energy (power/steam/solar/fluids) — 59 tests green. Then gameplay (character/crafting/mining/commands/undo) — 76 tests green. Then persistence/session/campaign — 86 tests green. **Core simulation complete.** Audit (S6 end): +6 audit tests (oil chain, beacons, research queue/infinite, long-handed, fluid recipes) → 93 tests green; gaps recorded in docs/AUDIT.md. Then art (852 sprites, agent), platform (xcodeproj generator + Linux typecheck harness, agent), app layer (controller, SpriteKit renderer, HUD, panels, menus) written by lead — typecheck OK; integration test 'first minutes of freeplay' green (87 tests).
 
 - **S7 (2026-10-14 night):** closed core gaps: ground items, direct fluid links + refinery output order, charting/radar, pollution, copy/paste blueprints, tap-to-walk A* → 111 tests; designer agent: pre-built factories L5–L8 → 118 tests. Mac went offline at ~02:02 — checkpoints 0202+ only in container until re-synced.
+
+- **S8 (2026-10-14 day):** app opened in real Xcode: **Build Succeeded, runs on the iPhone 17 Pro simulator**.
+  Hand playtest of L1 through computer use; fixed: tutorial ore layout (L1/L2 patches near spawn, layout saved in
+  WorldSettings), walk-and-mine + long-press walk, near-miss ore snap, build assist (IO markers, snap onto drill output,
+  auto-exit build mode), pause/entity panel scrolling, craftable counts per tab, campaign lock icon; new minimap + map
+  screen (tap to walk), pollution in stats; core 122 tests green.
 
 ## Honest audit
 See **docs/AUDIT.md** (what is done / partial / missing, saves, agents, priority backlog). Keep it updated.

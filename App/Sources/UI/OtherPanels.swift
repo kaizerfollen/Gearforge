@@ -155,6 +155,15 @@ struct StatsPanel: View {
                     column("Consumed / min", consumed, db)
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Rockets launched: \(st.rocketsLaunched)").foregroundStyle(Theme.text)
+                        let pol = controller.world.pollution!
+                        Text("Pollution").font(.caption).foregroundStyle(Theme.textDim).padding(.top, 6)
+                        Text("\(Int(pol.perMinute.rounded())) / min · total \(Int(pol.total.rounded()))").foregroundStyle(Theme.text)
+                        ForEach(pol.bySource.sorted { $0.value > $1.value }.prefix(4), id: \.key) { kv in
+                            HStack(spacing: 6) {
+                                SpriteImage(name: "i_\(db.items[max(0, db.entityItem[kv.key])].id)", size: 18)
+                                Text(String(format: "%.1f / min", kv.value)).font(.caption).foregroundStyle(Theme.textDim)
+                            }
+                        }
                         let net = controller.world.power.network(at: controller.world.player.position)
                         if net >= 0, let ps = controller.world.power.stats(network: net) {
                             Text("Power here").font(.caption).foregroundStyle(Theme.textDim)
