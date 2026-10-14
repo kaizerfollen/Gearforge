@@ -37,7 +37,6 @@ final class GameScene: SKScene {
     /// Diagnostics (Settings → Show FPS): terrain state of the chunk under the camera centre.
     private let debugLabel = SKLabelNode(text: "")
     private var debugTimer: Double = 0
-    private var debugRebakes = 0
     private var gridKey = ""
     private var pastePool: [SKSpriteNode] = []
     /// Paste preview cache: recomputed when the origin/rotation/clipboard changes or every 15 ticks (not per frame).
@@ -164,7 +163,13 @@ final class GameScene: SKScene {
         debugLabel.isHidden = true
         cam.addChild(debugLabel)
         buildTileSet()
-        zoom = 1
+        // SwiftUI's SpriteView left the scene at its creation size (1024×768) although the scale mode is resizeFill:
+        // SpriteKit then shrank the picture into the phone screen and culled tile maps against the wrong viewport,
+        // so whole chunks stayed black (S10). Size the scene to the view and let it track the view from now on.
+        view.shouldCullNonVisibleNodes = false
+        if view.bounds.width > 0 { size = view.bounds.size }
+        // Same amount of world on screen as before on a phone (~0.52 on an iPhone in landscape), 1.0 on an iPad.
+        zoom = max(0.5, min(1, size.height / 768))
         if let c = controller { cameraCenter = c.world.player.position }
     }
 
@@ -225,6 +230,7 @@ final class GameScene: SKScene {
 
     override func update(_ currentTime: TimeInterval) {
         guard let c = controller else { return }
+        if let v = view, v.bounds.width > 0, v.bounds.size != size { size = v.bounds.size }
         let dt = lastTime == 0 ? 1.0 / 60 : min(0.25, currentTime - lastTime)
         lastTime = currentTime
         c.frame(dt: dt)
@@ -305,12 +311,6 @@ final class GameScene: SKScene {
             lines.append("cols=\(g.numberOfColumns) group=\(tg != nil) tex=\(tg?.rules.first?.tileDefinitions.first?.textures.first.map { "\(Int($0.size().width))" } ?? "nil")")
             let f = g.frame
             lines.append("frame \(Int(f.minX)),\(Int(f.minY)) \(Int(f.width))x\(Int(f.height)) kids=\(g.children.count) ore kids=\(n.ore.children.count)")
-            debugRebakes += 1
-            if debugRebakes % 6 == 0, let ch = w.surface.existingChunk(cp), let ts = tileSet {
-                n.ground.removeFromParent(); n.ore.removeFromParent()
-                chunkNodes[cp] = bakeChunk(ch, ts, w)
-                lines.append("REBAKED this chunk")
-            }
         } else { lines.append("node NONE for chunk") }
         if let v = view {
             let p = convertPoint(toView: cam.position)

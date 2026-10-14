@@ -65,6 +65,7 @@ struct GameView: View {
             .simultaneousGesture(
                 MagnifyGesture()
                     .onChanged { v in
+                        if !pinching { zoomStart = model.scene?.zoom ?? 1 }     // start from the current zoom
                         if !holding { model.scene?.zoom = zoomStart * v.magnification }
                         dragging = true
                         pinching = true
