@@ -40,6 +40,7 @@ final class GameScene: SKScene {
     private var pasteKey: Int? = nil
     private var pasteTick: UInt64 = 0
     private var groundZoom: CGFloat = 0
+    private var appliedReduceMotion = false
     /// Items lying on the ground (re-synced when GroundItems.revision or the view changes).
     private var groundPool: [SKSpriteNode] = []
     private var groundRevision = -1
@@ -462,6 +463,16 @@ final class GameScene: SKScene {
 
     /// Working animation, status icons, alt-mode recipe icons (4 Hz).
     private func refreshStates(_ w: World, _ c: GameController) {
+        if c.settings.reduceMotion != appliedReduceMotion {
+            // Settings → Reduce motion changed mid-game: belt animations are only (re)started when a view is
+            // created, so restart / stop the ones already on screen (machines follow via setWorking).
+            appliedReduceMotion = c.settings.reduceMotion
+            for (_, v) in views where v.kind == .transportBelt && !v.spriteKey.isEmpty {
+                v.node.removeAllActions(); v.animating = false
+                v.node.texture = SpriteCatalog.shared.texture(v.spriteKey)
+                startBeltAnimation(v, w.db.entities[Int(v.proto)], base: v.spriteKey)
+            }
+        }
         let vis = visibleRect(margin: 3)
         var sounds: [(kind: AudioManager.LoopKind, x: Double, y: Double)] = []
         var inserterSounds: [(kind: AudioManager.LoopKind, x: Double, y: Double)] = []
