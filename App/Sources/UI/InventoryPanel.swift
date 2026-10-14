@@ -33,7 +33,8 @@ struct InventoryPanel: View {
                         }
                         .pickerStyle(.segmented)
                         .padding(.horizontal, 14).padding(.top, 8)
-                        if compactTab == 0 { inventoryGrid } else { crafting }
+                        Group { if compactTab == 0 { inventoryGrid } else { crafting } }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     }
                 }
             }
