@@ -39,11 +39,18 @@ final class AppModel {
         progress = CampaignProgress.load(from: progressURL)
         offerRecovery = saveManager.hadUncleanExit && FileManager.default.fileExists(atPath: saveManager.url(for: SaveManager.backgroundSlot).path)
         refreshSaves()
+        applyAudioSettings()
     }
 
     private func saveSettings() {
         if let d = try? JSONEncoder().encode(settings) { try? d.write(to: settingsURL, options: .atomic) }
         controller?.settings = settings
+        applyAudioSettings()
+    }
+
+    private func applyAudioSettings() {
+        AudioManager.shared.configure(master: settings.masterVolume, music: settings.musicVolume,
+                                      sfx: settings.sfxVolume, enabled: settings.masterVolume > 0.001)
     }
 
     func refreshSaves() { saves = saveManager.listSaves() }
@@ -97,11 +104,14 @@ final class AppModel {
         saveManager.markSessionStarted()
         offerRecovery = false
         screen = .game
+        AudioManager.shared.startMusic()
     }
 
     func quitToMenu(save: Bool) {
         if save, let c = controller { c.save(slot: "autosave_exit", name: "Last exit") }
         saveManager.markSessionEnded()
+        AudioManager.shared.stopMusic()
+        AudioManager.shared.updateAmbience(listener: (0, 0), sources: [])   // machine loops fade out
         controller = nil
         scene = nil
         refreshSaves()
@@ -111,6 +121,11 @@ final class AppModel {
     // MARK: Lifecycle
 
     func scenePhaseChanged(_ phase: ScenePhase) {
+        switch phase {
+        case .background: AudioManager.shared.setPaused(true)
+        case .active: AudioManager.shared.setPaused(false)
+        default: break
+        }
         guard let c = controller else { return }
         switch phase {
         case .background:

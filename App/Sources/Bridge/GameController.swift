@@ -101,6 +101,14 @@ final class GameController {
     /// Where the build preview sits (tile) — set by the scene from the last touch.
     @ObservationIgnored var previewTile: TilePos? = nil
     @ObservationIgnored private var toastTimer: Double = 0
+    /// Sound bookkeeping (mining hits, footsteps, panel open/close, alert throttle).
+    @ObservationIgnored private var mineSoundTimer: Double = 0
+    @ObservationIgnored private var lastMiningProgress: Double = 0
+    @ObservationIgnored private var lastMiningTarget: FactoryCore.Character.MiningTarget? = nil
+    @ObservationIgnored private var stepTimer: Double = 0
+    @ObservationIgnored private var stepIndex = 0
+    @ObservationIgnored private var panelWasOpen = false
+    @ObservationIgnored private var alertSoundCooldown: Double = 0
 
     init(session: GameSession, saveManager: SaveManager, settings: GameSettings) {
         self.session = session
@@ -121,17 +129,26 @@ final class GameController {
         frameEvents = world.drainEvents()
         for e in frameEvents {
             switch e {
-            case .alert(let s): show(s)
-            case .researchFinished(let t): show(LF("Research complete: %@", world.db.techName(t))); haptic(.success)
+            case .alert(let s):
+                show(s)
+                if alertSoundCooldown <= 0 { AudioManager.shared.play(.alert, volume: 0.7); alertSoundCooldown = 3 }
+            case .researchFinished(let t):
+                show(LF("Research complete: %@", world.db.techName(t))); haptic(.success)
+                AudioManager.shared.play(.uiSuccess)
+            case .objectiveCompleted: AudioManager.shared.play(.uiSuccess, volume: 0.8)
             case .levelCompleted:
                 showVictory = true
                 onLevelCompleted?(session.objectives.stars, session.gameSeconds)
                 haptic(.success)
+                AudioManager.shared.play(.uiSuccess)
+            case .craftFinished: AudioManager.shared.play(.uiCraftDone, volume: 0.8)
             case .rocketLaunched:
+                AudioManager.shared.play(.rocketLaunch)
                 if session.mode == .freeplay && !session.victoryShown { session.victoryShown = true; showVictory = true }
             default: break
             }
         }
+        updatePlayerSounds(dt: paused ? 0 : dt)
         if let h = selected, world.entities.resolve(h) == nil { selected = nil; if case .entity = panel { panel = nil } }
         hudTimer += dt
         if hudTimer >= 0.1 { hudTimer = 0; refreshHUD() }
@@ -142,6 +159,49 @@ final class GameController {
         }
         if toast != nil { toastTimer -= dt; if toastTimer <= 0 { toast = nil } }
         if session.autosaveDue && settings.autosaveMinutes > 0 { autosave() }
+    }
+
+    // MARK: Sound
+
+    /// Mining hits (~2/s), mined-item pop, footsteps while walking, panel open/close.
+    private func updatePlayerSounds(dt: Double) {
+        let audio = AudioManager.shared
+        let pl = world.player!
+        alertSoundCooldown -= dt
+        if let target = pl.miningTarget {
+            mineSoundTimer -= dt
+            if mineSoundTimer <= 0 {
+                mineSoundTimer = 0.5
+                var tree = false
+                if case .entity(let e) = target, world.entities.isLive(e) { tree = world.entities[e].kind == .tree }
+                audio.play(tree ? .mineHitTree : .mineHitOre, volume: 0.9)
+            }
+            // one more ore mined from the same patch (progress wrapped around)
+            if target == lastMiningTarget && pl.miningProgress < lastMiningProgress - 0.3 { audio.play(.mineDone, volume: 0.7) }
+            lastMiningProgress = pl.miningProgress
+            lastMiningTarget = target
+        } else {
+            // tree / rock mined out (the entity is gone), not merely cancelled
+            if case .entity(let e)? = lastMiningTarget, !world.entities.isLive(e) { audio.play(.mineDone, volume: 0.7) }
+            lastMiningProgress = 0
+            lastMiningTarget = nil
+            mineSoundTimer = 0
+        }
+        if pl.isMoving && dt > 0 {
+            stepTimer -= dt
+            if stepTimer <= 0 {
+                stepTimer = 0.32
+                audio.play(AudioManager.SFX.footsteps[stepIndex % 4], volume: 0.8)
+                stepIndex += 1
+            }
+        } else {
+            stepTimer = 0.1
+        }
+        let open = panel != nil
+        if open != panelWasOpen {
+            panelWasOpen = open
+            audio.play(open ? .uiOpen : .uiClose, volume: 0.8)
+        }
     }
 
     // MARK: Map
@@ -259,9 +319,22 @@ final class GameController {
     @discardableResult
     func execute(_ cmd: PlayerCommand, silent: Bool = false) -> CommandResult {
         let r = world.execute(cmd)
-        if case .failed(let e) = r, !silent { show(e.message); haptic(.error) }
-        if r.isOK { hudTimer = 1 }   // refresh soon
+        if case .failed(let e) = r, !silent { show(e.message); haptic(.error); AudioManager.shared.play(.uiError) }
+        if r.isOK { hudTimer = 1; playCommandSound(cmd, silent: silent) }   // refresh soon
         return r
+    }
+
+    private func playCommandSound(_ cmd: PlayerCommand, silent: Bool) {
+        let audio = AudioManager.shared
+        switch cmd {
+        case .build, .buildGhost: audio.play(.buildPlace)
+        case .placeTiles: audio.play(.buildPlace, volume: 0.6)
+        case .remove, .removeArea: audio.play(.buildRemove)
+        case .rotate: if !silent { audio.play(.rotate) }
+        case .pasteSettings, .pasteBlueprint: audio.play(.paste)
+        case .takeAll, .pickUpBeltItems, .pickUpGround, .transferFromEntity: audio.play(.pickup, volume: 0.8)
+        default: break
+        }
     }
 
     func show(_ message: String) {
@@ -318,6 +391,7 @@ final class GameController {
         mode = .build
         addToQuickbar(item)
         haptic(.light)
+        AudioManager.shared.play(.uiTap)
     }
 
     func cancelMode() { mode = .explore; buildItem = -1; previewTile = nil }
@@ -325,6 +399,7 @@ final class GameController {
     func rotateBuild() {
         buildDirection = buildDirection.clockwise
         haptic(.light)
+        AudioManager.shared.play(.rotate)
     }
 
     /// Places the current build item at a touched tile.
@@ -373,7 +448,7 @@ final class GameController {
 
     func tapEntity(_ e: Int32) {
         let h = world.entities.handle(e)
-        if selected == h { openEntity(h) } else { selected = h; haptic(.light) }
+        if selected == h { openEntity(h) } else { selected = h; haptic(.light); AudioManager.shared.play(.uiTap) }
         hudTimer = 1
     }
 
@@ -384,7 +459,7 @@ final class GameController {
         case .tree, .rock, .character: return
         default: break
         }
-        if !world.player.canReach(rec.rect) { show("Out of reach") ; return }
+        if !world.player.canReach(rec.rect) { show("Out of reach"); AudioManager.shared.play(.uiError); return }
         panel = .entity(h)
     }
 
