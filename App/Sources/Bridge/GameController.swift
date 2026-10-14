@@ -429,7 +429,8 @@ final class GameController {
         defer { copyStart = nil; copyEnd = nil }
         guard let a = copyStart, let b = copyEnd else { return }
         let bp = world.captureBlueprint(Self.rect(a, b))
-        guard !bp.isEmpty else { show(L("Nothing to copy here")); mode = .explore; return }
+        // floor tiles are captured but not pasted (no tile ghosts yet): a tiles-only area is "nothing to copy"
+        guard !bp.entries.isEmpty else { show(L("Nothing to copy here")); mode = .explore; return }
         clipboard = bp
         pasteRotation = 0
         mode = .paste
@@ -466,7 +467,9 @@ final class GameController {
         guard r.isOK else { show(L("Can't place here — buildings or water in the way")); haptic(.error); return }
         haptic(.medium)
         // tell the player what is missing
-        let need = bp.requiredItems(db: world.db)
+        var buildings = bp
+        buildings.tiles = []                       // tiles aren't pasted: don't report concrete/brick as missing
+        let need = buildings.requiredItems(db: world.db)
         let missing = need.filter { world.player.count(of: $0.key) < $0.value }
         if let m = missing.first {
             show(LF("Ghosts placed — missing %@", "\(Names.item(world.db, m.key)) ×\(m.value - world.player.count(of: m.key))"))
