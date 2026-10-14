@@ -196,7 +196,9 @@ public extension World {
             let o = TilePos(origin.x + e.dx, origin.y + e.dy)
             if alreadyBuilt(proto: p, origin: o, direction: e.direction) { return (p, o, e.direction, true) }
             // Trees/rocks don't make the preview red — but only when everything else about the spot is valid.
-            let ok = placementError(proto: p, origin: o, direction: e.direction, ignoringNatural: true) == nil
+            var ok = placementError(proto: p, origin: o, direction: e.direction, ignoringNatural: true) == nil
+            // trees/rocks are only cleared within the character's reach (QA S9: no free wood across the map)
+            if ok, let obs = naturalObstacles(proto: p, origin: o, direction: e.direction), !obstaclesInReach(obs) { ok = false }
             return (p, o, e.direction, ok)
         }
     }
@@ -231,6 +233,11 @@ public extension World {
     }
 
     /// Removes natural obstacles, giving their loot to the player (overflow spilled on the ground).
+    /// Every obstacle lies within the character's build reach (or casual reach is on).
+    func obstaclesInReach(_ list: [Int32]) -> Bool {
+        list.allSatisfy { player.canReach(entities[$0].rect) }
+    }
+
     internal func harvestObstacles(_ list: [Int32]) {
         for o in list {
             let r = entities[o]
@@ -253,6 +260,7 @@ public extension World {
     @discardableResult
     func pasteBlueprint(_ bp: Blueprint, at origin: TilePos) -> Int {
         var placed = 0
+        lastPasteSkippedFarObstacles = 0
         for e in bp.entries {
             let p = db.entity(e.entity)
             guard p >= 0 else { continue }
@@ -261,7 +269,10 @@ public extension World {
             // Validate as if trees/rocks were gone first, so nothing is cut down for a ghost that can't go there
             // (water, no ore under a drill, shoreline, fluid mixing…). QA S9-1.
             guard placementError(proto: p, origin: o, direction: e.direction, ignoringNatural: true) == nil else { continue }
-            if let obs = naturalObstacles(proto: p, origin: o, direction: e.direction) { harvestObstacles(obs) }
+            if let obs = naturalObstacles(proto: p, origin: o, direction: e.direction) {
+                guard obstaclesInReach(obs) else { lastPasteSkippedFarObstacles += 1; continue }
+                harvestObstacles(obs)
+            }
             guard placementError(proto: p, origin: o, direction: e.direction) == nil else { continue }
             let g = createEntity(proto: p, origin: o, direction: e.direction, flags: [.playerBuilt, .ghost])
             setGhostSettings(e.settings, for: g)

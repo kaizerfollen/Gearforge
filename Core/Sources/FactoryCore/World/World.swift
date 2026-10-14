@@ -111,6 +111,8 @@ public final class World {
     public private(set) var pollution: PollutionStats!
     /// Settings waiting on ghosts (entity index → (generation, settings)); applied when the ghost is built.
     internal var ghostSettings: [Int32: (UInt32, GhostSettings)] = [:]
+    /// Entries skipped by the last paste because trees/rocks in the way were out of the character's reach.
+    public internal(set) var lastPasteSkippedFarObstacles = 0
 
     /// All entity systems in update order.
     public private(set) var systems: [EntitySystem] = []

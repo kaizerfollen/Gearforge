@@ -221,6 +221,7 @@
 "Size" = "Size";
 "Slots %@" = "Slots %@";
 "Small" = "Small";
+"Some ghosts skipped: trees or rocks out of reach — walk closer and paste again" = "Some ghosts skipped: trees or rocks out of reach — walk closer and paste again";
 "Sort" = "Sort";
 "Sound effects" = "Sound effects";
 "Speed %@" = "Speed %@";
@@ -237,6 +238,7 @@
 "Throughput %@ items/s" = "Throughput %@ items/s";
 "Time %@" = "Time %@";
 "Trees" = "Trees";
+"Trees or rocks in the way — walk closer to clear them" = "Trees or rocks in the way — walk closer to clear them";
 "Tritanopia" = "Tritanopia";
 "Tutorial hints" = "Tutorial hints";
 "Unlocked by %@" = "Unlocked by %@";

@@ -286,6 +286,7 @@ final class CoreGapTests: XCTestCase {
         let bp = w.captureBlueprint(TileRect(x: 0, y: 0, w: 3, h: 3))
         let tree = w.place("tree_01", 20, 20)
         w.entities.update(tree) { $0.flags = [] }           // natural, not player-built
+        w.player.position = Vec2(18.5, 20.5)                 // trees are cleared only within reach
         XCTAssertTrue(w.blueprintPreview(bp, at: TilePos(20, 20)).allSatisfy { $0.ok }, "trees don't make the preview red")
         XCTAssertEqual(w.pasteBlueprint(bp, at: TilePos(20, 20)), 1)
         XCTAssertTrue(w.entities[w.entity(at: TilePos(20, 20))!].flags.contains(.ghost))
@@ -312,5 +313,21 @@ final class CoreGapTests: XCTestCase {
         let s = GameSettings.decodeTolerant(old)!
         XCTAssertEqual(s.autosaveMinutes, 10)
         XCTAssertFalse(s.confirmPlacement, "new key gets its default")
+    }
+
+    func testPasteClearsTreesOnlyWithinReach() {
+        let w = TestWorld.make()
+        w.place("wooden_chest", 1, 1)
+        let bp = w.captureBlueprint(TileRect(x: 0, y: 0, w: 3, h: 3))
+        let tree = w.place("tree_01", 50, 50)
+        w.entities.update(tree) { $0.flags = [] }
+        w.player.position = Vec2(10.5, 10.5)                 // ~56 tiles away
+        XCTAssertFalse(w.blueprintPreview(bp, at: TilePos(50, 50)).allSatisfy { $0.ok }, "far trees make the preview red")
+        XCTAssertEqual(w.pasteBlueprint(bp, at: TilePos(50, 50)), 0)
+        XCTAssertEqual(w.lastPasteSkippedFarObstacles, 1)
+        XCTAssertEqual(w.player.count(of: w.item("wood")), 0, "no free wood from across the map")
+        w.player.position = Vec2(48.5, 50.5)
+        XCTAssertEqual(w.pasteBlueprint(bp, at: TilePos(50, 50)), 1)
+        XCTAssertEqual(w.player.count(of: w.item("wood")), 4)
     }
 }

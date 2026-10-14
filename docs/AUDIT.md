@@ -96,3 +96,7 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
 - Inventory & crafting panel is cramped on iPhone (crafting column squeezed, group tabs wrap) → needs a compact layout.
 - Save thumbnails show black for older saves (made before thumbnails existed) — verify a fresh save shows its map.
 - Xcode warnings: Sprites.atlas split into 3 textures (fine), AudioManager "consider async alternative", "Update to recommended settings".
+
+## QA S9 (independent agent)
+- 15 findings in this session's changes (1 high, 7 medium, 7 low), all fixed; details `docs/team/qa_s9.md`.
+- Design follow-up resolved by lead: paste clears trees/rocks **only within the character's reach** (preview red otherwise, message tells the player to walk closer). 165 tests green.

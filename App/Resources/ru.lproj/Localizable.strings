@@ -221,6 +221,7 @@
 "Size" = "Размер";
 "Slots %@" = "Ячеек: %@";
 "Small" = "Маленькая";
+"Some ghosts skipped: trees or rocks out of reach — walk closer and paste again" = "Часть призраков пропущена: деревья или камни слишком далеко — подойдите и вставьте снова";
 "Sort" = "Сортировать";
 "Sound effects" = "Звуковые эффекты";
 "Speed %@" = "Скорость %@";
@@ -237,6 +238,7 @@
 "Throughput %@ items/s" = "Пропускная способность %@ предм./с";
 "Time %@" = "Время %@";
 "Trees" = "Деревья";
+"Trees or rocks in the way — walk closer to clear them" = "Мешают деревья или камни — подойдите ближе, чтобы расчистить";
 "Tritanopia" = "Тританопия";
 "Tutorial hints" = "Подсказки обучения";
 "Unlocked by %@" = "Открыто исследованием «%@»";

@@ -46,6 +46,7 @@ final class QAS9Tests: XCTestCase {
         let bp = w.captureBlueprint(TileRect(x: 0, y: 0, w: 4, h: 4))
         let t1 = w.entities.handle(natural(w, "tree_01", 20, 20))
         let t2 = w.entities.handle(natural(w, "tree_01", 21, 21))
+        w.player.position = Vec2(18.5, 20.5)                 // trees are only cleared within reach
         XCTAssertTrue(w.blueprintPreview(bp, at: TilePos(20, 20)).first!.ok)
         XCTAssertEqual(w.pasteBlueprint(bp, at: TilePos(20, 20)), 1)
         XCTAssertNil(w.entities.resolve(t1)); XCTAssertNil(w.entities.resolve(t2))

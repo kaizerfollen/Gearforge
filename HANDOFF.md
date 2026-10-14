@@ -92,6 +92,8 @@ stage it from the Mac `checkpoints/` → `git clone <bundle> /home/claude/Gearfo
 - **S9 (2026-10-14 evening):** new container (repo + Swift gone). Restored repo from bundle 1321, installed Swift
   from Ubuntu questing (see Toolchain), 152 tests + app typecheck green; synced checkpoint 1321 to the Mac. Then: ground items rendering + tap pickup,
   copy/paste area UI (paste clears trees), save rename, HUD safe-area fix — built & checked in Xcode simulator (153 tests).
+  Then audio agent (31 procedural sounds + AudioManager), Codex, settings wiring (UI scale, colour-blind, reduce motion,
+  grid, confirm placement, auto-build), QA agent (15 findings fixed), paste clears trees only within reach → 165 tests.
   NOTE: on the Mac `rm` is not permitted this session → unpack each patch into a new `.p<TS>` dir (hidden, harmless).
 
 ## Honest audit

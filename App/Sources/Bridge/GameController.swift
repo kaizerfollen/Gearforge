@@ -464,8 +464,16 @@ final class GameController {
     func paste(at tile: TilePos) {
         guard let bp = pasteBlueprint, let o = pasteOrigin(tile) else { return }
         let r = execute(.pasteBlueprint(bp, origin: o), silent: true)
-        guard r.isOK else { show(L("Can't place here — buildings or water in the way")); haptic(.error); return }
+        guard r.isOK else {
+            if world.lastPasteSkippedFarObstacles > 0 { show(L("Trees or rocks in the way — walk closer to clear them")) }
+            else { show(L("Can't place here — buildings or water in the way")) }
+            haptic(.error); return
+        }
         haptic(.medium)
+        if world.lastPasteSkippedFarObstacles > 0 {
+            show(L("Some ghosts skipped: trees or rocks out of reach — walk closer and paste again"))
+            return
+        }
         // tell the player what is missing
         var buildings = bp
         buildings.tiles = []                       // tiles aren't pasted: don't report concrete/brick as missing
