@@ -37,6 +37,7 @@ final class GameScene: SKScene {
     /// Diagnostics (Settings → Show FPS): terrain state of the chunk under the camera centre.
     private let debugLabel = SKLabelNode(text: "")
     private var debugTimer: Double = 0
+    private var debugRebakes = 0
     private var gridKey = ""
     private var pastePool: [SKSpriteNode] = []
     /// Paste preview cache: recomputed when the origin/rotation/clipboard changes or every 15 ticks (not per frame).
@@ -302,7 +303,19 @@ final class GameScene: SKScene {
             let tg = g.tileGroup(atColumn: 16, row: 15)
             lines.append("node parent=\(g.parent != nil) pos=\(Int(g.position.x)),\(Int(g.position.y)) hidden=\(g.isHidden) a=\(g.alpha) z=\(g.zPosition)")
             lines.append("cols=\(g.numberOfColumns) group=\(tg != nil) tex=\(tg?.rules.first?.tileDefinitions.first?.textures.first.map { "\(Int($0.size().width))" } ?? "nil")")
+            let f = g.frame
+            lines.append("frame \(Int(f.minX)),\(Int(f.minY)) \(Int(f.width))x\(Int(f.height)) kids=\(g.children.count) ore kids=\(n.ore.children.count)")
+            debugRebakes += 1
+            if debugRebakes % 6 == 0, let ch = w.surface.existingChunk(cp), let ts = tileSet {
+                n.ground.removeFromParent(); n.ore.removeFromParent()
+                chunkNodes[cp] = bakeChunk(ch, ts, w)
+                lines.append("REBAKED this chunk")
+            }
         } else { lines.append("node NONE for chunk") }
+        if let v = view {
+            let p = convertPoint(toView: cam.position)
+            lines.append("view \(Int(v.bounds.width))x\(Int(v.bounds.height)) camInView \(Int(p.x)),\(Int(p.y)) camScale \(cam.xScale) scaleMode \(scaleMode.rawValue)")
+        }
         debugLabel.text = lines.joined(separator: "\n")
         debugLabel.position = CGPoint(x: -size.width / 2 + 12, y: size.height / 2 - 90)
         debugLabel.isHidden = false
