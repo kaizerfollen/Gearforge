@@ -369,8 +369,8 @@ final class GameController {
     /// Places ghosts of the clipboard at the touched tile; the character builds them from the inventory.
     func paste(at tile: TilePos) {
         guard let bp = pasteBlueprint, let o = pasteOrigin(tile) else { return }
-        let r = execute(.pasteBlueprint(bp, origin: o))
-        guard r.isOK else { return }
+        let r = execute(.pasteBlueprint(bp, origin: o), silent: true)
+        guard r.isOK else { show(L("Can't place here — buildings or water in the way")); haptic(.error); return }
         haptic(.medium)
         // tell the player what is missing
         let need = bp.requiredItems(db: world.db)

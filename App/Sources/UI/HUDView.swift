@@ -41,19 +41,16 @@ struct HUDView: View {
             // Mode column (right; left in the left-handed layout)
             HStack {
                 if !leftHanded { Spacer() }
-                VStack(spacing: 10) {
+                VStack(spacing: 8) {
                     Spacer()
-                    HUDButton(glyph: "ui_build", active: controller.mode == .build) {
-                        if controller.mode == .build { controller.cancelMode() } else { controller.panel = .inventory }
-                    }
-                    HUDButton(glyph: "ui_remove", active: controller.mode == .remove) {
-                        controller.mode = controller.mode == .remove ? .explore : .remove
-                    }
-                    if controller.mode == .build {
-                        HUDButton(glyph: "ui_rotate") { controller.rotateBuild() }
-                    }
-                    if controller.mode == .paste {
-                        HUDButton(glyph: "ui_rotate") { controller.rotatePaste() }
+                    // compact 2-column grid so the column fits an iPhone in landscape
+                    HStack(spacing: 8) {
+                        HUDButton(glyph: "ui_build", active: controller.mode == .build, size: 48) {
+                            if controller.mode == .build { controller.cancelMode() } else { controller.panel = .inventory }
+                        }
+                        HUDButton(glyph: "ui_remove", active: controller.mode == .remove, size: 48) {
+                            controller.mode = controller.mode == .remove ? .explore : .remove
+                        }
                     }
                     HStack(spacing: 8) {
                         HUDButton(glyph: "ui_copy", active: controller.mode == .copy, size: 44) {
@@ -65,10 +62,16 @@ struct HUDView: View {
                         .opacity(controller.clipboard == nil ? 0.4 : 1)
                     }
                     HStack(spacing: 8) {
-                        HUDButton(glyph: "ui_undo", size: 44) { controller.undo() }.opacity(hud.canUndo ? 1 : 0.4)
+                        if controller.mode == .build || controller.mode == .paste {
+                            HUDButton(glyph: "ui_rotate", size: 44) {
+                                if controller.mode == .paste { controller.rotatePaste() } else { controller.rotateBuild() }
+                            }
+                        } else {
+                            HUDButton(glyph: "ui_undo", size: 44) { controller.undo() }.opacity(hud.canUndo ? 1 : 0.4)
+                        }
                         HUDButton(glyph: "ui_redo", size: 44) { controller.redo() }.opacity(hud.canRedo ? 1 : 0.4)
                     }
-                    HUDButton(glyph: "ui_inventory", size: 60) { controller.panel = .inventory }
+                    HUDButton(glyph: "ui_inventory", size: 56) { controller.panel = .inventory }
                 }
                 .padding(leftHanded ? .leading : .trailing, 16).padding(.bottom, 16)
                 if leftHanded { Spacer() }

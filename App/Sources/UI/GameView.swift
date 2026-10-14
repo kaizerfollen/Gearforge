@@ -18,6 +18,8 @@ struct GameView: View {
     @State private var zoomStart: CGFloat = 1
     @State private var contextMenu: ContextMenuState? = nil
     @State private var touchID = 0
+    /// Paste mode: true when the touch started on the tile already previewed (second tap places).
+    @State private var pasteArmed = false
 
     /// Holds a generation-checked handle: the entity may be removed (undo, mining…) while the menu is open (QA A1).
     struct ContextMenuState: Equatable { var handle: EntityHandle; var point: CGPoint }
@@ -32,6 +34,8 @@ struct GameView: View {
                 }
                 touchLayer
                 HUDView(model: model, controller: controller)
+                    .padding(.leading, geo.safeAreaInsets.leading)
+                    .padding(.trailing, geo.safeAreaInsets.trailing)
                 if let cm = contextMenu { contextMenuView(cm, in: geo.size) }
                 panelOverlay
                 if controller.showVictory { VictoryView(model: model, controller: controller) }
@@ -76,6 +80,10 @@ struct GameView: View {
             touchID += 1
             let id = touchID
             if controller.mode == .build { controller.previewTile = lastTile }
+            if controller.mode == .paste {
+                pasteArmed = lastTile != nil && controller.previewTile == lastTile
+                controller.previewTile = lastTile
+            }
             if controller.mode == .explore {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { longPressFired(id: id, at: v.startLocation) }
             }
@@ -105,7 +113,7 @@ struct GameView: View {
             if controller.copyStart == nil { controller.copyStart = lastTile ?? t }
             controller.copyEnd = t
         case .paste:
-            controller.previewTile = t
+            if dragging { controller.previewTile = t; pasteArmed = false }
         }
         lastTile = t
         lastDrag = v.location
@@ -145,7 +153,8 @@ struct GameView: View {
         case .remove:
             controller.remove(at: t)
         case .paste:
-            if controller.previewTile == t { controller.paste(at: t) } else { controller.previewTile = t }
+            if pasteArmed && controller.previewTile == t { controller.paste(at: t) } else { controller.previewTile = t }
+            pasteArmed = false
         case .copy:
             break
         }

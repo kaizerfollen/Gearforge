@@ -191,7 +191,8 @@ struct LoadGameView: View {
                             SaveThumbnail(model: model, slot: m.slot)
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(L(m.displayName)).font(.headline).foregroundStyle(Theme.text)
-                                Text(describe(m)).font(.caption).foregroundStyle(Theme.textDim)
+                                    .lineLimit(1).minimumScaleFactor(0.7)
+                                Text(describe(m)).font(.caption).foregroundStyle(Theme.textDim).lineLimit(2)
                             }
                             Spacer()
                             Text(m.savedAt, style: .relative).font(.caption).foregroundStyle(Theme.textDim)

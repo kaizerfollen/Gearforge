@@ -35,6 +35,7 @@
 "Campaign" = "Campaign";
 "Can't build on water" = "Can't build on water";
 "Can't get there" = "Can't get there";
+"Can't place here — buildings or water in the way" = "Can't place here — buildings or water in the way";
 "Can't rename: use a new, non-empty name without / or :" = "Can't rename: use a new, non-empty name without / or :";
 "Can't rotate" = "Can't rotate";
 "Cancel" = "Cancel";

@@ -279,4 +279,19 @@ final class CoreGapTests: XCTestCase {
         _ = w.mapRGBA(x0: -80, y0: -80, w: 160, h: 160)
         XCTAssertLessThan(Date().timeIntervalSince(t0), 0.5)
     }
+
+    func testPasteClearsTreesAndGivesWood() {
+        let w = TestWorld.make()
+        w.place("wooden_chest", 1, 1)
+        let bp = w.captureBlueprint(TileRect(x: 0, y: 0, w: 3, h: 3))
+        let tree = w.place("tree_01", 20, 20)
+        w.entities.update(tree) { $0.flags = [] }           // natural, not player-built
+        XCTAssertTrue(w.blueprintPreview(bp, at: TilePos(20, 20)).allSatisfy { $0.ok }, "trees don't make the preview red")
+        XCTAssertEqual(w.pasteBlueprint(bp, at: TilePos(20, 20)), 1)
+        XCTAssertTrue(w.entities[w.entity(at: TilePos(20, 20))!].flags.contains(.ghost))
+        XCTAssertEqual(w.player.count(of: w.item("wood")), 4, "tree loot goes to the player")
+        // a player building in the way is never removed
+        w.place("iron_chest", 30, 30)
+        XCTAssertEqual(w.pasteBlueprint(bp, at: TilePos(30, 30)), 0)
+    }
 }

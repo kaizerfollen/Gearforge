@@ -194,7 +194,45 @@ public extension World {
             let p = db.entity(e.entity)
             guard p >= 0 else { return nil }
             let o = TilePos(origin.x + e.dx, origin.y + e.dy)
-            return (p, o, e.direction, canPlace(proto: p, origin: o, direction: e.direction) == nil)
+            if let ex = entity(at: o), Int(entities[ex].proto) == p, entities[ex].origin == o { return (p, o, e.direction, true) }
+            let err = placementError(proto: p, origin: o, direction: e.direction)
+            let ok = err == nil || (err == .blocked && naturalObstacles(proto: p, origin: o, direction: e.direction) != nil)
+            return (p, o, e.direction, ok)
+        }
+    }
+
+    /// Trees/rocks overlapping the footprint when they are the ONLY occupants in the way (nil if anything else
+    /// blocks). Pasting clears them (Factorio marks them for deconstruction; here the character harvests them).
+    func naturalObstacles(proto: Int, origin: TilePos, direction: Direction) -> [Int32]? {
+        let (w, h) = footprint(proto, direction)
+        var out: [Int32] = []
+        var other = false
+        TileRect(origin: origin, w: w, h: h).forEach { q in
+            let o = surface.occupant(at: q)
+            guard o >= 0 else { return }
+            let r = entities[o]
+            if (r.kind == .tree || r.kind == .rock) && !r.flags.contains(.playerBuilt) {
+                if !out.contains(o) { out.append(o) }
+            } else { other = true }
+        }
+        return other || out.isEmpty ? nil : out
+    }
+
+    /// Removes natural obstacles, giving their loot to the player (overflow spilled on the ground).
+    internal func harvestObstacles(_ list: [Int32]) {
+        for o in list {
+            let r = entities[o]
+            guard r.isAlive else { continue }
+            let loot = db.entities[Int(r.proto)].minedResults
+            let c = r.rect.center
+            removeEntity(o)
+            for l in loot {
+                let it = db.item(l.id)
+                guard it >= 0 else { continue }
+                let fit = player.give(it, Int(l.amount))
+                if fit < Int(l.amount) { ground.spill([ItemStack(item: it, count: Int(l.amount) - fit)], near: c) }
+                stats.producedByHandMining(item: it, count: Int(l.amount))
+            }
         }
     }
 
@@ -208,7 +246,12 @@ public extension World {
             guard p >= 0 else { continue }
             let o = TilePos(origin.x + e.dx, origin.y + e.dy)
             if let ex = entity(at: o), Int(entities[ex].proto) == p, entities[ex].origin == o { continue }
-            guard placementError(proto: p, origin: o, direction: e.direction) == nil else { continue }
+            var err = placementError(proto: p, origin: o, direction: e.direction)
+            if err == .blocked, let obs = naturalObstacles(proto: p, origin: o, direction: e.direction) {
+                harvestObstacles(obs)
+                err = placementError(proto: p, origin: o, direction: e.direction)
+            }
+            guard err == nil else { continue }
             let g = createEntity(proto: p, origin: o, direction: e.direction, flags: [.playerBuilt, .ghost])
             setGhostSettings(e.settings, for: g)
             placed += 1
