@@ -32,6 +32,8 @@ public final class Character {
     /// Last movement direction (for the sprite).
     public private(set) var facing: Direction = .south
     public private(set) var isMoving = false
+    /// Settings → Gameplay → "Auto-build ghosts in reach" (not saved with the world).
+    public var autoBuildGhostsEnabled = true
     /// Remaining tap-to-walk waypoints (not saved).
     public internal(set) var walkPath: [TilePos] = []
     /// Target to mine once the character has walked into reach (transient, not saved: it only lives while held).
@@ -102,7 +104,7 @@ public final class Character {
         updatePendingMine()
         updateCrafting()
         updateMining()
-        if world.tick % 30 == 0 { autoBuildGhosts() }
+        if world.tick % 30 == 0 && autoBuildGhostsEnabled { autoBuildGhosts() }
         if world.tick % 10 == 0, !world.ground.isEmpty { autoLoot() }
         if world.tick % 60 == 0 { world.chartArea(around: position.tile.chunk, radius: World.characterChartRadius) }
     }

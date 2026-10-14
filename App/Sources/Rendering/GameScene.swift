@@ -30,6 +30,11 @@ final class GameScene: SKScene {
     private let reachNode = SKShapeNode(circleOfRadius: 320)
     /// Copy-area rectangle and paste preview (GDD §4.6).
     private let copyRectNode = SKShapeNode()
+    /// ✓ / ✕ next to the build ghost in colour-blind modes (validity not shown by colour alone).
+    private let validityLabel = SKLabelNode(text: "")
+    /// Tile grid (Settings → show grid: off / build / always).
+    private let gridNode = SKShapeNode()
+    private var gridKey = ""
     private var pastePool: [SKSpriteNode] = []
     /// Items lying on the ground (re-synced when GroundItems.revision or the view changes).
     private var groundPool: [SKSpriteNode] = []
@@ -126,6 +131,17 @@ final class GameScene: SKScene {
         copyRectNode.zPosition = 43
         copyRectNode.isHidden = true
         overlayLayer.addChild(copyRectNode)
+        validityLabel.fontName = "HelveticaNeue-Bold"
+        validityLabel.fontSize = 20
+        validityLabel.zPosition = 45
+        validityLabel.verticalAlignmentMode = .center
+        validityLabel.isHidden = true
+        overlayLayer.addChild(validityLabel)
+        gridNode.strokeColor = UIColor(white: 1, alpha: 0.10)
+        gridNode.lineWidth = 1
+        gridNode.zPosition = 5
+        gridNode.isHidden = true
+        addChild(gridNode)
         nightNode.zPosition = 100
         nightNode.alpha = 0
         cam.addChild(nightNode)
@@ -213,6 +229,7 @@ final class GameScene: SKScene {
         updateCharacter(w, dt: dt)
         updateOverlay(w, c)
         updateCopyPaste(w, c)
+        updateGrid(c)
         let night = c.settings.dayNightLighting ? (1 - w.daylight) * 0.55 : 0
         nightNode.alpha = CGFloat(night)
     }
@@ -399,8 +416,38 @@ final class GameScene: SKScene {
         }
     }
 
+    private func setValidityGlyph(_ ok: Bool, at p: CGPoint, size: CGSize) {
+        guard Theme.colorblind != "off" else { validityLabel.isHidden = true; return }
+        validityLabel.text = ok ? "✓" : "✕"
+        validityLabel.fontColor = ok ? Theme.goodUI : Theme.badUI
+        validityLabel.position = CGPoint(x: p.x + size.width / 2 + 8, y: p.y + size.height / 2 + 8)
+        validityLabel.isHidden = false
+    }
+
+    /// Grid lines over the visible area, rebuilt only when the camera crosses a tile or the zoom changes.
+    private func updateGrid(_ c: GameController) {
+        let mode = c.settings.showGrid
+        let show = (mode == "always" || (mode == "build" && c.mode != .explore)) && zoom >= 0.6
+        gridNode.isHidden = !show
+        guard show else { return }
+        let r = visibleRect(margin: 1)
+        let key = "\(r.x),\(r.y),\(r.w),\(r.h)"
+        guard key != gridKey else { return }
+        gridKey = key
+        let path = CGMutablePath()
+        for x in r.x...r.maxX {
+            path.move(to: CGPoint(x: CGFloat(x) * S, y: -CGFloat(r.y) * S))
+            path.addLine(to: CGPoint(x: CGFloat(x) * S, y: -CGFloat(r.maxY) * S))
+        }
+        for y in r.y...r.maxY {
+            path.move(to: CGPoint(x: CGFloat(r.x) * S, y: -CGFloat(y) * S))
+            path.addLine(to: CGPoint(x: CGFloat(r.maxX) * S, y: -CGFloat(y) * S))
+        }
+        gridNode.path = path
+    }
+
     private func startBeltAnimation(_ v: EntityView, _ p: EntityProto, base: String) {
-        guard base.hasSuffix("_f0") else { return }
+        guard base.hasSuffix("_f0"), controller?.settings.reduceMotion != true else { return }
         let stem = String(base.dropLast(3))
         let frames = (0..<8).map { SpriteCatalog.shared.texture(firstOf: ["\(stem)_f\($0)", base]) }
         let speed = Double(p.belt?.speed ?? 8)          // positions per tick; 8 frames per tile (256 positions)
@@ -492,6 +539,7 @@ final class GameScene: SKScene {
     }
 
     private func setWorking(_ v: EntityView, _ rec: EntityRecord, _ w: World, _ working: Bool) {
+        let working = working && controller?.settings.reduceMotion != true      // Settings → Reduce motion
         guard working != v.animating else { return }
         let base = v.spriteKey
         if working {
@@ -618,7 +666,7 @@ final class GameScene: SKScene {
                 n.texture = SpriteCatalog.shared.texture(firstOf: names)
                 n.size = CGSize(width: CGFloat(fw) * S, height: CGFloat(fh) * S)
                 n.position = scenePoint(Double(e.origin.x) + Double(fw) / 2, Double(e.origin.y) + Double(fh) / 2)
-                n.color = e.ok ? UIColor(red: 0.35, green: 0.8, blue: 1, alpha: 1) : UIColor(red: 1, green: 0.25, blue: 0.2, alpha: 1)
+                n.color = e.ok ? (Theme.colorblind == "off" ? UIColor(red: 0.35, green: 0.8, blue: 1, alpha: 1) : Theme.goodUI) : Theme.badUI
                 n.isHidden = false
                 used += 1
             }
@@ -703,7 +751,8 @@ final class GameScene: SKScene {
                 previewNode.position = scenePoint(Double(origin.x) + Double(fw) / 2, Double(origin.y) + Double(fh) / 2)
                 let ok = w.placementError(proto: proto, origin: origin, direction: c.buildDirection) == nil
                     || isFastReplace(w, proto, origin, c.buildDirection)
-                previewNode.color = ok ? UIColor(red: 0.3, green: 1, blue: 0.4, alpha: 1) : UIColor(red: 1, green: 0.25, blue: 0.2, alpha: 1)
+                previewNode.color = ok ? Theme.goodUI : Theme.badUI
+                setValidityGlyph(ok, at: previewNode.position, size: previewNode.size)
                 previewNode.isHidden = false
                 let io = w.ioPoints(proto: proto, origin: origin, dir: c.buildDirection)
                 if let i = io.input { ioInNode.position = scenePoint(i.x, i.y); ioInNode.isHidden = false } else { ioInNode.isHidden = true }
@@ -713,10 +762,11 @@ final class GameScene: SKScene {
                 previewNode.texture = SpriteCatalog.shared.texture("tile_\(w.db.tiles[w.db.itemPlaceTile[c.buildItem]].id)_v0")
                 previewNode.size = CGSize(width: S, height: S)
                 previewNode.position = scenePoint(Double(t.x) + 0.5, Double(t.y) + 0.5)
-                previewNode.color = UIColor(red: 0.3, green: 1, blue: 0.4, alpha: 1)
+                previewNode.color = Theme.goodUI
                 previewNode.isHidden = false
             }
         } else { previewNode.isHidden = true }
+        if previewNode.isHidden || c.mode != .build { validityLabel.isHidden = true }
         if previewNode.isHidden || c.mode != .build { ioInNode.isHidden = true; ioOutNode.isHidden = true }
     }
 

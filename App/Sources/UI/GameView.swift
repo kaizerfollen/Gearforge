@@ -20,6 +20,8 @@ struct GameView: View {
     @State private var touchID = 0
     /// Paste mode: true when the touch started on the tile already previewed (second tap places).
     @State private var pasteArmed = false
+    /// Build mode with "confirm placement": the touch started on the tile already previewed.
+    @State private var buildArmed = false
 
     /// Holds a generation-checked handle: the entity may be removed (undo, mining…) while the menu is open (QA A1).
     struct ContextMenuState: Equatable { var handle: EntityHandle; var point: CGPoint }
@@ -76,7 +78,10 @@ struct GameView: View {
             lastTile = tile(v.startLocation)
             touchID += 1
             let id = touchID
-            if controller.mode == .build { controller.previewTile = lastTile }
+            if controller.mode == .build {
+                buildArmed = lastTile != nil && controller.previewTile == lastTile
+                controller.previewTile = lastTile
+            }
             if controller.mode == .paste {
                 pasteArmed = lastTile != nil && controller.previewTile == lastTile
                 controller.previewTile = lastTile
@@ -145,8 +150,13 @@ struct GameView: View {
                 if controller.world.surface.resource(at: t).1 > 0 { controller.show("Hold to mine") }
             }
         case .build:
-            controller.previewTile = t
-            controller.build(at: t)
+            if controller.settings.confirmPlacement && !buildArmed {
+                controller.previewTile = t          // first tap: show the ghost; second tap on the same tile builds
+            } else {
+                controller.previewTile = t
+                controller.build(at: t)
+            }
+            buildArmed = false
         case .remove:
             controller.remove(at: t)
         case .paste:
@@ -173,7 +183,7 @@ struct GameView: View {
         } else if let r = nearestMineable(t) {
             holding = controller.walkAndMine(at: r)
             if !holding { controller.show("Can't get there") }
-        } else if controller.walkTo(t) {
+        } else if controller.settings.tapToWalk, controller.walkTo(t) {
             // Long-press on empty ground: walk there (A*); lifting the finger does not cancel it.
             controller.cameraFollowsPlayer = true
             controller.haptic(.light)
@@ -255,6 +265,7 @@ struct GameView: View {
                 case .stats: StatsPanel(controller: controller)
                 case .pause: PauseMenu(model: model, controller: controller)
                 case .map: MapPanel(controller: controller)
+                case .codex: CodexPanel(controller: controller)
                 }
             }
         }

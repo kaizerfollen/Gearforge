@@ -35,6 +35,7 @@ struct InventoryPanel: View {
             HStack {
                 Text("Inventory").font(.headline).foregroundStyle(Theme.text)
                 Spacer()
+                Button("Codex") { controller.panel = .codex }.buttonStyle(.bordered)
                 Button("Sort") { controller.execute(.sortInventory) }.buttonStyle(.bordered).tint(Theme.accent)
             }
             ScrollView {

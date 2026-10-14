@@ -294,4 +294,23 @@ final class CoreGapTests: XCTestCase {
         w.place("iron_chest", 30, 30)
         XCTAssertEqual(w.pasteBlueprint(bp, at: TilePos(30, 30)), 0)
     }
+
+    func testAutoBuildGhostsCanBeDisabled() {
+        let w = playerWorld()
+        w.player.autoBuildGhostsEnabled = false
+        XCTAssertTrue(w.execute(.buildGhost(entityProto: w.proto("wooden_chest"), origin: TilePos(12, 12), direction: .north)).isOK)
+        w.player.give(w.item("wooden_chest"), 1)
+        w.step(61)
+        XCTAssertTrue(w.entities[w.entity(at: TilePos(12, 12))!].flags.contains(.ghost), "stays a ghost while auto-build is off")
+        w.player.autoBuildGhostsEnabled = true
+        w.step(31)
+        XCTAssertFalse(w.entities[w.entity(at: TilePos(12, 12))!].flags.contains(.ghost))
+    }
+
+    func testSettingsAddNewKeysTolerantly() {
+        let old = #"{"autosaveMinutes": 10, "haptics": false}"#.data(using: .utf8)!
+        let s = GameSettings.decodeTolerant(old)!
+        XCTAssertEqual(s.autosaveMinutes, 10)
+        XCTAssertFalse(s.confirmPlacement, "new key gets its default")
+    }
 }

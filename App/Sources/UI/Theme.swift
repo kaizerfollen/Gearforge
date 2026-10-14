@@ -12,9 +12,34 @@ enum Theme {
     static let accent = Color(red: 0.98, green: 0.62, blue: 0.20)
     static let text = Color(white: 0.92)
     static let textDim = Color(white: 0.6)
-    static let good = Color(red: 0.35, green: 0.85, blue: 0.4)
     static let warn = Color(red: 0.98, green: 0.8, blue: 0.25)
-    static let bad = Color(red: 0.95, green: 0.3, blue: 0.25)
+
+    // MARK: Accessibility (GDD §10): colour-blind palettes and HUD scale, set by AppModel from GameSettings.
+    /// "off" | "deuteranopia" | "protanopia" | "tritanopia"
+    nonisolated(unsafe) static var colorblind = "off"
+    /// HUD scale 0.8…1.4.
+    nonisolated(unsafe) static var uiScale: CGFloat = 1
+
+    /// "OK / valid / working" and "bad / invalid / no power" as RGB, per palette. Red–green deficiencies get
+    /// blue vs orange; tritanopia gets green vs magenta-red. Ghost validity also shows ✓/✕ glyphs (not colour only).
+    static var goodRGB: (CGFloat, CGFloat, CGFloat) {
+        switch colorblind {
+        case "deuteranopia", "protanopia": return (0.25, 0.6, 1.0)
+        case "tritanopia": return (0.2, 0.8, 0.45)
+        default: return (0.35, 0.85, 0.4)
+        }
+    }
+    static var badRGB: (CGFloat, CGFloat, CGFloat) {
+        switch colorblind {
+        case "deuteranopia", "protanopia": return (1.0, 0.55, 0.1)
+        case "tritanopia": return (0.95, 0.2, 0.45)
+        default: return (0.95, 0.3, 0.25)
+        }
+    }
+    static var good: Color { let c = goodRGB; return Color(red: Double(c.0), green: Double(c.1), blue: Double(c.2)) }
+    static var bad: Color { let c = badRGB; return Color(red: Double(c.0), green: Double(c.1), blue: Double(c.2)) }
+    static var goodUI: UIColor { let c = goodRGB; return UIColor(red: c.0, green: c.1, blue: c.2, alpha: 1) }
+    static var badUI: UIColor { let c = badRGB; return UIColor(red: c.0, green: c.1, blue: c.2, alpha: 1) }
 
     static func powerColor(_ s: Double) -> Color { s >= 0.999 ? good : (s >= 0.5 ? warn : bad) }
 }
@@ -81,9 +106,9 @@ struct HUDButton: View {
             ZStack {
                 Circle().fill(active ? Theme.accent.opacity(0.9) : Color.black.opacity(0.55))
                 Circle().stroke(Color.white.opacity(0.25), lineWidth: 1)
-                SpriteImage(name: glyph, size: size * 0.55)
+                SpriteImage(name: glyph, size: size * Theme.uiScale * 0.55)
             }
-            .frame(width: size, height: size)
+            .frame(width: size * Theme.uiScale, height: size * Theme.uiScale)
         }
         .buttonStyle(.plain)
     }

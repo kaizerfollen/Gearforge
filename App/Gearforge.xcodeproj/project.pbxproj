@@ -13,6 +13,7 @@
 		2C50E6DFBF38AD7E18BA4BB2 /* InventoryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64CB6F58F91E7BED429525FA /* InventoryPanel.swift */; };
 		2D167E87D10F28225A69D103 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = D2E1E2D3D13EE04F1E7F7CEA /* Sounds */; };
 		40DE273DCCE27B38613910CD /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 03C608477711F56CE040B909 /* Localizable.strings */; };
+		44E62F06A1D8A15A4626530C /* CodexPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 079ADFD8EA2FCAF0A876CBF5 /* CodexPanel.swift */; };
 		527EA2EFEF8BAEA764EDD2BD /* MapPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD51ACDAC24D83DDDF570BD9 /* MapPanel.swift */; };
 		5FF248CA80894C7D9DDC2D37 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC2785D25BAD05C8473EA863 /* GameView.swift */; };
 		62F8DC3089D1E0382B72A96F /* HUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD32A38A0176DBDEBEF3FCE /* HUDView.swift */; };
@@ -33,6 +34,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		079ADFD8EA2FCAF0A876CBF5 /* CodexPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexPanel.swift; sourceTree = "<group>"; };
 		087261AC6A1D95AA2D904CF2 /* SpriteCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteCatalog.swift; sourceTree = "<group>"; };
 		1F33BAC76A9D0347E182D8D4 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		24697E0782FE1E9E1E1C82ED /* EntityPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityPanel.swift; sourceTree = "<group>"; };
@@ -99,6 +101,7 @@
 		3BAF19BB1D96F961A5FDDF8E /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				079ADFD8EA2FCAF0A876CBF5 /* CodexPanel.swift */,
 				24697E0782FE1E9E1E1C82ED /* EntityPanel.swift */,
 				DC2785D25BAD05C8473EA863 /* GameView.swift */,
 				CCD32A38A0176DBDEBEF3FCE /* HUDView.swift */,
@@ -256,6 +259,7 @@
 			files = (
 				DDE89D51F3CDB0F5D78E3DBB /* AppModel.swift in Sources */,
 				F88326E2CD7EB9EBE56EE994 /* AudioManager.swift in Sources */,
+				44E62F06A1D8A15A4626530C /* CodexPanel.swift in Sources */,
 				8E1CD7E08464C243DB951E91 /* EntityPanel.swift in Sources */,
 				A5E4CC0013CF3B1455C0D324 /* GameController.swift in Sources */,
 				CB7C00B739B03AA34D72A6FC /* GameScene.swift in Sources */,

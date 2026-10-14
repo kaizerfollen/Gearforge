@@ -1,6 +1,5 @@
 // Gearforge — FactoryCore
 // Player preferences (GDD §10) — not per-save. Persisted as JSON by SettingsStore. Owner: Progression engineer.
-// STUB — Progression engineer completes the full list; keep existing property names.
 
 import Foundation
 
@@ -18,7 +17,9 @@ public struct GameSettings: Codable, Equatable, Sendable {
     public var leftHanded: Bool = false
     // Controls
     public var tapToWalk: Bool = true
-    public var oneTapPlace: Bool = false
+    public var oneTapPlace: Bool = false               // legacy (unused) — see confirmPlacement
+    /// Build mode: first tap shows the ghost, a second tap on the same spot builds (off = build on first tap).
+    public var confirmPlacement: Bool = false
     public var joystickFloating: Bool = true
     // Gameplay
     public var autosaveMinutes: Int = 5                // 0 = off

@@ -19,6 +19,7 @@ enum GamePanel: Equatable, Identifiable {
     case stats
     case pause
     case map
+    case codex
     var id: String {
         switch self {
         case .inventory: return "inventory"
@@ -27,6 +28,7 @@ enum GamePanel: Equatable, Identifiable {
         case .stats: return "stats"
         case .pause: return "pause"
         case .map: return "map"
+        case .codex: return "codex"
         }
     }
 }
@@ -69,7 +71,7 @@ final class GameController {
     @ObservationIgnored let session: GameSession
     @ObservationIgnored var world: World { session.world }
     @ObservationIgnored let saveManager: SaveManager
-    @ObservationIgnored var settings: GameSettings
+    @ObservationIgnored var settings: GameSettings { didSet { applySettings() } }
     /// Events drained from the world this frame (the renderer consumes them in the same update).
     @ObservationIgnored private(set) var frameEvents: [WorldEvent] = []
     @ObservationIgnored private var hudTimer: Double = 0
@@ -120,6 +122,7 @@ final class GameController {
         self.saveManager = saveManager
         self.settings = settings
         self.altMode = settings.altMode
+        applySettings()
         session.autosaveIntervalSeconds = Double(settings.autosaveMinutes * 60)
         if session.world.player.quickbar.allSatisfy({ $0 < 0 }) { seedQuickbar() }
         refreshHUD()
@@ -401,6 +404,13 @@ final class GameController {
 
     func cancelMode() { mode = .explore; buildItem = -1; previewTile = nil; copyStart = nil; copyEnd = nil }
 
+    /// Pushes preferences that live outside SwiftUI (core flags, theme statics).
+    func applySettings() {
+        world.player.autoBuildGhostsEnabled = settings.autoBuildGhosts
+        Theme.colorblind = settings.colorblindMode
+        Theme.uiScale = CGFloat(min(max(settings.uiScale, 0.8), 1.4))
+    }
+
     // MARK: Copy / paste area
 
     func beginCopy() { cancelMode(); mode = .copy; haptic(.light) }
@@ -461,7 +471,7 @@ final class GameController {
     func pickUpGround(at tile: TilePos) -> Bool {
         guard world.ground.count(at: tile) > 0 else { return false }
         let r = execute(.pickUpGround(tile), silent: true)
-        if r.isOK { haptic(.light) } else if case .failed(.outOfReach) = r { _ = walkTo(tile) }
+        if r.isOK { haptic(.light) } else if case .failed(.outOfReach) = r, settings.tapToWalk { _ = walkTo(tile) }
         return true
     }
 

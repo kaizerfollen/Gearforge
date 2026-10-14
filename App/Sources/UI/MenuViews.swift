@@ -258,12 +258,31 @@ struct SettingsView: View {
                         Stepper(LF("Autosave slots: %@", "\(model.settings.autosaveSlots)"), value: $model.settings.autosaveSlots, in: 1...5)
                         Toggle("Auto-build ghosts in reach", isOn: $model.settings.autoBuildGhosts)
                     }
+                    section("Controls") {
+                        Toggle("Long-press empty ground to walk there", isOn: $model.settings.tapToWalk)
+                        Toggle("Confirm placement with a second tap", isOn: $model.settings.confirmPlacement)
+                    }
                     section("Interface") {
                         Toggle("Alt-mode (recipe icons on machines)", isOn: $model.settings.altMode)
                         Toggle("Show reach circle", isOn: $model.settings.showReachCircle)
                         Toggle("Haptics", isOn: $model.settings.haptics)
                         Toggle("Left-handed layout", isOn: $model.settings.leftHanded)
                         Toggle("Tutorial hints", isOn: $model.settings.tutorialHints)
+                        HStack {
+                            Text("Interface size")
+                            Slider(value: $model.settings.uiScale, in: 0.8...1.4, step: 0.1)
+                            Text(verbatim: "\(Int((model.settings.uiScale * 100).rounded()))%").monospacedDigit().frame(width: 52)
+                        }
+                        Picker("Grid", selection: $model.settings.showGrid) {
+                            Text("Grid off").tag("off"); Text("Grid when building").tag("build"); Text("Grid always").tag("always")
+                        }.pickerStyle(.segmented)
+                    }
+                    section("Accessibility") {
+                        Picker("Colour-blind palette", selection: $model.settings.colorblindMode) {
+                            Text("Standard").tag("off"); Text("Deuteranopia").tag("deuteranopia")
+                            Text("Protanopia").tag("protanopia"); Text("Tritanopia").tag("tritanopia")
+                        }.pickerStyle(.menu)
+                        Toggle("Reduce motion (no belt / machine animation)", isOn: $model.settings.reduceMotion)
                     }
                     section("Graphics & performance") {
                         Toggle("Day/night lighting", isOn: $model.settings.dayNightLighting)
