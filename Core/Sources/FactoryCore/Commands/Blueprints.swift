@@ -195,8 +195,8 @@ public extension World {
             guard p >= 0 else { return nil }
             let o = TilePos(origin.x + e.dx, origin.y + e.dy)
             if let ex = entity(at: o), Int(entities[ex].proto) == p, entities[ex].origin == o { return (p, o, e.direction, true) }
-            let err = placementError(proto: p, origin: o, direction: e.direction)
-            let ok = err == nil || (err == .blocked && naturalObstacles(proto: p, origin: o, direction: e.direction) != nil)
+            // Trees/rocks don't make the preview red — but only when everything else about the spot is valid.
+            let ok = placementError(proto: p, origin: o, direction: e.direction, ignoringNatural: true) == nil
             return (p, o, e.direction, ok)
         }
     }
@@ -210,12 +210,17 @@ public extension World {
         TileRect(origin: origin, w: w, h: h).forEach { q in
             let o = surface.occupant(at: q)
             guard o >= 0 else { return }
-            let r = entities[o]
-            if (r.kind == .tree || r.kind == .rock) && !r.flags.contains(.playerBuilt) {
+            if isNaturalObstacle(o) {
                 if !out.contains(o) { out.append(o) }
             } else { other = true }
         }
         return other || out.isEmpty ? nil : out
+    }
+
+    /// A tree or rock that was not built by the player.
+    internal func isNaturalObstacle(_ e: Int32) -> Bool {
+        let r = entities[e]
+        return (r.kind == .tree || r.kind == .rock) && !r.flags.contains(.playerBuilt)
     }
 
     /// Removes natural obstacles, giving their loot to the player (overflow spilled on the ground).
@@ -246,12 +251,11 @@ public extension World {
             guard p >= 0 else { continue }
             let o = TilePos(origin.x + e.dx, origin.y + e.dy)
             if let ex = entity(at: o), Int(entities[ex].proto) == p, entities[ex].origin == o { continue }
-            var err = placementError(proto: p, origin: o, direction: e.direction)
-            if err == .blocked, let obs = naturalObstacles(proto: p, origin: o, direction: e.direction) {
-                harvestObstacles(obs)
-                err = placementError(proto: p, origin: o, direction: e.direction)
-            }
-            guard err == nil else { continue }
+            // Validate as if trees/rocks were gone first, so nothing is cut down for a ghost that can't go there
+            // (water, no ore under a drill, shoreline, fluid mixing…). QA S9-1.
+            guard placementError(proto: p, origin: o, direction: e.direction, ignoringNatural: true) == nil else { continue }
+            if let obs = naturalObstacles(proto: p, origin: o, direction: e.direction) { harvestObstacles(obs) }
+            guard placementError(proto: p, origin: o, direction: e.direction) == nil else { continue }
             let g = createEntity(proto: p, origin: o, direction: e.direction, flags: [.playerBuilt, .ghost])
             setGhostSettings(e.settings, for: g)
             placed += 1

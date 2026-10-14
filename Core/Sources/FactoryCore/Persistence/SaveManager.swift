@@ -53,6 +53,13 @@ public final class SaveManager {
         return !t.isEmpty && t.count <= 64 && !t.contains("/") && !t.contains("\\") && !t.hasPrefix(".") && !t.contains(":")
     }
 
+    /// Slot names the game writes on its own (rotating autosaves, exit/background saves): a manual save renamed to
+    /// one of these would later be overwritten silently (QA S9-2).
+    public static func isReservedName(_ s: String) -> Bool {
+        let t = s.trimmingCharacters(in: .whitespaces).lowercased()
+        return t == backgroundSlot || t.hasPrefix("autosave_")
+    }
+
     /// All saves, newest first (metadata only — fast).
     public func listSaves(includeThumbnails: Bool = false) -> [SaveMetadata] {
         let files = (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? []
@@ -117,7 +124,7 @@ public final class SaveManager {
     /// Renames a save: new file name and the display name stored inside it (metadata is rewritten, world untouched).
     public func rename(slot: String, to newName: String) throws {
         let name = newName.trimmingCharacters(in: .whitespaces)
-        guard Self.isValidName(name) else { throw SaveError.invalidName(newName) }
+        guard Self.isValidName(name), !Self.isReservedName(name) else { throw SaveError.invalidName(newName) }
         if name == slot { return }
         guard !FileManager.default.fileExists(atPath: url(for: name).path) else { throw SaveError.slotExists(name) }
         let data: Data

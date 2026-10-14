@@ -128,7 +128,9 @@ public extension World {
 
     /// Full rule set for building (GDD §4.4 reasons): tiles, special placement rules, fluid mixing.
     /// `ignoring` lets fast-replace validate against the footprint of the entity being replaced.
-    func placementError(proto: Int, origin: TilePos, direction: Direction, ignoring: Int32? = nil) -> PlacementError? {
+    /// `ignoringNatural` treats natural trees/rocks as absent (paste clears them — but only if everything else fits).
+    func placementError(proto: Int, origin: TilePos, direction: Direction, ignoring: Int32? = nil,
+                        ignoringNatural: Bool = false) -> PlacementError? {
         let p = db.entities[proto]
         let (w, h) = footprint(proto, direction)
         let rect = TileRect(origin: origin, w: w, h: h)
@@ -137,7 +139,7 @@ public extension World {
             if err != nil { return }
             if !surface.isInBounds(q) { err = .outOfBounds; return }
             let occ = surface.occupant(at: q)
-            if occ >= 0 && occ != (ignoring ?? -2) { err = .blocked; return }
+            if occ >= 0 && occ != (ignoring ?? -2) && !(ignoringNatural && isNaturalObstacle(occ)) { err = .blocked; return }
             let t = surface.tile(at: q)
             if t >= 0 && db.tiles[t].isWater { err = .water }
         }
