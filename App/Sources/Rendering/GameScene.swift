@@ -50,6 +50,10 @@ final class GameScene: SKScene {
     private var groundCenter = TilePos(Int32.max, 0)
 
     private var chunkNodes: [ChunkPos: (ground: SKTileMapNode, ore: SKTileMapNode)] = [:]
+    /// Chunks whose tile maps were (re)built while on screen. SpriteKit never draws an SKTileMapNode that was built
+    /// while entirely off screen (S10: whole chunks stayed black once scrolled into view), so a chunk is re-baked the
+    /// moment it enters the screen after having been off it.
+    private var chunkOnScreen: Set<ChunkPos> = []
     private var tileGroups: [Int: [SKTileGroup]] = [:]          // tile index → variants
     private var oreGroups: [Int: [SKTileGroup]] = [:]           // resource index → 8 stages
     private var tileSet: SKTileSet?
@@ -241,7 +245,7 @@ final class GameScene: SKScene {
         handleEvents(c.frameEvents, w)
         syncTimer += dt; stateTimer += dt; wireTimer += dt
         let center = cameraCenter.tile
-        if syncTimer > 0.2 || abs(center.x - lastSyncCenter.x) > 3 || abs(center.y - lastSyncCenter.y) > 3 {
+        if syncTimer > 0.2 || abs(Int(center.x) - Int(lastSyncCenter.x)) > 1 || abs(Int(center.y) - Int(lastSyncCenter.y)) > 1 {
             syncTimer = 0; lastSyncCenter = center
             syncChunks(w); syncEntities(w)
         }
@@ -282,6 +286,7 @@ final class GameScene: SKScene {
                 if let v = views[id] { configure(v, id, w, force: true) }
             case .tilesChanged(let cp), .chunkGenerated(let cp):
                 if let n = chunkNodes[cp] { n.ground.removeFromParent(); n.ore.removeFromParent(); chunkNodes[cp] = nil }
+                chunkOnScreen.remove(cp)
                 syncTimer = 1          // re-bake in this same frame (sync runs right after the events), no blank frames
             default: break
             }
@@ -326,6 +331,7 @@ final class GameScene: SKScene {
     private func syncChunks(_ w: World) {
         guard let ts = tileSet else { return }
         let vis = visibleRect(margin: 8)
+        let screen = visibleRect(margin: 1)
         let c0 = TilePos(vis.x, vis.y).chunk, c1 = TilePos(vis.maxX, vis.maxY).chunk
         var wanted = Set<ChunkPos>()
         var cy = c0.y
@@ -335,7 +341,13 @@ final class GameScene: SKScene {
                 let cp = ChunkPos(cx, cy)
                 if let ch = w.surface.chunk(cp) {          // generates on demand (exploration)
                     wanted.insert(cp)
-                    if chunkNodes[cp] == nil { chunkNodes[cp] = bakeChunk(ch, ts, w) }
+                    let o = cp.originTile
+                    let onScreen = TileRect(x: o.x, y: o.y, w: Int32(chunkSize), h: Int32(chunkSize)).intersects(screen)
+                    if chunkNodes[cp] == nil || (onScreen && !chunkOnScreen.contains(cp)) {
+                        if let old = chunkNodes[cp] { old.ground.removeFromParent(); old.ore.removeFromParent() }
+                        chunkNodes[cp] = bakeChunk(ch, ts, w)
+                    }
+                    if onScreen { chunkOnScreen.insert(cp) } else { chunkOnScreen.remove(cp) }
                 }
                 cx += 1
             }
@@ -343,6 +355,7 @@ final class GameScene: SKScene {
         }
         for (cp, n) in chunkNodes where !wanted.contains(cp) {
             n.ground.removeFromParent(); n.ore.removeFromParent(); chunkNodes[cp] = nil
+            chunkOnScreen.remove(cp)
         }
     }
 
