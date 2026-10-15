@@ -125,7 +125,7 @@ struct NewGameView: View {
                         .overlay(alignment: .bottomTrailing) {
                             if !unlocked { Image(systemName: "lock.fill").font(.title3).foregroundStyle(Theme.textDim).padding(14) }
                         }
-                        .opacity(unlocked ? 1 : 0.6)
+                        .saturation(unlocked ? 1 : 0).brightness(unlocked ? 0 : -0.12)   // solid card: the menu background must not show through
                     }
                     .buttonStyle(.plain)
                 }

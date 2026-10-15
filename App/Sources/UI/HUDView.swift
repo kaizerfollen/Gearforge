@@ -292,15 +292,16 @@ struct HUDView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     if hud.researchName.isEmpty {
                         Text("Choose research").font(.caption.bold()).foregroundStyle(Theme.warn)
-                            .lineLimit(1).minimumScaleFactor(0.8)
+                            .lineLimit(1).minimumScaleFactor(0.8).frame(maxWidth: 160, alignment: .leading)
                     } else {
                         HStack(spacing: 4) {
                             Text(hud.researchName + (hud.researchLevel > 0 ? " \(hud.researchLevel)" : ""))
                                 .font(.caption.bold()).foregroundStyle(Theme.text).lineLimit(1).minimumScaleFactor(0.75)
+                                .frame(maxWidth: 150, alignment: .leading)
                             Text(verbatim: "\(Int(hud.researchProgress * 100))%").font(.caption2.bold()).monospacedDigit()
                                 .foregroundStyle(Theme.accent)
                         }
-                        BarView(fraction: hud.researchProgress, height: 4).frame(minWidth: 50, maxWidth: 160)
+                        BarView(fraction: hud.researchProgress, height: 4).frame(width: 130)
                     }
                     // overall progress through the tech tree
                     Text(LF("Researched %@ of %@", "\(hud.researchedCount)", "\(hud.techCount)"))
@@ -309,6 +310,7 @@ struct HUDView: View {
             }
             .padding(.horizontal, 12).padding(.vertical, 5)
             .background(Capsule().fill(Color.black.opacity(0.55)))
+            .fixedSize()          // natural width (names capped above) — never truncated by the top bar
         }
         .buttonStyle(.plain)
         .opacity(hud.researchEnabled ? 1 : 0)
