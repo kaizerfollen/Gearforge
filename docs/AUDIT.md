@@ -128,3 +128,14 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
   building, belts & inserters, electricity, research, automation, campaign & saves); main menu, pause menu, HUD «?»;
   opens once by itself on the first game start. en + ru (339 UI keys, 100 %).
 - Still to do: water/shore transition tiles (lake edges are stair-stepped), playtest the guide's first steps on L1.
+
+## S10c — black ground, real fix (2026-10-15)
+- S10b's atlas split was not enough: the user still saw black chunks after exploring. With a diagnostics overlay
+  (Settings → Show FPS) the chunk under the camera had a live tile map with tiles and textures, yet nothing was drawn;
+  re-baking it made it appear while a neighbour went black. SpriteKit stopped drawing older per-chunk SKTileMapNodes
+  once newer ones were added.
+- Fix: terrain is now ONE ground + ONE ore SKTileMapNode covering a chunk-aligned window around the camera, rebuilt
+  when the view leaves it (hysteresis 2 tiles) and patched in place when tiles/ore change. Verified on the simulator
+  by panning far north/west/south/east through freshly generated chunks — ground everywhere.
+- Also: the scene now follows the view size (SpriteView left it at 1024×768), zoom starts at the same framing as
+  before (0.52 on iPhone landscape, 1.0 on iPad), pinch starts from the current zoom. Diagnostics stay behind Show FPS.
