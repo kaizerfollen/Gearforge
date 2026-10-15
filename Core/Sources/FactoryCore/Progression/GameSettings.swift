@@ -40,6 +40,8 @@ public struct GameSettings: Codable, Equatable, Sendable {
     public var tutorialHints: Bool = true
     /// The "How to play" guide was shown once (it opens by itself on the first game start).
     public var guideSeen: Bool = false
+    /// The guided first tutorial (L1) was finished or skipped; it no longer starts by itself.
+    public var tutorialDone: Bool = false
     public init() {}
 
     /// Decodes settings saved by any app version: keys missing in `data` (added later) keep their defaults,
