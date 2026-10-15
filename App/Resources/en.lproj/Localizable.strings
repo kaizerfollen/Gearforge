@@ -249,6 +249,7 @@
 "Place the drill first." = "Place the drill first.";
 "Place the furnace first." = "Place the furnace first.";
 "Place the furnace on the highlighted tiles — right where the drill drops its ore." = "Place the furnace on the highlighted tiles — right where the drill drops its ore.";
+"Place the furnace right where the drill drops its ore." = "Place the furnace right where the drill drops its ore.";
 "Pollution" = "Pollution";
 "Power %@%%" = "Power %@%%";
 "Power here" = "Power here";
@@ -355,6 +356,10 @@
 "Waiting for ingredients" = "Waiting for ingredients";
 "Waiting for source" = "Waiting for source";
 "Waiting for target" = "Waiting for target";
+"Walk back to the drill (follow the arrow), then place the furnace on the highlighted tiles." = "Walk back to the drill (follow the arrow), then place the furnace on the highlighted tiles.";
+"Walk back to the drill (follow the arrow)." = "Walk back to the drill (follow the arrow).";
+"Walk to the blue-grey iron ore and place the drill on it." = "Walk to the blue-grey iron ore and place the drill on it.";
+"Walk to the highlighted spot on the iron ore — follow the arrow. Then tap it to place the drill." = "Walk to the highlighted spot on the iron ore — follow the arrow. Then tap it to place the drill.";
 "Water — lakes. An offshore pump on the shore supplies boilers and chemistry." = "Water — lakes. An offshore pump on the shore supplies boilers and chemistry.";
 "Welcome! This short tutorial shows where to tap and what to do first: mine, build a drill and a furnace, get iron plates. You can skip it at any time." = "Welcome! This short tutorial shows where to tap and what to do first: mine, build a drill and a furnace, get iron plates. You can skip it at any time.";
 "Window" = "Window";

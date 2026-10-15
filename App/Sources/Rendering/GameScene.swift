@@ -259,8 +259,10 @@ final class GameScene: SKScene {
             // or the bottom bar); the bias eases in and out.
             var want = Vec2(0, 0)
             if case .tiles(let r)? = c.tutorialHint?.target {
+                // keep the character in the middle area: at most ~9 tiles sideways / 4.5 up-down (the edge arrow
+                // points to anything further away)
                 let d = r.center - w.player.position
-                if d.length < 40 { want = d * 0.5 }
+                if d.length < 40 { want = Vec2(max(-9, min(9, d.x * 0.6)), max(-4.5, min(4.5, d.y * 0.6))) }
             }
             let k = min(1, dt * 3)
             cameraBias = cameraBias + (want - cameraBias) * k

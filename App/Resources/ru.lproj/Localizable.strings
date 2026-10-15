@@ -249,6 +249,7 @@
 "Place the drill first." = "Сначала поставьте бур.";
 "Place the furnace first." = "Сначала поставьте печь.";
 "Place the furnace on the highlighted tiles — right where the drill drops its ore." = "Поставьте печь на подсвеченные клетки — ровно туда, куда бур выбрасывает руду.";
+"Place the furnace right where the drill drops its ore." = "Поставьте печь ровно туда, куда бур выбрасывает руду.";
 "Pollution" = "Загрязнение";
 "Power %@%%" = "Энергия %@%%";
 "Power here" = "Энергия здесь";
@@ -355,6 +356,10 @@
 "Waiting for ingredients" = "Ждёт ингредиентов";
 "Waiting for source" = "Ждёт источника";
 "Waiting for target" = "Ждёт получателя";
+"Walk back to the drill (follow the arrow), then place the furnace on the highlighted tiles." = "Вернитесь к буру (следуйте за стрелкой) и поставьте печь на подсвеченные клетки.";
+"Walk back to the drill (follow the arrow)." = "Вернитесь к буру (следуйте за стрелкой).";
+"Walk to the blue-grey iron ore and place the drill on it." = "Дойдите до серо-голубой железной руды и поставьте на неё бур.";
+"Walk to the highlighted spot on the iron ore — follow the arrow. Then tap it to place the drill." = "Дойдите до подсвеченного места на железной руде — следуйте за стрелкой. Затем коснитесь его, чтобы поставить бур.";
 "Water — lakes. An offshore pump on the shore supplies boilers and chemistry." = "Вода — озёра. Прибрежный насос на берегу снабжает бойлеры и химию.";
 "Welcome! This short tutorial shows where to tap and what to do first: mine, build a drill and a furnace, get iron plates. You can skip it at any time." = "Добро пожаловать! Это короткое обучение покажет, куда нажимать и с чего начать: добыть ресурсы, поставить бур и печь, получить железные плиты. Его можно пропустить в любой момент.";
 "Window" = "Период";

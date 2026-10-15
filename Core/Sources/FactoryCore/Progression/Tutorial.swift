@@ -165,20 +165,30 @@ public final class Tutorial {
                 return h("This drill is not on iron ore. Hold your finger on it and pick it up, then place it on the highlighted spot.",
                          .tiles(world.entities[wrong].rect))
             }
+            guard let spot = drillSpot() else { return h("Walk to the blue-grey iron ore and place the drill on it.", .none) }
+            if !pl.canReach(spot) {
+                return h("Walk to the highlighted spot on the iron ore — follow the arrow. Then tap it to place the drill.", .tiles(spot))
+            }
             return h("Tap the highlighted spot on the iron ore (blue-grey) to place the drill. The orange dot shows where it drops the ore.",
-                     drillSpot().map { .tiles($0) } ?? .none)
+                     .tiles(spot))
         case .selectFurnace:
             return h("Now pick the stone furnace on the bottom bar.", .hud(quickbarAnchors(furnaceItem) + ["build"]))
         case .placeFurnace:
             if ui.buildItem != furnaceItem {
                 return h("Now pick the stone furnace on the bottom bar.", .hud(quickbarAnchors(furnaceItem) + ["build"]))
             }
-            return h("Place the furnace on the highlighted tiles — right where the drill drops its ore.",
-                     furnaceSpot().map { .tiles($0) } ?? .none)
+            guard let spot = furnaceSpot() else { return h("Place the furnace right where the drill drops its ore.", .none) }
+            if !pl.canReach(spot) {
+                return h("Walk back to the drill (follow the arrow), then place the furnace on the highlighted tiles.", .tiles(spot))
+            }
+            return h("Place the furnace on the highlighted tiles — right where the drill drops its ore.", .tiles(spot))
         case .fuelDrill:
             guard let d = drillOnIron() else { return h("Place the drill first.", .none) }
             if ui.panel == "entity" && ui.openEntity == d {
                 return h("Tap the coal in your inventory to put it into the drill's fuel slot.", .hud(["insert.\(coalItem)"]))
+            }
+            if !pl.canReach(world.entities[d].rect) {
+                return h("Walk back to the drill (follow the arrow).", .tiles(world.entities[d].rect))
             }
             return h("The drill needs fuel. Tap the drill twice to open it.", .tiles(world.entities[d].rect))
         case .fuelFurnace:
