@@ -808,7 +808,9 @@ final class GameScene: SKScene {
     /// Items on the ground: up to 4 icons per tile in a 2×2 pattern.
     private func updateGroundItems(_ w: World) {
         let center = cameraCenter.tile
-        let moved = abs(center.x - groundCenter.x) > 2 || abs(center.y - groundCenter.y) > 2
+        // Int64 maths: groundCenter starts at Int32.max ("never synced"), so Int32 subtraction would overflow
+        // as soon as the camera is at a negative x (menu showcase starts at x = −6).
+        let moved = abs(Int64(center.x) - Int64(groundCenter.x)) > 2 || abs(Int64(center.y) - Int64(groundCenter.y)) > 2
             || abs(zoom - groundZoom) > 0.05            // zooming out reveals tiles outside the last synced rect
         guard w.ground.revision != groundRevision || moved else { return }
         groundRevision = w.ground.revision; groundCenter = center; groundZoom = zoom
