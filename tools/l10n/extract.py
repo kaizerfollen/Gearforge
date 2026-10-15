@@ -43,6 +43,8 @@ UI_CALLS: dict[str, set] = {
     "L": {None}, "LF": {None}, "show": {None},
     # Gearforge helpers whose title goes through LocalizedStringKey(title) / L(title)
     "row": {None}, "prioPicker": {None}, "itemsRow": {None}, "column": {None}, "section": {None},
+    # save display names are shown through L(displayName) in the Continue / Load screens
+    "save": {"name"},
     "LoadingView": {"text"}, "MenuButton": {"title", "subtitle"}, "PanelChrome": {"title"}, "start": {"label"},
 }
 # Calls whose literal is formatted by us (L/LF/show/start) — interpolation there can never match a key.

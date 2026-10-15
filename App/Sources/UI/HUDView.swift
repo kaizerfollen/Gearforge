@@ -29,7 +29,8 @@ struct HUDView: View {
         ZStack {
             // Top bar
             VStack {
-                HStack(alignment: .top, spacing: 12) {
+                // spacing 0: the two Spacers below separate the groups; extra spacing here would squeeze the research text
+                HStack(alignment: .top, spacing: 0) {
                     VStack(alignment: .leading, spacing: 8) {
                         statusChip(hud)
                         if let t = controller.tutorialHint, controller.panel == nil {
@@ -41,9 +42,9 @@ struct HUDView: View {
                     }
                     .frame(width: compact ? (controller.tutorialHint != nil ? 250 : 210) : 280, alignment: .leading)
                     .tutorialAnchor("objectives")
-                    Spacer(minLength: 8)
+                    Spacer(minLength: 10)
                     researchBar(hud).layoutPriority(1).tutorialAnchor("research")   // before the spacers, so its text is not cut
-                    Spacer(minLength: 8)
+                    Spacer(minLength: 10)
                     HStack(alignment: .top, spacing: 8) {
                         MinimapView(controller: controller).tutorialAnchor("minimap")
                         Button { controller.panel = .guide } label: {

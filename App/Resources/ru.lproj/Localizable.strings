@@ -165,6 +165,7 @@
 "Lab speed +%@%%" = "Скорость лабораторий +%@%%";
 "Landing on %@…" = "Высадка: %@…";
 "Large" = "Большая";
+"Last exit" = "Последний выход";
 "Later: solar panels work only in daytime, accumulators store energy for the night." = "Позже: солнечные панели работают только днём, аккумуляторы запасают энергию на ночь.";
 "Learning" = "Обучение";
 "Left" = "Слева";
@@ -267,6 +268,7 @@
 "Protanopia" = "Протанопия";
 "Put data cards into the lab: red mechanics cards (copper plate + gear), later green motion cards (inserter + belt) and others." = "Вложите в лабораторию карты данных: красные карты механики (медная плита + шестерня), позже зелёные карты движения (манипулятор + конвейер) и другие.";
 "Queue" = "Очередь";
+"Quicksave" = "Быстрое сохранение";
 "Recipe" = "Рецепт";
 "Reduce motion (no belt / machine animation)" = "Меньше движения (без анимации лент и машин)";
 "Remove — tap or drag over buildings to pick them up into the inventory." = "Убрать — коснитесь построек или проведите по ним, чтобы забрать их в инвентарь.";

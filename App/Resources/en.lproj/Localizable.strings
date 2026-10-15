@@ -165,6 +165,7 @@
 "Lab speed +%@%%" = "Lab speed +%@%%";
 "Landing on %@…" = "Landing on %@…";
 "Large" = "Large";
+"Last exit" = "Last exit";
 "Later: solar panels work only in daytime, accumulators store energy for the night." = "Later: solar panels work only in daytime, accumulators store energy for the night.";
 "Learning" = "Learning";
 "Left" = "Left";
@@ -267,6 +268,7 @@
 "Protanopia" = "Protanopia";
 "Put data cards into the lab: red mechanics cards (copper plate + gear), later green motion cards (inserter + belt) and others." = "Put data cards into the lab: red mechanics cards (copper plate + gear), later green motion cards (inserter + belt) and others.";
 "Queue" = "Queue";
+"Quicksave" = "Quicksave";
 "Recipe" = "Recipe";
 "Reduce motion (no belt / machine animation)" = "Reduce motion (no belt / machine animation)";
 "Remove — tap or drag over buildings to pick them up into the inventory." = "Remove — tap or drag over buildings to pick them up into the inventory.";
