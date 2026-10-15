@@ -11,6 +11,9 @@
 "%@ kW" = "%@ кВт";
 "%@ min" = "%@ мин";
 "%@ s" = "%@ с";
+"%@ · %@ left here" = "%@ · здесь осталось %@";
+"%@M" = "%@ млн";
+"%@k" = "%@ тыс.";
 "10 min" = "10 мин";
 "10h" = "10 ч";
 "10m" = "10 мин";
@@ -120,6 +123,7 @@
 "Generating world…" = "Создание мира…";
 "Ghosts placed — missing %@" = "Призраки размещены — не хватает: %@";
 "Ghosts placed — walk close to build them" = "Призраки размещены — подойдите ближе, чтобы построить";
+"Gives: %@" = "Даёт: %@";
 "Goal of the game" = "Цель игры";
 "Got it" = "Понятно";
 "Graphics & performance" = "Графика и производительность";
@@ -131,6 +135,7 @@
 "Hand mining speed +%@%%" = "Скорость ручной добычи +%@%%";
 "Hand size: %@" = "Размер захвата: %@";
 "Haptics" = "Виброотклик";
+"Here: %@" = "В этой клетке: %@";
 "Hold on ore, a tree or a rock to mine it — if it is too far, the character walks there first. Hold on empty ground to walk to that spot. Tap the minimap to open the map, tap the map to walk there." = "Удерживайте палец на руде, дереве или скале, чтобы добывать их — если далеко, персонаж сначала подойдёт. Удерживайте на пустой земле, чтобы дойти туда. Коснитесь миникарты, чтобы открыть карту; касание карты отправляет персонажа в это место.";
 "Hold to chop" = "Удерживайте, чтобы рубить";
 "Hold to mine" = "Удерживайте, чтобы добывать";
@@ -161,7 +166,7 @@
 "Landing on %@…" = "Высадка: %@…";
 "Large" = "Большая";
 "Later: solar panels work only in daytime, accumulators store energy for the night." = "Позже: солнечные панели работают только днём, аккумуляторы запасают энергию на ночь.";
-"Learn the basics step by step" = "Основы шаг за шагом";
+"Learning" = "Обучение";
 "Left" = "Слева";
 "Left-handed layout" = "Раскладка для левши";
 "Level complete!" = "Уровень пройден!";
@@ -192,6 +197,7 @@
 "Modules" = "Модули";
 "Move the joystick to walk. Drag the ground with one finger to look around." = "Двигайте джойстик, чтобы идти. Проведите пальцем по земле, чтобы осмотреться.";
 "Music" = "Музыка";
+"Needs a pumpjack" = "Нужен станок-качалка";
 "Needs research: %@" = "Нужно исследование: %@";
 "Needs water edge" = "Нужен берег";
 "New Game" = "Новая игра";
@@ -272,6 +278,7 @@
 "Research now" = "Исследовать";
 "Research unlocks new buildings and recipes and gives permanent upgrades: faster mining, bigger inserter hands, more inventory." = "Исследования открывают новые постройки и рецепты и дают постоянные улучшения: быстрее добыча, больше захват манипуляторов, больше инвентарь.";
 "Researched" = "Изучено";
+"Researched %@ of %@" = "Изучено %@ из %@";
 "Researching %@" = "Исследуется: %@";
 "Resource richness" = "Богатство ресурсов";
 "Resources" = "Ресурсы";
@@ -336,11 +343,14 @@
 "The game was closed unexpectedly" = "Игра была неожиданно закрыта";
 "The goals of the current level are listed in the top-left corner. The hint below them tells you what to do next; hints can be turned off in Settings." = "Цели текущего уровня показаны в левом верхнем углу. Подсказка под ними говорит, что делать дальше; подсказки можно выключить в настройках.";
 "The lightning sign at the top left shows the network where you stand: a dash — no network, green 100% — enough power, yellow or red — not enough. Next to it is the time of day." = "Значок молнии слева вверху показывает сеть там, где вы стоите: прочерк — сети нет, зелёные 100% — энергии хватает, жёлтый или красный — не хватает. Рядом показано время суток.";
+"The tutorial guides you step by step in this game." = "Обучение проведёт вас по шагам прямо в этой игре.";
+"The tutorial starts level 1 and shows step by step where to tap." = "Обучение запускает уровень 1 и по шагам показывает, куда нажимать.";
 "Then automate the data cards, belts and inserters — everything you used to craft by hand. The statistics show what is missing." = "Затем автоматизируйте карты данных, конвейеры и манипуляторы — всё, что раньше делали руками. Статистика покажет, чего не хватает.";
 "This drill is not on iron ore. Hold your finger on it and pick it up, then place it on the highlighted spot." = "Этот бур стоит не на железной руде. Удерживайте на нём палец и заберите его, затем поставьте на подсвеченное место.";
 "Throughput %@ items/s" = "Пропускная способность %@ предм./с";
 "Time %@" = "Время %@";
 "To confirm every placement turn on «Confirm placement with a second tap» in Settings." = "Чтобы подтверждать каждую установку, включите в настройках «Подтверждать постройку вторым касанием».";
+"Tools" = "Инструменты";
 "Transport belt — moves items along its arrows. Drag to lay a line; belts turn and merge." = "Транспортный конвейер — везёт предметы по стрелкам. Проведите пальцем, чтобы проложить линию; конвейеры поворачивают и сливаются.";
 "Trees" = "Деревья";
 "Trees or rocks in the way — walk closer to clear them" = "Мешают деревья или камни — подойдите ближе, чтобы расчистить";
@@ -362,11 +372,13 @@
 "Walk to the highlighted spot on the iron ore — follow the arrow. Then tap it to place the drill." = "Дойдите до подсвеченного места на железной руде — следуйте за стрелкой. Затем коснитесь его, чтобы поставить бур.";
 "Water — lakes. An offshore pump on the shore supplies boilers and chemistry." = "Вода — озёра. Прибрежный насос на берегу снабжает бойлеры и химию.";
 "Welcome! This short tutorial shows where to tap and what to do first: mine, build a drill and a furnace, get iron plates. You can skip it at any time." = "Добро пожаловать! Это короткое обучение покажет, куда нажимать и с чего начать: добыть ресурсы, поставить бур и печь, получить железные плиты. Его можно пропустить в любой момент.";
+"Whole patch: %@ in %@ tiles" = "Всё месторождение: %@ на %@ клетках";
 "Window" = "Период";
 "With enough plates craft belts and inserters, then build electricity and labs and start research — see the sections below." = "Когда плит хватает, делайте конвейеры и манипуляторы, затем постройте электростанцию, лаборатории и начните исследования — подробности в разделах ниже.";
 "Wood — from trees. Early fuel, wooden chests, small electric poles." = "Древесина — из деревьев. Топливо на первое время, деревянные сундуки, малые опоры ЛЭП.";
 "Working" = "Работает";
 "Would mix fluids" = "Жидкости смешаются";
+"Yield here: %@%%" = "Добыча здесь: %@%%";
 "You can only build within reach — the circle around the character. Trees and rocks under a new building are cleared." = "Строить можно только в пределах досягаемости — круга вокруг персонажа. Деревья и скалы под новой постройкой убираются.";
 "Your inventory — tap to insert" = "Ваш инвентарь — коснитесь, чтобы вложить";
 "autosave" = "автосохранение";

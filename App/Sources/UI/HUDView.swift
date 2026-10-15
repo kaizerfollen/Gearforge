@@ -9,6 +9,12 @@ struct HUDView: View {
     @Bindable var controller: GameController
 
     private var leftHanded: Bool { controller.settings.leftHanded }
+    /// The ☰ tools tray (remove, copy, paste, undo, redo) is open.
+    @State private var toolsOpen = false
+    private var inventoryButton: some View {
+        HUDButton(glyph: "ui_inventory", size: 56) { controller.panel = .inventory; toolsOpen = false }
+            .tutorialAnchor("inventory")
+    }
     @Environment(\.verticalSizeClass) private var vClass
     /// iPhone in landscape (~750 × 370 pt inside the safe area): narrower info column, smaller joystick area and
     /// the quickbar laid out between the joystick and the mode buttons instead of under them.
@@ -29,8 +35,9 @@ struct HUDView: View {
                         if let t = controller.tutorialHint, controller.panel == nil {
                             TutorialCard(controller: controller, hint: t)       // guided tutorial replaces the goals list
                         } else if !hud.objectives.isEmpty { objectives(hud) }
-                        if let hint = hud.hint, controller.tutorialHint == nil, hud.selectedName.isEmpty { hintBubble(hint, hud.hintObjective) }
+                        if let hint = hud.hint, controller.tutorialHint == nil, hud.selectedName.isEmpty, controller.inspect == nil { hintBubble(hint, hud.hintObjective) }
                         if !hud.selectedName.isEmpty { selectionCard(hud, db) }
+                        else if let info = controller.inspect { inspectCard(info) }
                     }
                     .frame(width: compact ? (controller.tutorialHint != nil ? 250 : 210) : 280, alignment: .leading)
                     .tutorialAnchor("objectives")
@@ -60,38 +67,61 @@ struct HUDView: View {
             // Mode column (right; left in the left-handed layout)
             HStack {
                 if !leftHanded { Spacer() }
-                VStack(spacing: 8) {
+                VStack(alignment: leftHanded ? .leading : .trailing, spacing: 8) {
                     Spacer()
-                    // compact 2-column grid so the column fits an iPhone in landscape
-                    HStack(spacing: 8) {
-                        HUDButton(glyph: "ui_build", active: controller.mode == .build, size: 48) {
-                            if controller.mode == .build { controller.cancelMode() } else { controller.panel = .inventory }
-                        }
-                        .tutorialAnchor("build")
-                        HUDButton(glyph: "ui_remove", active: controller.mode == .remove, size: 48) {
-                            controller.mode = controller.mode == .remove ? .explore : .remove
-                        }
-                    }
-                    HStack(spacing: 8) {
-                        HUDButton(glyph: "ui_copy", active: controller.mode == .copy, size: 44) {
-                            if controller.mode == .copy { controller.cancelMode() } else { controller.beginCopy() }
-                        }
-                        HUDButton(glyph: "ui_paste", active: controller.mode == .paste, size: 44) {
-                            if controller.mode == .paste { controller.cancelMode() } else { controller.beginPaste() }
-                        }
-                        .opacity(controller.clipboard == nil ? 0.4 : 1)
-                    }
-                    HStack(spacing: 8) {
-                        if controller.mode == .build || controller.mode == .paste {
-                            HUDButton(glyph: "ui_rotate", size: 44) {
+                    // Tools for the current mode (rotate / done) — only while a mode is active.
+                    if controller.mode == .build || controller.mode == .paste {
+                        HStack(spacing: 8) {
+                            HUDButton(glyph: "ui_rotate", size: 40) {
                                 if controller.mode == .paste { controller.rotatePaste() } else { controller.rotateBuild() }
                             }
-                        } else {
-                            HUDButton(glyph: "ui_undo", size: 44) { controller.undo() }.opacity(hud.canUndo ? 1 : 0.4)
+                            HUDButton(glyph: "ui_close", size: 40) { controller.cancelMode() }
                         }
-                        HUDButton(glyph: "ui_redo", size: 44) { controller.redo() }.opacity(hud.canRedo ? 1 : 0.4)
+                    } else if controller.mode == .remove || controller.mode == .copy {
+                        HUDButton(glyph: controller.mode == .remove ? "ui_remove" : "ui_copy", active: true, size: 40) {
+                            controller.cancelMode()
+                        }
                     }
-                    HUDButton(glyph: "ui_inventory", size: 56) { controller.panel = .inventory }.tutorialAnchor("inventory")
+                    // Everything else lives behind the ☰ button: remove, copy, paste, undo, redo.
+                    if toolsOpen {
+                        VStack(spacing: 6) {
+                            HStack(spacing: 6) {
+                                HUDButton(glyph: "ui_remove", active: controller.mode == .remove, size: 38) {
+                                    controller.mode = controller.mode == .remove ? .explore : .remove; toolsOpen = false
+                                }
+                                HUDButton(glyph: "ui_copy", active: controller.mode == .copy, size: 38) {
+                                    if controller.mode == .copy { controller.cancelMode() } else { controller.beginCopy() }
+                                    toolsOpen = false
+                                }
+                                HUDButton(glyph: "ui_paste", active: controller.mode == .paste, size: 38) {
+                                    if controller.mode == .paste { controller.cancelMode() } else { controller.beginPaste() }
+                                    toolsOpen = false
+                                }
+                                .opacity(controller.clipboard == nil ? 0.4 : 1)
+                            }
+                            HStack(spacing: 6) {
+                                HUDButton(glyph: "ui_undo", size: 38) { controller.undo() }.opacity(hud.canUndo ? 1 : 0.4)
+                                HUDButton(glyph: "ui_redo", size: 38) { controller.redo() }.opacity(hud.canRedo ? 1 : 0.4)
+                            }
+                        }
+                        .padding(6)
+                        .background(RoundedRectangle(cornerRadius: 14).fill(Color.black.opacity(0.35)))
+                        .transition(.opacity)
+                    }
+                    HStack(spacing: 8) {
+                        if leftHanded { inventoryButton }
+                        Button { withAnimation(.easeOut(duration: 0.15)) { toolsOpen.toggle() } } label: {
+                            Image(systemName: toolsOpen ? "xmark" : "line.3.horizontal")
+                                .font(.system(size: 17 * Theme.uiScale, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(width: 40 * Theme.uiScale, height: 40 * Theme.uiScale)
+                                .background(Circle().fill(toolsOpen ? Theme.accent.opacity(0.9) : Color.black.opacity(0.55)))
+                                .overlay(Circle().stroke(Color.white.opacity(0.25), lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text("Tools"))
+                        if !leftHanded { inventoryButton }
+                    }
                 }
                 .padding(leftHanded ? .leading : .trailing, 16).padding(.bottom, 16)
                 if leftHanded { Spacer() }
@@ -117,7 +147,14 @@ struct HUDView: View {
                         .background(Capsule().fill(Color.black.opacity(0.6)))
                 }
                 if hud.miningProgress >= 0 {
-                    BarView(fraction: hud.miningProgress, color: Theme.good, height: 8).frame(width: 160)
+                    VStack(spacing: 3) {
+                        if !hud.miningLabel.isEmpty {
+                            Text(hud.miningLabel).font(.caption.bold()).foregroundStyle(.white).lineLimit(1)
+                        }
+                        BarView(fraction: hud.miningProgress, color: Theme.good, height: 8).frame(width: 160)
+                    }
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .background(Capsule().fill(Color.black.opacity(0.55)))
                 }
                 if !hud.craftQueue.isEmpty { craftQueue(hud, db) }
                 ViewThatFits(in: .horizontal) {
@@ -208,6 +245,26 @@ struct HUDView: View {
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.accent.opacity(0.5), lineWidth: 1))
     }
 
+    /// Resource tile / tree / rock the player tapped: what it is and how much is there.
+    private func inspectCard(_ i: InspectInfo) -> some View {
+        Button { controller.inspect = nil } label: {
+            HStack(alignment: .top, spacing: 8) {
+                SpriteImage(name: i.icon, size: 30)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(i.title).font(.caption.bold()).foregroundStyle(Theme.text).lineLimit(1)
+                    ForEach(Array(i.lines.enumerated()), id: \.offset) { n, line in
+                        Text(line).font(.caption2).foregroundStyle(n == i.lines.count - 1 ? Theme.accent : Theme.textDim)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(10)
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.6)))
+        }
+        .buttonStyle(.plain)
+    }
+
     private func selectionCard(_ hud: HUDState, _ db: PrototypeDB) -> some View {
         Button {
             if let h = controller.selected { controller.openEntity(h) }
@@ -232,22 +289,29 @@ struct HUDView: View {
         Button { controller.panel = .research } label: {
             HStack(spacing: 8) {
                 SpriteImage(name: "ui_research", size: 20)
-                if hud.researchName.isEmpty {
-                    Text("Choose research").font(.caption.bold()).foregroundStyle(Theme.warn)
-                        .lineLimit(2).multilineTextAlignment(.leading).minimumScaleFactor(0.85)
-                } else {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(hud.researchName).font(.caption.bold()).foregroundStyle(Theme.text).lineLimit(1).minimumScaleFactor(0.8)
+                VStack(alignment: .leading, spacing: 3) {
+                    if hud.researchName.isEmpty {
+                        Text("Choose research").font(.caption.bold()).foregroundStyle(Theme.warn)
+                            .lineLimit(1).minimumScaleFactor(0.8)
+                    } else {
+                        HStack(spacing: 4) {
+                            Text(hud.researchName + (hud.researchLevel > 0 ? " \(hud.researchLevel)" : ""))
+                                .font(.caption.bold()).foregroundStyle(Theme.text).lineLimit(1).minimumScaleFactor(0.75)
+                            Text(verbatim: "\(Int(hud.researchProgress * 100))%").font(.caption2.bold()).monospacedDigit()
+                                .foregroundStyle(Theme.accent)
+                        }
                         BarView(fraction: hud.researchProgress, height: 4).frame(minWidth: 50, maxWidth: 160)
                     }
-                    Text("\(Int(hud.researchProgress * 100))%").font(.caption2).monospacedDigit().foregroundStyle(Theme.textDim)
+                    // overall progress through the tech tree
+                    Text(LF("Researched %@ of %@", "\(hud.researchedCount)", "\(hud.techCount)"))
+                        .font(.system(size: 9)).monospacedDigit().foregroundStyle(Theme.textDim).lineLimit(1)
                 }
             }
-            .padding(.horizontal, 12).padding(.vertical, 6)
+            .padding(.horizontal, 12).padding(.vertical, 5)
             .background(Capsule().fill(Color.black.opacity(0.55)))
         }
         .buttonStyle(.plain)
-        .opacity(controller.world.research.researchEnabled ? 1 : 0)
+        .opacity(hud.researchEnabled ? 1 : 0)
     }
 
     private func craftQueue(_ hud: HUDState, _ db: PrototypeDB) -> some View {

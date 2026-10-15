@@ -81,6 +81,12 @@ final class GameScene: SKScene {
     var cameraCenter = Vec2(0, 0)
     /// Offset from the character while following it (tutorial framing).
     private var cameraBias = Vec2(0, 0)
+    /// Main-menu background (MenuShowcase): the camera loops slowly through these tile points; no character, no
+    /// machine sounds. Empty in a real game.
+    var showcaseWaypoints: [Vec2] = []
+    var showcaseZoom: CGFloat = 0.7
+    private var showcaseDistance: Double = 0
+    var isShowcase: Bool { !showcaseWaypoints.isEmpty }
 
     final class EntityView {
         let node: SKSpriteNode
@@ -188,7 +194,8 @@ final class GameScene: SKScene {
         view.shouldCullNonVisibleNodes = false
         if view.bounds.width > 0 { size = view.bounds.size }
         // Same amount of world on screen as before on a phone (~0.52 on an iPhone in landscape), 1.0 on an iPad.
-        zoom = max(0.5, min(1, size.height / 768))
+        zoom = isShowcase ? showcaseZoom : max(0.5, min(1, size.height / 768))
+        if isShowcase { cameraCenter = showcaseWaypoints[0] }
         if let c = controller { cameraCenter = c.world.player.position }
     }
 
@@ -254,7 +261,10 @@ final class GameScene: SKScene {
         lastTime = currentTime
         c.frame(dt: dt)
         let w = c.world
-        if c.cameraFollowsPlayer {
+        if isShowcase {
+            showcaseDistance += dt * 1.2                    // tiles per second
+            cameraCenter = showcasePoint(showcaseDistance)
+        } else if c.cameraFollowsPlayer {
             // Tutorial: frame both the character and the highlighted place (so it is not hidden under the joystick
             // or the bottom bar); the bias eases in and out.
             var want = Vec2(0, 0)
@@ -283,6 +293,7 @@ final class GameScene: SKScene {
         updateBeltItems(w)
         updateGroundItems(w)
         updateCharacter(w, dt: dt)
+        if isShowcase { characterNode.isHidden = true }
         updateOverlay(w, c)
         updateCopyPaste(w, c)
         updateGrid(c)
@@ -313,6 +324,8 @@ final class GameScene: SKScene {
                 refreshBeltsNear(TileRect(origin: origin, w: 3, h: 3).expanded(by: 1), w)
             case .entityChanged(let id):
                 if let v = views[id] { configure(v, id, w, force: true) }
+            case .handMined(let item, let n, let at):
+                spawnMinedPopup(item: item, count: n, at: at, w)
             case .tilesChanged(let cp), .chunkGenerated(let cp):
                 refreshTerrainChunk(cp, w)
             default: break
@@ -320,6 +333,30 @@ final class GameScene: SKScene {
         }
         if pipesDirty { for (id, v) in views where v.kind == .pipe { configure(v, id, w, force: true) } }
         if pipesDirty { wireTimer = 1 }
+    }
+
+    /// "+N [icon]" floating up from where the character just mined something by hand.
+    private func spawnMinedPopup(item: Int, count: Int, at: TilePos, _ w: World) {
+        guard item >= 0 && item < w.db.items.count else { return }
+        let node = SKNode()
+        let icon = SKSpriteNode(texture: SpriteCatalog.shared.texture("i_\(w.db.items[item].id)"))
+        icon.size = CGSize(width: S * 0.7, height: S * 0.7)
+        icon.position = CGPoint(x: -S * 0.3, y: 0)
+        let label = SKLabelNode(text: "+\(count)")
+        label.fontName = "HelveticaNeue-Bold"
+        label.fontSize = S * 0.55
+        label.fontColor = .white
+        label.verticalAlignmentMode = .center
+        label.horizontalAlignmentMode = .left
+        label.position = CGPoint(x: S * 0.1, y: 0)
+        node.addChild(icon); node.addChild(label)
+        node.position = scenePoint(Double(at.x) + 0.5, Double(at.y) + 0.3)
+        node.zPosition = 47
+        overlayLayer.addChild(node)
+        node.run(.sequence([
+            .group([.moveBy(x: 0, y: S * 1.3, duration: 0.9),
+                    .sequence([.wait(forDuration: 0.5), .fadeOut(withDuration: 0.4)])]),
+            .removeFromParent()]))
     }
 
     private func refreshBeltsNear(_ r: TileRect, _ w: World) {
@@ -337,6 +374,25 @@ final class GameScene: SKScene {
         tutorialNode.isHidden = false
         tutorialPhase += dt
         tutorialNode.alpha = CGFloat(0.6 + 0.4 * sin(tutorialPhase * 5))
+    }
+
+    /// Point at distance `d` along the closed waypoint loop, eased at the corners.
+    private func showcasePoint(_ d: Double) -> Vec2 {
+        let pts = showcaseWaypoints
+        guard pts.count > 1 else { return pts.first ?? Vec2(0, 0) }
+        var lens: [Double] = []
+        for i in 0..<pts.count { lens.append((pts[(i + 1) % pts.count] - pts[i]).length) }
+        let total = max(0.001, lens.reduce(0, +))
+        var t = d.truncatingRemainder(dividingBy: total)
+        for i in 0..<pts.count {
+            if t <= lens[i] || i == pts.count - 1 {
+                let f = lens[i] > 0 ? min(1, t / lens[i]) : 0
+                let e = f * f * (3 - 2 * f)                  // smoothstep: slow down at each waypoint
+                return pts[i] + (pts[(i + 1) % pts.count] - pts[i]) * e
+            }
+            t -= lens[i]
+        }
+        return pts[0]
     }
 
     /// Screen rect (SKView points) of a tile rect — for the tutorial's off-screen arrow and card placement.
@@ -662,6 +718,7 @@ final class GameScene: SKScene {
     /// inserters) to the audio engine, with the character as the listener.
     private func updateAmbience(_ w: World, sounds: [(kind: AudioManager.LoopKind, x: Double, y: Double)],
                                 inserters: [(kind: AudioManager.LoopKind, x: Double, y: Double)], visible: TileRect) {
+        guard !isShowcase else { return }                  // the menu background stays silent
         let me = w.player.position
         func d2(_ x: Double, _ y: Double) -> Double { (x - me.x) * (x - me.x) + (y - me.y) * (y - me.y) }
         var all = sounds

@@ -26,6 +26,9 @@ final class AppModel {
     @ObservationIgnored private let settingsURL: URL
     @ObservationIgnored private let progressURL: URL
     @ObservationIgnored var scene: GameScene?
+    /// Animated, darkened factory behind the menus (Core: MenuShowcase, built by the designer).
+    var menuScene: GameScene?
+    @ObservationIgnored private var menuController: GameController?
 
     init() {
         let support = (try? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true))
@@ -98,7 +101,29 @@ final class AppModel {
         }
     }
 
+    /// Builds the menu background once (after the first menu frame so the menu appears instantly).
+    func prepareMenuBackground() {
+        guard menuScene == nil, controller == nil else { return }
+        DispatchQueue.main.async { [self] in
+            guard menuScene == nil, controller == nil else { return }
+            let sc = MenuShowcase.make()
+            var s = settings
+            s.autosaveMinutes = 0; s.tutorialHints = false; s.showReachCircle = false; s.showFPS = false
+            let c = GameController(session: GameSession(world: sc.world, mode: .freeplay), saveManager: saveManager, settings: s)
+            c.cameraFollowsPlayer = false
+            let scene = GameScene(size: CGSize(width: 1024, height: 768))
+            scene.showcaseWaypoints = sc.waypoints
+            scene.showcaseZoom = CGFloat(sc.zoom)
+            scene.controller = c
+            menuController = c
+            menuScene = scene
+        }
+    }
+
+    func releaseMenuBackground() { menuScene = nil; menuController = nil }
+
     private func begin(_ session: GameSession) {
+        releaseMenuBackground()
         let c = GameController(session: session, saveManager: saveManager, settings: settings)
         c.onLevelCompleted = { [weak self] stars, seconds in
             guard let self, case .campaign(let id) = session.mode else { return }

@@ -11,6 +11,9 @@
 "%@ kW" = "%@ kW";
 "%@ min" = "%@ min";
 "%@ s" = "%@ s";
+"%@ · %@ left here" = "%@ · %@ left here";
+"%@M" = "%@M";
+"%@k" = "%@k";
 "10 min" = "10 min";
 "10h" = "10h";
 "10m" = "10m";
@@ -120,6 +123,7 @@
 "Generating world…" = "Generating world…";
 "Ghosts placed — missing %@" = "Ghosts placed — missing %@";
 "Ghosts placed — walk close to build them" = "Ghosts placed — walk close to build them";
+"Gives: %@" = "Gives: %@";
 "Goal of the game" = "Goal of the game";
 "Got it" = "Got it";
 "Graphics & performance" = "Graphics & performance";
@@ -131,6 +135,7 @@
 "Hand mining speed +%@%%" = "Hand mining speed +%@%%";
 "Hand size: %@" = "Hand size: %@";
 "Haptics" = "Haptics";
+"Here: %@" = "Here: %@";
 "Hold on ore, a tree or a rock to mine it — if it is too far, the character walks there first. Hold on empty ground to walk to that spot. Tap the minimap to open the map, tap the map to walk there." = "Hold on ore, a tree or a rock to mine it — if it is too far, the character walks there first. Hold on empty ground to walk to that spot. Tap the minimap to open the map, tap the map to walk there.";
 "Hold to chop" = "Hold to chop";
 "Hold to mine" = "Hold to mine";
@@ -161,7 +166,7 @@
 "Landing on %@…" = "Landing on %@…";
 "Large" = "Large";
 "Later: solar panels work only in daytime, accumulators store energy for the night." = "Later: solar panels work only in daytime, accumulators store energy for the night.";
-"Learn the basics step by step" = "Learn the basics step by step";
+"Learning" = "Learning";
 "Left" = "Left";
 "Left-handed layout" = "Left-handed layout";
 "Level complete!" = "Level complete!";
@@ -192,6 +197,7 @@
 "Modules" = "Modules";
 "Move the joystick to walk. Drag the ground with one finger to look around." = "Move the joystick to walk. Drag the ground with one finger to look around.";
 "Music" = "Music";
+"Needs a pumpjack" = "Needs a pumpjack";
 "Needs research: %@" = "Needs research: %@";
 "Needs water edge" = "Needs water edge";
 "New Game" = "New Game";
@@ -272,6 +278,7 @@
 "Research now" = "Research now";
 "Research unlocks new buildings and recipes and gives permanent upgrades: faster mining, bigger inserter hands, more inventory." = "Research unlocks new buildings and recipes and gives permanent upgrades: faster mining, bigger inserter hands, more inventory.";
 "Researched" = "Researched";
+"Researched %@ of %@" = "Researched %@ of %@";
 "Researching %@" = "Researching %@";
 "Resource richness" = "Resource richness";
 "Resources" = "Resources";
@@ -336,11 +343,14 @@
 "The game was closed unexpectedly" = "The game was closed unexpectedly";
 "The goals of the current level are listed in the top-left corner. The hint below them tells you what to do next; hints can be turned off in Settings." = "The goals of the current level are listed in the top-left corner. The hint below them tells you what to do next; hints can be turned off in Settings.";
 "The lightning sign at the top left shows the network where you stand: a dash — no network, green 100% — enough power, yellow or red — not enough. Next to it is the time of day." = "The lightning sign at the top left shows the network where you stand: a dash — no network, green 100% — enough power, yellow or red — not enough. Next to it is the time of day.";
+"The tutorial guides you step by step in this game." = "The tutorial guides you step by step in this game.";
+"The tutorial starts level 1 and shows step by step where to tap." = "The tutorial starts level 1 and shows step by step where to tap.";
 "Then automate the data cards, belts and inserters — everything you used to craft by hand. The statistics show what is missing." = "Then automate the data cards, belts and inserters — everything you used to craft by hand. The statistics show what is missing.";
 "This drill is not on iron ore. Hold your finger on it and pick it up, then place it on the highlighted spot." = "This drill is not on iron ore. Hold your finger on it and pick it up, then place it on the highlighted spot.";
 "Throughput %@ items/s" = "Throughput %@ items/s";
 "Time %@" = "Time %@";
 "To confirm every placement turn on «Confirm placement with a second tap» in Settings." = "To confirm every placement turn on «Confirm placement with a second tap» in Settings.";
+"Tools" = "Tools";
 "Transport belt — moves items along its arrows. Drag to lay a line; belts turn and merge." = "Transport belt — moves items along its arrows. Drag to lay a line; belts turn and merge.";
 "Trees" = "Trees";
 "Trees or rocks in the way — walk closer to clear them" = "Trees or rocks in the way — walk closer to clear them";
@@ -362,11 +372,13 @@
 "Walk to the highlighted spot on the iron ore — follow the arrow. Then tap it to place the drill." = "Walk to the highlighted spot on the iron ore — follow the arrow. Then tap it to place the drill.";
 "Water — lakes. An offshore pump on the shore supplies boilers and chemistry." = "Water — lakes. An offshore pump on the shore supplies boilers and chemistry.";
 "Welcome! This short tutorial shows where to tap and what to do first: mine, build a drill and a furnace, get iron plates. You can skip it at any time." = "Welcome! This short tutorial shows where to tap and what to do first: mine, build a drill and a furnace, get iron plates. You can skip it at any time.";
+"Whole patch: %@ in %@ tiles" = "Whole patch: %@ in %@ tiles";
 "Window" = "Window";
 "With enough plates craft belts and inserters, then build electricity and labs and start research — see the sections below." = "With enough plates craft belts and inserters, then build electricity and labs and start research — see the sections below.";
 "Wood — from trees. Early fuel, wooden chests, small electric poles." = "Wood — from trees. Early fuel, wooden chests, small electric poles.";
 "Working" = "Working";
 "Would mix fluids" = "Would mix fluids";
+"Yield here: %@%%" = "Yield here: %@%%";
 "You can only build within reach — the circle around the character. Trees and rocks under a new building are cleared." = "You can only build within reach — the circle around the character. Trees and rocks under a new building are cleared.";
 "Your inventory — tap to insert" = "Your inventory — tap to insert";
 "autosave" = "autosave";

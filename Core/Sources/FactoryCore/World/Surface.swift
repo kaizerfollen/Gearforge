@@ -113,6 +113,26 @@ public final class Surface {
         let i = p.localIndex
         return (Int(ch.resource[i]) - 1, ch.resourceAmount[i])
     }
+    /// Resource patch around `p`: tiles of the same resource connected (4-neighbour) to it, and their total amount.
+    /// Stops after `limit` tiles (`complete == false`), so the cost stays bounded for huge patches.
+    public func resourcePatch(at p: TilePos, limit: Int = 6000) -> (resource: ResourceIndex, tiles: Int, total: Int, complete: Bool) {
+        let (r, a) = resource(at: p)
+        guard r >= 0, a > 0 else { return (-1, 0, 0, true) }
+        var seen: Set<TilePos> = [p]
+        var stack = [p]
+        var total = 0
+        while let t = stack.popLast() {
+            total += Int(resource(at: t).1)
+            if seen.count >= limit { return (r, seen.count, total, false) }
+            for n in [TilePos(t.x + 1, t.y), TilePos(t.x - 1, t.y), TilePos(t.x, t.y + 1), TilePos(t.x, t.y - 1)]
+            where !seen.contains(n) && isInBounds(n) {
+                let (rn, an) = resource(at: n)
+                if rn == r && an > 0 { seen.insert(n); stack.append(n) }
+            }
+        }
+        return (r, seen.count, total, true)
+    }
+
     public func setResource(at p: TilePos, _ r: ResourceIndex, amount: UInt32) {
         guard let ch = chunk(at: p) else { return }
         let i = p.localIndex

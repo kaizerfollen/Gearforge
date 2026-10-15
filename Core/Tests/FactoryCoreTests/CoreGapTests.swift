@@ -347,4 +347,34 @@ final class CoreGapTests: XCTestCase {
             XCTAssertTrue(b.contains(TilePos(0, 0)), "spawn stays inside")
         }
     }
+
+    // MARK: Hand mining feedback (S12)
+
+    func testHandMiningRockRemovesItAndReportsLoot() {
+        let w = playerWorld()
+        w.recordsEvents = true
+        let rock = w.place("big_rock", 12, 10)
+        w.player.position = Vec2(11.0, 10.5)
+        XCTAssertNil(w.player.startMining(TilePos(12, 10)))
+        _ = w.drainEvents()
+        var mined: [(Int, Int)] = []
+        for _ in 0..<(60 * 10) {
+            w.step()
+            for e in w.drainEvents() { if case .handMined(let item, let n, _) = e { mined.append((item, n)) } }
+            if !w.entities.isLive(rock) { break }
+        }
+        XCTAssertFalse(w.entities.isLive(rock), "the rock disappears")
+        XCTAssertEqual(w.player.count(of: w.item("stone")), 20)
+        XCTAssertEqual(mined.first?.0, w.item("stone")); XCTAssertEqual(mined.first?.1, 20)
+    }
+
+    func testResourcePatchTotal() {
+        let w = TestWorld.make()
+        let iron = w.db.resource("iron_ore")
+        for x in 5..<10 { for y in 5..<8 { w.surface.setResource(at: TilePos(x, y), iron, amount: 100) } }
+        w.surface.setResource(at: TilePos(20, 20), iron, amount: 50)          // separate patch
+        let p = w.surface.resourcePatch(at: TilePos(6, 6))
+        XCTAssertEqual(p.resource, iron); XCTAssertEqual(p.tiles, 15); XCTAssertEqual(p.total, 1500); XCTAssertTrue(p.complete)
+        XCTAssertEqual(w.surface.resourcePatch(at: TilePos(30, 30)).tiles, 0)
+    }
 }

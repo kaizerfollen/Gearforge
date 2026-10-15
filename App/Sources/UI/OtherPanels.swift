@@ -236,7 +236,9 @@ struct PauseMenu: View {
 
     var body: some View {
         if showSettings {
-            SettingsView(model: model, onClose: { showSettings = false })
+            SettingsView(model: model, onClose: { showSettings = false },
+                         onGuide: { showSettings = false; controller.panel = .guide },
+                         onTutorial: { showSettings = false; controller.startTutorial(); controller.panel = nil })
         } else {
             ScrollView {
             VStack(spacing: 10) {
@@ -252,7 +254,6 @@ struct PauseMenu: View {
                     }.buttonStyle(.borderedProminent).tint(Theme.accent)
                 }
                 MenuButton(title: "Production stats") { controller.panel = .stats }
-                MenuButton(title: "How to play") { controller.panel = .guide }
                 MenuButton(title: "Codex") { controller.panel = .codex }
                 MenuButton(title: "Settings") { showSettings = true }
                 MenuButton(title: "Save & quit to menu") { model.quitToMenu(save: true) }

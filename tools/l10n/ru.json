@@ -1193,6 +1193,19 @@
   "Walk back to the drill (follow the arrow), then place the furnace on the highlighted tiles.": "Вернитесь к буру (следуйте за стрелкой) и поставьте печь на подсвеченные клетки.",
   "Walk back to the drill (follow the arrow).": "Вернитесь к буру (следуйте за стрелкой).",
   "Tap coal (or wood) in your inventory to put it into the drill's fuel slot.": "Коснитесь угля (или древесины) в своём инвентаре, чтобы положить топливо в бур.",
-  "Tap coal or wood in your inventory to put it into the furnace — both are fuel.": "Коснитесь угля или древесины в своём инвентаре, чтобы положить в печь — и то и другое топливо."
+  "Tap coal or wood in your inventory to put it into the furnace — both are fuel.": "Коснитесь угля или древесины в своём инвентаре, чтобы положить в печь — и то и другое топливо.",
+  "%@ · %@ left here": "%@ · здесь осталось %@",
+  "%@M": "%@ млн",
+  "%@k": "%@ тыс.",
+  "Gives: %@": "Даёт: %@",
+  "Here: %@": "В этой клетке: %@",
+  "Learning": "Обучение",
+  "Needs a pumpjack": "Нужен станок-качалка",
+  "Researched %@ of %@": "Изучено %@ из %@",
+  "The tutorial guides you step by step in this game.": "Обучение проведёт вас по шагам прямо в этой игре.",
+  "The tutorial starts level 1 and shows step by step where to tap.": "Обучение запускает уровень 1 и по шагам показывает, куда нажимать.",
+  "Tools": "Инструменты",
+  "Whole patch: %@ in %@ tiles": "Всё месторождение: %@ на %@ клетках",
+  "Yield here: %@%%": "Добыча здесь: %@%%"
  }
 }

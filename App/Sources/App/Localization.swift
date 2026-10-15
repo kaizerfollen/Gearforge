@@ -82,4 +82,5 @@ extension PrototypeDB {
     func entityName(_ e: Int) -> String { Names.entity(self, e) }
     func recipeName(_ r: Int) -> String { Names.recipe(self, r) }
     func techName(_ t: Int) -> String { Names.tech(self, t) }
+    func fluidName(_ f: Int) -> String { Names.fluid(self, f) }
 }

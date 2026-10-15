@@ -156,15 +156,17 @@ struct GameView: View {
             if let e = controller.world.entity(at: t), controller.world.entities[e].kind != .character {
                 let rec = controller.world.entities[e]
                 if rec.kind == .tree || rec.kind == .rock {
-                    controller.show("Hold to chop")
+                    controller.inspectTile(t)          // what it gives + "hold to chop"
                 } else {
+                    controller.inspect = nil
                     controller.tapEntity(e)
                 }
             } else if controller.pickUpGround(at: t) {
                 controller.selected = nil
             } else {
                 controller.selected = nil
-                if controller.world.surface.resource(at: t).1 > 0 { controller.show("Hold to mine") }
+                // resource tile: how much is here and in the whole patch; empty ground clears the card
+                controller.inspectTile(t)
             }
         case .build:
             if controller.settings.confirmPlacement && !buildArmed {

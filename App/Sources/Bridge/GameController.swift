@@ -42,11 +42,24 @@ struct ObjectiveLine: Equatable, Identifiable {
     var detail: String
 }
 
+/// What the player tapped that is not a building: a resource tile, a tree or a rock (GDD: show what is there).
+struct InspectInfo: Equatable {
+    var icon: String
+    var title: String
+    var lines: [String]
+    var tile: TilePos
+}
+
 struct HUDState: Equatable {
     var powerSatisfaction: Double = -1        // -1 = no network here
     var researchName: String = ""
     var researchIcon: String = ""
     var researchProgress: Double = 0
+    /// Level of the current technology when it has several (0 = single-level).
+    var researchLevel = 0
+    var researchedCount = 0
+    var techCount = 0
+    var researchEnabled = true
     var craftQueue: [CraftQueueEntry] = []
     var objectives: [ObjectiveLine] = []
     var levelCompleted = false
@@ -61,6 +74,8 @@ struct HUDState: Equatable {
     var canRedo = false
     var gameTime: String = "0:00"
     var miningProgress: Double = -1
+    /// "Stone · 245 left here" while hand mining.
+    var miningLabel: String = ""
     var buildReason: String = ""
     /// Tutorial hint for the first active objective that has one (and was not dismissed).
     var hint: String? = nil
@@ -313,6 +328,45 @@ final class GameController {
         return ui
     }
 
+    // MARK: Inspecting resources / trees / rocks
+
+    var inspect: InspectInfo? = nil
+    @ObservationIgnored private var inspectTime = Date()
+    @ObservationIgnored private lazy var techTotal: Int = world.db.technologies.indices.count { world.db.technologies[$0].phase == "mvp" }
+
+    /// Tap on a resource tile, tree or rock: what it is and how much is there (the card hides after a few seconds).
+    func inspectTile(_ t: TilePos) {
+        let w = world, db = w.db
+        if let e = w.entity(at: t) {
+            let rec = w.entities[e]
+            guard rec.kind == .tree || rec.kind == .rock else { inspect = nil; return }
+            let p = db.entities[Int(rec.proto)]
+            let loot = p.minedResults.map { LF("%@ × %@", "\($0.amount)", db.itemName(db.item($0.id))) }.joined(separator: ", ")
+            let icon = p.minedResults.first.map { "i_\($0.id)" } ?? "i_wood"
+            inspect = InspectInfo(icon: icon, title: db.entityName(Int(rec.proto)),
+                                  lines: [LF("Gives: %@", loot), L(rec.kind == .tree ? "Hold to chop" : "Hold to mine")], tile: t)
+        } else {
+            let (r, a) = w.surface.resource(at: t)
+            guard r >= 0, a > 0 else { inspect = nil; return }
+            let res = db.resources[r]
+            let patch = w.surface.resourcePatch(at: t)
+            let total = (patch.complete ? "" : "≥ ") + formatCount(patch.total)
+            if res.resultIsFluid {
+                inspect = InspectInfo(icon: "f_\(res.result)", title: db.fluidName(db.fluid(res.result)),
+                                      lines: [LF("Yield here: %@%%", "\(Int(Double(a) / 3000))"), L("Needs a pumpjack")], tile: t)
+            } else {
+                let item = db.item(res.result)
+                inspect = InspectInfo(icon: "i_\(res.result)", title: db.itemName(item),
+                                      lines: [LF("Here: %@", formatCount(Int(a))),
+                                              LF("Whole patch: %@ in %@ tiles", total, "\(patch.tiles)"),
+                                              L("Hold to mine")], tile: t)
+            }
+        }
+        inspectTime = Date()
+        selected = nil
+        AudioManager.shared.play(.uiTap)
+    }
+
     func refreshHUD() {
         updateTutorial()
         var h = HUDState()
@@ -321,10 +375,15 @@ final class GameController {
         let net = w.power.network(at: pl.position)
         if net >= 0, let st = w.power.stats(network: net) { h.powerSatisfaction = st.demandW > 0 ? st.satisfaction : 1 }
         let cur = w.research.current
+        h.researchEnabled = w.research.researchEnabled
+        h.researchedCount = w.research.researchedTechs.count { w.db.technologies[$0].phase == "mvp" }
+        h.techCount = techTotal
         if cur >= 0 {
             h.researchName = w.db.techName(cur)
             h.researchIcon = w.db.technologies[cur].id
             h.researchProgress = w.research.progress(of: cur)
+            let tp = w.db.technologies[cur]
+            if tp.maxLevel != nil && tp.maxLevel != 1 { h.researchLevel = w.research.level(of: cur) }
         }
         h.craftQueue = Array(pl.craftQueue.prefix(6))
         h.objectives = session.objectives.active.map { o in
@@ -362,7 +421,17 @@ final class GameController {
         h.canUndo = w.canUndo; h.canRedo = w.canRedo
         let secs = Int(session.gameSeconds)
         h.gameTime = secs >= 3600 ? String(format: "%d:%02d:%02d", secs / 3600, secs / 60 % 60, secs % 60) : String(format: "%d:%02d", secs / 60, secs % 60)
-        if pl.miningTarget != nil { h.miningProgress = pl.miningProgress }
+        if let mt = pl.miningTarget {
+            h.miningProgress = pl.miningProgress
+            switch mt {
+            case .tile(let p):
+                let (r, a) = w.surface.resource(at: p)
+                if r >= 0 { h.miningLabel = LF("%@ · %@ left here", w.db.itemName(w.db.item(w.db.resources[r].result)), formatCount(Int(a))) }
+            case .entity(let e):
+                if w.entities.isLive(e) { h.miningLabel = w.db.entityName(Int(w.entities[e].proto)) }
+            }
+        }
+        if let i = inspect, Date().timeIntervalSince(inspectTime) > 8 { _ = i; inspect = nil }
         if mode == .build, let t = previewTile, buildItem >= 0 {
             let proto = w.db.itemPlaceResult[buildItem]
             if proto >= 0, let err = w.placementError(proto: proto, origin: buildOrigin(proto: proto, tile: t), direction: buildDirection) {

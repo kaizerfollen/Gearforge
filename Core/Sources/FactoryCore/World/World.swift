@@ -17,6 +17,8 @@ public enum WorldEvent: Sendable {
     case researchFinished(TechIndex)
     case recipeUnlocked(RecipeIndex)
     case craftFinished(item: Int, count: Int)
+    /// The character got items by hand mining (a resource tile, a tree or a rock) at a tile (UI feedback "+1").
+    case handMined(item: Int, count: Int, at: TilePos)
     case rocketLaunched(withSatellite: Bool)
     case objectiveCompleted(Int)
     case levelCompleted

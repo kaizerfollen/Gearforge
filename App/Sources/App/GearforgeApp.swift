@@ -2,6 +2,7 @@
 
 import SwiftUI
 import FactoryCore
+import SpriteKit
 
 @main
 struct GearforgeApp: App {
@@ -27,6 +28,16 @@ struct RootView: View {
     var body: some View {
         ZStack {
             Theme.background.ignoresSafeArea()
+            if model.screen != .game, let s = model.menuScene {
+                // live factory behind the menus, darkened so the buttons stay readable
+                SpriteView(scene: s, preferredFramesPerSecond: 30)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+                LinearGradient(colors: [Color.black.opacity(0.45), Color.black.opacity(0.72)],
+                               startPoint: .top, endPoint: .bottom)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+            }
             switch model.screen {
             case .menu:
                 MainMenuView(model: model)
@@ -37,13 +48,15 @@ struct RootView: View {
             case .settings:
                 SettingsView(model: model)
             case .guide:
-                GuidePanel(onClose: { model.screen = .menu })
+                GuidePanel(onClose: { model.screen = .settings })
             case .loading(let text):
                 LoadingView(text: text)
             case .game:
                 if let c = model.controller { GameView(model: model, controller: c) }
             }
         }
+        .onAppear { model.prepareMenuBackground() }
+        .onChange(of: model.screen) { _, s in if s != .game { model.prepareMenuBackground() } }
         .alert("Gearforge", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
             Button("OK", role: .cancel) { model.errorMessage = nil }
         } message: {

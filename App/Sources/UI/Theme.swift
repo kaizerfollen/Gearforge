@@ -243,6 +243,15 @@ extension EntityStatus {
     }
 }
 
+/// 1 234 / 12.3k / 4.5M — compact counts for resource amounts.
+func formatCount(_ n: Int) -> String {
+    if n >= 10_000_000 { return LF("%@M", String(format: "%.0f", Double(n) / 1e6)) }
+    if n >= 1_000_000 { return LF("%@M", String(format: "%.1f", Double(n) / 1e6)) }
+    if n >= 100_000 { return LF("%@k", String(format: "%.0f", Double(n) / 1e3)) }
+    if n >= 10_000 { return LF("%@k", String(format: "%.1f", Double(n) / 1e3)) }
+    return "\(n)"
+}
+
 func formatWatts(_ w: Double) -> String {
     if w >= 1e9 { return LF("%@ GW", String(format: "%.1f", w / 1e9)) }
     if w >= 1e6 { return LF("%@ MW", String(format: "%.1f", w / 1e6)) }

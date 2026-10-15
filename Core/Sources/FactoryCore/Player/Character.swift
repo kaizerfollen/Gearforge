@@ -377,7 +377,11 @@ public final class Character {
             for (item, n) in loot where item >= 0 {
                 if inventory.canInsert(item: item, count: n, stackSize: world.stackSize(item)) < n { miningProgress = 1; return }
             }
-            for (item, n) in loot where item >= 0 { give(item, n); world.stats.producedByHandMining(item: item, count: n) }
+            let at = rec.origin
+            for (item, n) in loot where item >= 0 {
+                give(item, n); world.stats.producedByHandMining(item: item, count: n)
+                world.emit(.handMined(item: item, count: n, at: at))
+            }
             world.removeEntity(e)
             stopMining()
         case .tile(let p):
@@ -391,6 +395,7 @@ public final class Character {
             miningProgress -= 1
             give(item, 1)
             world.stats.producedByHandMining(item: item, count: 1)
+            world.emit(.handMined(item: item, count: 1, at: p))
             if !res.infinite {
                 let left = a - 1
                 world.surface.setResource(at: p, left > 0 ? r : -1, amount: left)

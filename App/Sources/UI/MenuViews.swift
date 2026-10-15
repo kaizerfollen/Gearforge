@@ -10,14 +10,18 @@ struct MainMenuView: View {
     var body: some View {
         let compact = vClass == .compact
         HStack(spacing: compact ? 24 : 40) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .center, spacing: 8) {
                 SpriteImage(name: "i_assembling_machine_2", size: compact ? 72 : 96)
+                    .shadow(color: .black.opacity(0.6), radius: 8)
                 Text("GEARFORGE").font(.system(size: compact ? 44 : 54, weight: .heavy, design: .rounded)).foregroundStyle(Theme.accent)
                     .lineLimit(1).minimumScaleFactor(0.6)
-                Text("Build. Automate. Launch.").font(.title3).foregroundStyle(Theme.textDim)
+                    .shadow(color: .black.opacity(0.7), radius: 6)
+                Text("Build. Automate. Launch.").font(.title3).foregroundStyle(Theme.text.opacity(0.85))
+                    .multilineTextAlignment(.center)
                     .lineLimit(2).minimumScaleFactor(0.8)
+                    .shadow(color: .black.opacity(0.7), radius: 4)
             }
-            .frame(maxWidth: 360, alignment: .leading)
+            .frame(maxWidth: 360, alignment: .center)
             ScrollView {
             VStack(spacing: compact ? 10 : 12) {
                 if model.offerRecovery {
@@ -29,8 +33,6 @@ struct MainMenuView: View {
                            enabled: model.canContinue) { model.continueLatest() }
                 MenuButton(title: "New Game") { model.screen = .newGame }
                 MenuButton(title: "Load Game", enabled: model.canContinue) { model.refreshSaves(); model.screen = .load }
-                MenuButton(title: "Tutorial", subtitle: "Learn the basics step by step") { model.startTutorial() }
-                MenuButton(title: "How to play") { model.screen = .guide }
                 MenuButton(title: "Settings") { model.screen = .settings }
             }
             .padding(.vertical, 8)
@@ -273,11 +275,29 @@ struct LoadGameView: View {
 struct SettingsView: View {
     @Bindable var model: AppModel
     var onClose: (() -> Void)? = nil
+    /// In a game (pause menu) these open the guide panel / start the tutorial in the current game.
+    var onGuide: (() -> Void)? = nil
+    var onTutorial: (() -> Void)? = nil
 
     var body: some View {
         PanelChrome(title: "Settings", onClose: { if let c = onClose { c() } else { model.screen = .menu } }) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
+                    section("Learning") {
+                        HStack(spacing: 10) {
+                            Button { if let t = onTutorial { t() } else { model.startTutorial() } } label: {
+                                Label("Tutorial", systemImage: "graduationcap.fill").frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.borderedProminent).tint(Theme.accent)
+                            Button { if let g = onGuide { g() } else { model.screen = .guide } } label: {
+                                Label("How to play", systemImage: "book.fill").frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                        Text(onTutorial == nil ? "The tutorial starts level 1 and shows step by step where to tap."
+                                               : "The tutorial guides you step by step in this game.")
+                            .font(.caption).foregroundStyle(Theme.textDim)
+                    }
                     section("Gameplay") {
                         FitPicker("Autosave", selection: $model.settings.autosaveMinutes,
                                   options: [("Off", 0), ("2 min", 2), ("5 min", 5), ("10 min", 10), ("15 min", 15)])
