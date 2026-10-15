@@ -33,7 +33,7 @@ struct RootView: View {
                 SpriteView(scene: s, preferredFramesPerSecond: 30)
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
-                LinearGradient(colors: [Color.black.opacity(0.45), Color.black.opacity(0.72)],
+                LinearGradient(colors: [Color.black.opacity(0.58), Color.black.opacity(0.8)],
                                startPoint: .top, endPoint: .bottom)
                     .ignoresSafeArea()
                     .allowsHitTesting(false)

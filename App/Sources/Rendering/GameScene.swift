@@ -338,24 +338,30 @@ final class GameScene: SKScene {
     /// "+N [icon]" floating up from where the character just mined something by hand.
     private func spawnMinedPopup(item: Int, count: Int, at: TilePos, _ w: World) {
         guard item >= 0 && item < w.db.items.count else { return }
+        // Sized in screen points (scaled by 1/zoom) so "+N" stays readable however far the camera is zoomed out.
         let node = SKNode()
+        let plate = SKShapeNode(rect: CGRect(x: -22, y: -15, width: 62, height: 30), cornerRadius: 15)
+        plate.fillColor = UIColor(white: 0, alpha: 0.6)
+        plate.strokeColor = UIColor(red: 0.98, green: 0.62, blue: 0.2, alpha: 0.8)
+        plate.lineWidth = 1.5
         let icon = SKSpriteNode(texture: SpriteCatalog.shared.texture("i_\(w.db.items[item].id)"))
-        icon.size = CGSize(width: S * 0.7, height: S * 0.7)
-        icon.position = CGPoint(x: -S * 0.3, y: 0)
+        icon.size = CGSize(width: 24, height: 24)
+        icon.position = CGPoint(x: -6, y: 0)
         let label = SKLabelNode(text: "+\(count)")
         label.fontName = "HelveticaNeue-Bold"
-        label.fontSize = S * 0.55
+        label.fontSize = 19
         label.fontColor = .white
         label.verticalAlignmentMode = .center
         label.horizontalAlignmentMode = .left
-        label.position = CGPoint(x: S * 0.1, y: 0)
-        node.addChild(icon); node.addChild(label)
+        label.position = CGPoint(x: 9, y: 0)
+        node.addChild(plate); node.addChild(icon); node.addChild(label)
+        node.setScale(1 / max(0.35, zoom))
         node.position = scenePoint(Double(at.x) + 0.5, Double(at.y) + 0.3)
         node.zPosition = 47
         overlayLayer.addChild(node)
         node.run(.sequence([
-            .group([.moveBy(x: 0, y: S * 1.3, duration: 0.9),
-                    .sequence([.wait(forDuration: 0.5), .fadeOut(withDuration: 0.4)])]),
+            .group([.moveBy(x: 0, y: 46 / max(0.35, zoom), duration: 1.1),
+                    .sequence([.wait(forDuration: 0.7), .fadeOut(withDuration: 0.4)])]),
             .removeFromParent()]))
     }
 

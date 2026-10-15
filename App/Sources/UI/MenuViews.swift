@@ -11,8 +11,14 @@ struct MainMenuView: View {
         let compact = vClass == .compact
         HStack(spacing: compact ? 24 : 40) {
             VStack(alignment: .center, spacing: 8) {
-                SpriteImage(name: "i_assembling_machine_2", size: compact ? 72 : 96)
-                    .shadow(color: .black.opacity(0.6), radius: 8)
+                // Logo: the gear icon on a dark round badge so it never blends into the factory behind the menu.
+                ZStack {
+                    Circle().fill(Theme.background.opacity(0.85))
+                    Circle().stroke(Theme.accent.opacity(0.8), lineWidth: 2)
+                    SpriteImage(name: "i_assembling_machine_2", size: compact ? 54 : 72)
+                }
+                .frame(width: compact ? 84 : 108, height: compact ? 84 : 108)
+                .shadow(color: .black.opacity(0.7), radius: 10)
                 Text("GEARFORGE").font(.system(size: compact ? 44 : 54, weight: .heavy, design: .rounded)).foregroundStyle(Theme.accent)
                     .lineLimit(1).minimumScaleFactor(0.6)
                     .shadow(color: .black.opacity(0.7), radius: 6)
