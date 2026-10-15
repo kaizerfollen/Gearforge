@@ -151,3 +151,17 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
   resume skips done steps, skip). 169 core tests green. Design/maintenance: `docs/TUTORIAL.md`. en + ru.
 - Played through on the simulator, all 15 steps (menu «Обучение» → «Понятно»); fixes from that run: camera framing,
   walk-there hints, wood as fuel fallback, selection card layout.
+
+## S12 — menu showcase, learning in Settings, HUD declutter, resource info (2026-10-15)
+Built in Xcode and checked on the iPhone 17 Pro simulator.
+- **Main menu**: 4 buttons (Continue / New Game / Load Game / Settings). Behind it a live, darkened pre-built factory
+  (`Core/Progression/MenuShowcase.swift`, designer agent) with a slow camera loop; logo on a round badge, centered.
+  Locked level cards stay opaque over that background.
+- **Settings → «Обучение»**: Tutorial + «Как играть» (also from the pause menu's Settings); the guide returns to Settings.
+- **HUD**: remove/copy/paste/undo/redo moved behind ☰; rotate/close appear only in build/paste mode.
+  Research widget: tech name + level + %, bar, «Изучено N из M» (layout priority, never truncated).
+- **Resources**: tap a tile → card with the amount in that tile and the whole patch («Всё месторождение: X на N клетках»),
+  tree/rock loot. Hand mining shows «+N» (screen-sized plate) and «здесь осталось N» above the progress bar.
+  Ore tiles hold hundreds of units, so a tile does not vanish after one hold — that is now visible in the numbers.
+- **Crash fixed**: `updateGroundItems` Int32 overflow (sentinel `Int32.max` − negative camera x in the showcase).
+- l10n: save names (Last exit, Quicksave) extracted + translated; 100 % Russian.

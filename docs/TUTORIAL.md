@@ -16,7 +16,7 @@ tests `Core/Tests/FactoryCoreTests/TutorialTests.swift`.
 
 ## When it runs
 - Level **L1 «Высадка»** until the tutorial is finished or skipped once (`GameSettings.tutorialDone`).
-- Main menu → **«Обучение»** always starts L1 with the tutorial (even if done before).
+- Settings → **«Обучение»** (main menu or pause) always starts L1 with the tutorial (even if done before).
 - While it runs the objective hint bubble (left column) is hidden and «Как играть» does not open by itself.
 - Steps already satisfied are skipped automatically (loading a save, a player who is ahead) — nothing can get stuck.
 

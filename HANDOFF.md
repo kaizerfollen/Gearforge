@@ -92,6 +92,9 @@ stage it from the Mac `checkpoints/` → `git clone <bundle> /home/claude/Gearfo
   screen (tap to walk), pollution in stats. Then: **Russian localization** (l10n agent: 1000+ keys, tooling
   tools/l10n), **independent QA agent** (15 core bugs found → all fixed, 152 tests green), tutorial hint bubbles,
   left-handed layout, save thumbnails, tolerant settings decoding. Mac went offline ~12:50 (screen locked).
+- **S12 (2026-10-15):** main menu with a live darkened factory background (MenuShowcase), Tutorial/How to play in
+  Settings, ☰ tools tray, tile resource info + mining popups, research level/progress in the HUD (AUDIT S12).
+  Xcode Run button: (228,19) in Xcode window 1413 (click tier) — app_click works without full-screen control.
 - **S11 (2026-10-15):** guided tutorial (Core/Progression/Tutorial.swift + App/UI/TutorialOverlay.swift, see
   docs/TUTORIAL.md); black-ground root cause fixed (single terrain tile-map window, AUDIT S10c).
 - **S10 (2026-10-15 night):** layout pass — every screen fits iPhone landscape (FitPicker, panelFrame, compact
