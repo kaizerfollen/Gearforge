@@ -245,14 +245,15 @@ public final class Tutorial {
         return playerEntities(furnaceProto).first { world.entities[$0].rect.contains(out) }
     }
 
-    /// Nearest tile of a resource around the player, highlighted with its neighbours.
+    /// Nearest tile of a resource around the player, highlighted with its neighbours. Tiles below the character cost
+    /// extra: the joystick and the bottom bar cover the lower part of the screen.
     private func nearestResource(_ res: Int) -> TileRect? {
         guard res >= 0 else { return nil }
         let c = world.player.position.tile
         var best: TilePos?, bestD = Int.max
         for dy in -40...40 {
             for dx in -40...40 {
-                let d = dx * dx + dy * dy
+                let d = dx * dx + dy * dy + max(0, dy + 2) * 12
                 guard d < bestD else { continue }
                 let p = TilePos(c.x + Int32(dx), c.y + Int32(dy))
                 guard world.surface.isInBounds(p) else { continue }

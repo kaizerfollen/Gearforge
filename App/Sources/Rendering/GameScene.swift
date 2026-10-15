@@ -79,6 +79,8 @@ final class GameScene: SKScene {
     var zoom: CGFloat = 1 { didSet { zoom = max(0.35, min(3, zoom)); cam.setScale(1 / zoom) } }
     /// Camera centre in tile coordinates.
     var cameraCenter = Vec2(0, 0)
+    /// Offset from the character while following it (tutorial framing).
+    private var cameraBias = Vec2(0, 0)
 
     final class EntityView {
         let node: SKSpriteNode
@@ -252,7 +254,18 @@ final class GameScene: SKScene {
         lastTime = currentTime
         c.frame(dt: dt)
         let w = c.world
-        if c.cameraFollowsPlayer { cameraCenter = w.player.position }
+        if c.cameraFollowsPlayer {
+            // Tutorial: frame both the character and the highlighted place (so it is not hidden under the joystick
+            // or the bottom bar); the bias eases in and out.
+            var want = Vec2(0, 0)
+            if case .tiles(let r)? = c.tutorialHint?.target {
+                let d = r.center - w.player.position
+                if d.length < 40 { want = d * 0.5 }
+            }
+            let k = min(1, dt * 3)
+            cameraBias = cameraBias + (want - cameraBias) * k
+            cameraCenter = w.player.position + cameraBias
+        }
         cam.position = scenePoint(cameraCenter.x, cameraCenter.y)
 
         handleEvents(c.frameEvents, w)
