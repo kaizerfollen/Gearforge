@@ -61,7 +61,7 @@ public final class Tutorial {
 
     // prototypes / items used by the script
     private let drillProto: Int, furnaceProto: Int
-    private let drillItem: Int, furnaceItem: Int, stoneItem: Int, coalItem: Int, plateItem: Int
+    private let drillItem: Int, furnaceItem: Int, stoneItem: Int, coalItem: Int, plateItem: Int, woodItem: Int
     private let ironRes: Int, stoneRes: Int, coalRes: Int
     private let drillRecipe: Int
 
@@ -71,7 +71,7 @@ public final class Tutorial {
         let db = world.db
         drillProto = db.entity("burner_mining_drill"); furnaceProto = db.entity("stone_furnace")
         drillItem = db.item("burner_mining_drill"); furnaceItem = db.item("stone_furnace")
-        stoneItem = db.item("stone"); coalItem = db.item("coal"); plateItem = db.item("iron_plate")
+        stoneItem = db.item("stone"); coalItem = db.item("coal"); plateItem = db.item("iron_plate"); woodItem = db.item("wood")
         ironRes = db.resource("iron_ore"); stoneRes = db.resource("stone"); coalRes = db.resource("coal")
         drillRecipe = db.recipe("burner_mining_drill")
     }
@@ -185,7 +185,7 @@ public final class Tutorial {
         case .fuelDrill:
             guard let d = drillOnIron() else { return h("Place the drill first.", .none) }
             if ui.panel == "entity" && ui.openEntity == d {
-                return h("Tap the coal in your inventory to put it into the drill's fuel slot.", .hud(["insert.\(coalItem)"]))
+                return h("Tap coal (or wood) in your inventory to put it into the drill's fuel slot.", .hud(fuelAnchors))
             }
             if !pl.canReach(world.entities[d].rect) {
                 return h("Walk back to the drill (follow the arrow).", .tiles(world.entities[d].rect))
@@ -194,7 +194,7 @@ public final class Tutorial {
         case .fuelFurnace:
             guard let f = furnaceAtOutput() else { return h("Place the furnace first.", .none) }
             if ui.panel == "entity" && ui.openEntity == f {
-                return h("Tap the coal in your inventory to put it into the furnace.", .hud(["insert.\(coalItem)"]))
+                return h("Tap coal or wood in your inventory to put it into the furnace — both are fuel.", .hud(fuelAnchors))
             }
             if !ui.panel.isEmpty { return h("Close this window and tap the furnace twice.", .hud(["panel.close"])) }
             return h("The furnace needs fuel too. Tap the furnace twice to open it.", .tiles(world.entities[f].rect))
@@ -322,6 +322,9 @@ public final class Tutorial {
         let (fw, fh) = world.footprint(furnaceProto, .north)
         return TileRect(origin: o, w: fw, h: fh)
     }
+
+    /// Fuel the player can insert: coal first, then wood (the drill often takes all the coal).
+    private var fuelAnchors: [String] { ["insert.\(coalItem)", "insert.\(woodItem)"] }
 
     private func quickbarAnchors(_ item: Int) -> [String] {
         let qb = world.player.quickbar

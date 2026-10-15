@@ -1179,8 +1179,6 @@
   "Skip tutorial": "Пропустить обучение",
   "Stone is the beige patch. Hold your finger on the highlighted stone until you have %@ of %@.": "Камень — бежевое пятно. Удерживайте палец на подсвеченном камне, пока не наберёте %@ из %@.",
   "Tap the burner mining drill recipe. The gears and the furnace it needs are made automatically from your plates and stone.": "Коснитесь рецепта твердотопливного бура. Нужные шестерни и печь создадутся сами из ваших плит и камня.",
-  "Tap the coal in your inventory to put it into the drill's fuel slot.": "Коснитесь угля в своём инвентаре, чтобы положить его в слот топлива бура.",
-  "Tap the coal in your inventory to put it into the furnace.": "Коснитесь угля в своём инвентаре, чтобы положить его в печь.",
   "Tap the highlighted spot on the iron ore (blue-grey) to place the drill. The orange dot shows where it drops the ore.": "Коснитесь подсвеченного места на железной руде (серо-голубой), чтобы поставить бур. Оранжевая точка показывает, куда он выбрасывает руду.",
   "Tap the iron plates in the output slot to take them.": "Коснитесь железных плит в выходном слоте, чтобы забрать их.",
   "The drill mines ore and the furnace smelts it into iron plates. Wait a few seconds…": "Бур добывает руду, а печь переплавляет её в железные плиты. Подождите несколько секунд…",
@@ -1193,6 +1191,8 @@
   "Walk to the highlighted spot on the iron ore — follow the arrow. Then tap it to place the drill.": "Дойдите до подсвеченного места на железной руде — следуйте за стрелкой. Затем коснитесь его, чтобы поставить бур.",
   "Place the furnace right where the drill drops its ore.": "Поставьте печь ровно туда, куда бур выбрасывает руду.",
   "Walk back to the drill (follow the arrow), then place the furnace on the highlighted tiles.": "Вернитесь к буру (следуйте за стрелкой) и поставьте печь на подсвеченные клетки.",
-  "Walk back to the drill (follow the arrow).": "Вернитесь к буру (следуйте за стрелкой)."
+  "Walk back to the drill (follow the arrow).": "Вернитесь к буру (следуйте за стрелкой).",
+  "Tap coal (or wood) in your inventory to put it into the drill's fuel slot.": "Коснитесь угля (или древесины) в своём инвентаре, чтобы положить топливо в бур.",
+  "Tap coal or wood in your inventory to put it into the furnace — both are fuel.": "Коснитесь угля или древесины в своём инвентаре, чтобы положить в печь — и то и другое топливо."
  }
 }

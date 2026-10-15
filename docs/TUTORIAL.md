@@ -31,8 +31,8 @@ tests `Core/Tests/FactoryCoreTests/TutorialTests.swift`.
 | 6 | placeDrill | best 2×2 spot fully on iron ore near the player where the furnace also fits | a player-built burner drill stands on iron |
 | 7 | selectFurnace | quickbar slot with the stone furnace | build mode with the furnace |
 | 8 | placeFurnace | 2×2 spot covering the drill's output tile | a furnace covers the drill output |
-| 9 | fuelDrill | the drill → with its screen open: coal in the inventory strip | drill has fuel |
-| 10 | fuelFurnace | the furnace → coal | furnace has fuel |
+| 9 | fuelDrill | the drill → with its screen open: coal (else wood) in the inventory strip | drill has fuel |
+| 10 | fuelFurnace | the furnace → coal, else wood (the drill usually takes all the coal) | furnace has fuel |
 | 11 | waitPlates | the furnace | first iron plate produced |
 | 12 | takePlates | the furnace → output slot 0 | player's iron plates increased |
 | 13 | craftDrill | Inventory button → Production tab → drill recipe | drill queued / crafted |
@@ -54,6 +54,11 @@ screen wins (e.g. recipe → its tab → the Crafting/Inventory picker).
 4. Missing anchor? Add `.tutorialAnchor("id")` to the view.
 5. Russian text in `tools/l10n/ru.json`, run `python3 tools/l10n/build.py --strict`.
 6. Extend `TutorialTests.testWalkthroughOnL1`.
+
+## Camera & reach
+- While a ground target is shown the camera eases toward it (≤ 9 tiles sideways, ≤ 4.5 up/down from the character)
+  so it is not hidden under the joystick or the bottom bar; farther targets get an arrow at the screen edge.
+- Stone/coal targets prefer tiles above the character. Out of reach → «Дойдите до… следуйте за стрелкой».
 
 ## Not done yet
 - Tutorials for L2 (power, research) and later levels — same mechanism, new scripts.

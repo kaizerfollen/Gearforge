@@ -317,9 +317,9 @@
 "Tap a building to select it, tap it again to open its screen. Hold on your building for a quick menu: open, rotate, copy settings, pick up." = "Tap a building to select it, tap it again to open its screen. Hold on your building for a quick menu: open, rotate, copy settings, pick up.";
 "Tap a recipe to craft one, hold to craft five, «Max» makes as many as possible. Missing parts such as gears and cables are crafted automatically when you have the plates." = "Tap a recipe to craft one, hold to craft five, «Max» makes as many as possible. Missing parts such as gears and cables are crafted automatically when you have the plates.";
 "Tap a spot to preview, tap again to place" = "Tap a spot to preview, tap again to place";
+"Tap coal (or wood) in your inventory to put it into the drill's fuel slot." = "Tap coal (or wood) in your inventory to put it into the drill's fuel slot.";
+"Tap coal or wood in your inventory to put it into the furnace — both are fuel." = "Tap coal or wood in your inventory to put it into the furnace — both are fuel.";
 "Tap the burner mining drill recipe. The gears and the furnace it needs are made automatically from your plates and stone." = "Tap the burner mining drill recipe. The gears and the furnace it needs are made automatically from your plates and stone.";
-"Tap the coal in your inventory to put it into the drill's fuel slot." = "Tap the coal in your inventory to put it into the drill's fuel slot.";
-"Tap the coal in your inventory to put it into the furnace." = "Tap the coal in your inventory to put it into the furnace.";
 "Tap the drill, tap it again to open it and insert coal from your inventory. Do the same with the furnace. Now ore turns into iron plates by itself." = "Tap the drill, tap it again to open it and insert coal from your inventory. Do the same with the furnace. Now ore turns into iron plates by itself.";
 "Tap the highlighted spot on the iron ore (blue-grey) to place the drill. The orange dot shows where it drops the ore." = "Tap the highlighted spot on the iron ore (blue-grey) to place the drill. The orange dot shows where it drops the ore.";
 "Tap the iron plates in the output slot to take them." = "Tap the iron plates in the output slot to take them.";

@@ -92,6 +92,8 @@ stage it from the Mac `checkpoints/` → `git clone <bundle> /home/claude/Gearfo
   screen (tap to walk), pollution in stats. Then: **Russian localization** (l10n agent: 1000+ keys, tooling
   tools/l10n), **independent QA agent** (15 core bugs found → all fixed, 152 tests green), tutorial hint bubbles,
   left-handed layout, save thumbnails, tolerant settings decoding. Mac went offline ~12:50 (screen locked).
+- **S11 (2026-10-15):** guided tutorial (Core/Progression/Tutorial.swift + App/UI/TutorialOverlay.swift, see
+  docs/TUTORIAL.md); black-ground root cause fixed (single terrain tile-map window, AUDIT S10c).
 - **S10 (2026-10-15 night):** layout pass — every screen fits iPhone landscape (FitPicker, panelFrame, compact
   columns); black-ground fix (Terrain.atlas, see AUDIT S10b); map bounds = chunk grid; «Как играть» guide.
   GitHub push still refused for this session (Claude GitHub App lacks access) — newest bundle in checkpoints/.

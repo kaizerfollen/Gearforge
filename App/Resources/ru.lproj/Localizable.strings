@@ -317,9 +317,9 @@
 "Tap a building to select it, tap it again to open its screen. Hold on your building for a quick menu: open, rotate, copy settings, pick up." = "Коснитесь постройки, чтобы выбрать её, и ещё раз — чтобы открыть её экран. Удерживайте палец на своей постройке, чтобы вызвать быстрое меню: открыть, повернуть, скопировать настройки, забрать.";
 "Tap a recipe to craft one, hold to craft five, «Max» makes as many as possible. Missing parts such as gears and cables are crafted automatically when you have the plates." = "Коснитесь рецепта, чтобы сделать один предмет, удерживайте — пять, «Макс» делает сколько возможно. Недостающие детали, например шестерни и провода, создаются сами, если есть плиты.";
 "Tap a spot to preview, tap again to place" = "Коснитесь места для предпросмотра, ещё раз — чтобы разместить";
+"Tap coal (or wood) in your inventory to put it into the drill's fuel slot." = "Коснитесь угля (или древесины) в своём инвентаре, чтобы положить топливо в бур.";
+"Tap coal or wood in your inventory to put it into the furnace — both are fuel." = "Коснитесь угля или древесины в своём инвентаре, чтобы положить в печь — и то и другое топливо.";
 "Tap the burner mining drill recipe. The gears and the furnace it needs are made automatically from your plates and stone." = "Коснитесь рецепта твердотопливного бура. Нужные шестерни и печь создадутся сами из ваших плит и камня.";
-"Tap the coal in your inventory to put it into the drill's fuel slot." = "Коснитесь угля в своём инвентаре, чтобы положить его в слот топлива бура.";
-"Tap the coal in your inventory to put it into the furnace." = "Коснитесь угля в своём инвентаре, чтобы положить его в печь.";
 "Tap the drill, tap it again to open it and insert coal from your inventory. Do the same with the furnace. Now ore turns into iron plates by itself." = "Коснитесь бура, затем коснитесь ещё раз, чтобы открыть его, и вложите уголь из инвентаря. То же самое сделайте с печью. Теперь руда сама превращается в железные плиты.";
 "Tap the highlighted spot on the iron ore (blue-grey) to place the drill. The orange dot shows where it drops the ore." = "Коснитесь подсвеченного места на железной руде (серо-голубой), чтобы поставить бур. Оранжевая точка показывает, куда он выбрасывает руду.";
 "Tap the iron plates in the output slot to take them." = "Коснитесь железных плит в выходном слоте, чтобы забрать их.";

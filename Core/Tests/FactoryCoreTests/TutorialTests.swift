@@ -54,7 +54,7 @@ final class TutorialTests: XCTestCase {
         guard case .tiles = h.target else { return XCTFail("drill not highlighted") }
         // with the drill screen open the coal in the inventory strip is highlighted
         XCTAssertEqual(t.update(ui: TutorialUIState(panel: "entity", openEntity: drill))?.target,
-                       .hud(["insert.\(db.item("coal"))"]))
+                       .hud(["insert.\(db.item("coal"))", "insert.\(db.item("wood"))"]))
         XCTAssertTrue(w.execute(.transferToEntity(entity: drill, item: db.item("coal"), count: 4)).isOK)
 
         h = try XCTUnwrap(t.update(ui: ui)); XCTAssertEqual(h.id, "fuelFurnace")

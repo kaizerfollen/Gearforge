@@ -29,7 +29,7 @@ struct HUDView: View {
                         if let t = controller.tutorialHint, controller.panel == nil {
                             TutorialCard(controller: controller, hint: t)       // guided tutorial replaces the goals list
                         } else if !hud.objectives.isEmpty { objectives(hud) }
-                        if let hint = hud.hint, controller.tutorialHint == nil { hintBubble(hint, hud.hintObjective) }
+                        if let hint = hud.hint, controller.tutorialHint == nil, hud.selectedName.isEmpty { hintBubble(hint, hud.hintObjective) }
                         if !hud.selectedName.isEmpty { selectionCard(hud, db) }
                     }
                     .frame(width: compact ? (controller.tutorialHint != nil ? 250 : 210) : 280, alignment: .leading)
@@ -215,12 +215,12 @@ struct HUDView: View {
             HStack(spacing: 8) {
                 if !hud.selectedRecipeIcon.isEmpty { SpriteImage(name: "i_\(hud.selectedRecipeIcon)", size: 30) }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(hud.selectedName).font(.caption.bold()).foregroundStyle(Theme.text)
-                    if let s = hud.selectedStatus { Text(L(s.label)).font(.caption2).foregroundStyle(s.color) }
-                    if hud.selectedProgress > 0 { BarView(fraction: hud.selectedProgress, height: 3).frame(width: 120) }
+                    Text(hud.selectedName).font(.caption.bold()).foregroundStyle(Theme.text).lineLimit(2)
+                    if let s = hud.selectedStatus { Text(L(s.label)).font(.caption2).foregroundStyle(s.color).lineLimit(1) }
+                    if hud.selectedProgress > 0 { BarView(fraction: hud.selectedProgress, height: 3).frame(maxWidth: 120) }
                 }
-                Spacer()
-                Text("Open ›").font(.caption2).foregroundStyle(Theme.accent)
+                Spacer(minLength: 4)
+                Text("Open ›").font(.caption2).foregroundStyle(Theme.accent).fixedSize()
             }
             .padding(10)
             .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.6)))

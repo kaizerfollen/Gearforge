@@ -139,3 +139,15 @@ Legend: ✅ done & tested · 🟡 partial / untested · ❌ missing
   by panning far north/west/south/east through freshly generated chunks — ground everywhere.
 - Also: the scene now follows the view size (SpriteView left it at 1024×768), zoom starts at the same framing as
   before (0.52 on iPhone landscape, 1.0 on iPad), pinch starts from the current zoom. Diagnostics stay behind Show FPS.
+
+## S11 — guided tutorial (2026-10-15)
+- **Interactive first tutorial** on L1 (and main menu → «Обучение»): 15 steps — walk, mine stone and coal by hand,
+  pick the drill on the bottom bar, place it on iron (spot highlighted on the ground), pick and place the furnace at
+  the drill output, fuel both, wait for plates, take them, craft a second drill, open the map to explore.
+- What to tap is highlighted (pulsing frame + arrow) on HUD buttons, quickbar slots, panel items (coal in the
+  inventory strip, furnace output slot, recipe, crafting tab, ✕); places on the map get a pulsing ground frame, the
+  camera frames them, and an edge arrow points to far ones. «Walk there» hints when out of reach.
+- Script in Core (`Progression/Tutorial.swift`) with 3 tests (full walkthrough on the real L1 map incl. smelting,
+  resume skips done steps, skip). 169 core tests green. Design/maintenance: `docs/TUTORIAL.md`. en + ru.
+- Played through on the simulator, all 15 steps (menu «Обучение» → «Понятно»); fixes from that run: camera framing,
+  walk-there hints, wood as fuel fallback, selection card layout.
