@@ -26,11 +26,13 @@ struct HUDView: View {
                 HStack(alignment: .top, spacing: 12) {
                     VStack(alignment: .leading, spacing: 8) {
                         statusChip(hud)
-                        if !hud.objectives.isEmpty { objectives(hud) }
+                        if let t = controller.tutorialHint, controller.panel == nil {
+                            TutorialCard(controller: controller, hint: t)       // guided tutorial replaces the goals list
+                        } else if !hud.objectives.isEmpty { objectives(hud) }
                         if let hint = hud.hint, controller.tutorialHint == nil { hintBubble(hint, hud.hintObjective) }
                         if !hud.selectedName.isEmpty { selectionCard(hud, db) }
                     }
-                    .frame(width: compact ? 210 : 250, alignment: .leading)
+                    .frame(width: compact ? (controller.tutorialHint != nil ? 250 : 210) : 280, alignment: .leading)
                     .tutorialAnchor("objectives")
                     Spacer(minLength: 8)
                     researchBar(hud).layoutPriority(-1).tutorialAnchor("research")

@@ -5,9 +5,9 @@ Status: implemented in S11 (2026-10-15). Code: `Core/Sources/FactoryCore/Progres
 tests `Core/Tests/FactoryCoreTests/TutorialTests.swift`.
 
 ## What the player sees
-- A card **«Обучение N/15»** with one instruction, a **«Пропустить обучение»** link and, on info steps, **«Далее»** /
-  **«Понятно»**. The card sits under the top bar; it moves to the bottom when it would cover the thing to tap, and
-  when a panel is open.
+- A card **«Обучение N/15»** with one instruction, a ✕ (skip) and, on info steps, **«Далее»** / **«Понятно»**.
+  It replaces the goals list in the HUD's left column (so it never covers the player or the buttons); over an open
+  panel it is shown at the bottom of the screen.
 - **What to tap is highlighted**: a pulsing orange frame and a bouncing arrow on HUD buttons, quickbar slots, panel
   items (coal in the inventory strip, the furnace output slot, the drill recipe, the crafting tab, ✕ of a panel).
 - **Where to go on the map** is highlighted with a pulsing orange frame on the ground (stone, coal, the 2×2 spot on
@@ -37,7 +37,7 @@ tests `Core/Tests/FactoryCoreTests/TutorialTests.swift`.
 | 12 | takePlates | the furnace → output slot 0 | player's iron plates increased |
 | 13 | craftDrill | Inventory button → Production tab → drill recipe | drill queued / crafted |
 | 14 | openMap | minimap | map screen open |
-| 15 | goals | objectives column | «Понятно» |
+| 15 | goals | — (the goals list returns to the left column) | «Понятно» |
 
 World-step guard: if a panel is open during a world step, the card says «Закройте это окно» and highlights ✕.
 

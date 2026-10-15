@@ -32,7 +32,13 @@ struct TutorialOverlay: View {
                 let _ = controller.hud          // refresh with the HUD (camera moves, panels open)
                 ZStack(alignment: .topLeading) {
                     highlight(h, proxy)
-                    card(h, proxy)
+                    // without a panel the card lives in the HUD's left column (HUDView); over a panel it sits at the
+                    // bottom so the panel stays readable
+                    if controller.panel != nil {
+                        TutorialCard(controller: controller, hint: h)
+                            .frame(width: min(440, proxy.size.width - 40))
+                            .position(x: proxy.size.width / 2, y: proxy.size.height - 58)
+                    }
                 }
                 .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
             }
@@ -99,58 +105,48 @@ struct TutorialOverlay: View {
             .allowsHitTesting(false)
     }
 
-    // MARK: Card
+}
 
-    private func card(_ h: TutorialHint, _ proxy: GeometryProxy) -> some View {
-        let panelOpen = controller.panel != nil
-        let width = min(430, proxy.size.width - 260)
+/// The step card: "Tutorial N/15", the instruction, Skip, and Next / Got it on info steps.
+struct TutorialCard: View {
+    @Bindable var controller: GameController
+    let hint: TutorialHint
+
+    var body: some View {
+        let h = hint
         let text = h.args.isEmpty ? L(h.text) : String(format: L(h.text), arguments: h.args.map { $0 as CVarArg })
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
-                Image(systemName: "graduationcap.fill").foregroundStyle(Theme.accent)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 5) {
+                Image(systemName: "graduationcap.fill").font(.caption).foregroundStyle(Theme.accent)
                 Text("Tutorial").font(.caption.bold()).foregroundStyle(Theme.accent)
-                Text(verbatim: "\(h.stepIndex + 1)/\(h.stepCount)").font(.caption).monospacedDigit().foregroundStyle(Theme.textDim)
-                Spacer()
+                Text(verbatim: "\(h.stepIndex + 1)/\(h.stepCount)").font(.caption2).monospacedDigit().foregroundStyle(Theme.textDim)
+                Spacer(minLength: 4)
                 if !h.isLast {
-                    Button { controller.skipTutorial() } label: { Text("Skip tutorial").font(.caption) }
-                        .buttonStyle(.plain).foregroundStyle(Theme.textDim)
+                    Button { controller.skipTutorial() } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.textDim)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text("Skip tutorial"))
                 }
             }
-            Text(text).font(.callout).foregroundStyle(Theme.text).fixedSize(horizontal: false, vertical: true)
+            Text(text).font(.footnote).foregroundStyle(Theme.text).fixedSize(horizontal: false, vertical: true)
             if h.needsNext {
-                HStack {
+                HStack(spacing: 8) {
+                    if h.stepIndex == 0 {
+                        Button { controller.skipTutorial() } label: { Text("Skip tutorial").font(.caption) }
+                            .buttonStyle(.plain).foregroundStyle(Theme.textDim)
+                    }
                     Spacer()
                     Button { controller.tutorialNext() } label: {
-                        Text(h.isLast ? "Got it" : "Next").font(.callout.bold()).padding(.horizontal, 10)
+                        Text(h.isLast ? "Got it" : "Next").font(.footnote.bold()).padding(.horizontal, 6)
                     }
                     .buttonStyle(.borderedProminent).tint(Theme.accent)
                 }
             }
         }
-        .padding(12)
-        .frame(width: max(260, width), alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Theme.panel.opacity(0.96)))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.accent.opacity(0.7), lineWidth: 1.5))
-        .shadow(color: .black.opacity(0.5), radius: 10)
-        .position(x: proxy.size.width / 2, y: cardY(h, proxy, panelOpen: panelOpen))
-    }
-
-    /// Under the top bar in the middle, unless that would cover what the player must tap; with a panel open at the
-    /// bottom so the panel stays readable.
-    private func cardY(_ h: TutorialHint, _ proxy: GeometryProxy, panelOpen: Bool) -> CGFloat {
-        let top: CGFloat = 128, bottom = proxy.size.height - 132
-        if panelOpen { return proxy.size.height - 62 }
-        let topBand = CGRect(x: proxy.size.width / 2 - 230, y: 60, width: 460, height: 140)
-        switch h.target {
-        case .hud(let ids):
-            if let id = ids.first(where: { anchors[$0] != nil }), let a = anchors[id], proxy[a].intersects(topBand) { return bottom }
-        case .tiles(let r):
-            if let s = scene, let vr = s.viewRect(forTiles: r) {
-                let g = proxy.frame(in: .global)
-                if vr.offsetBy(dx: -g.minX, dy: -g.minY).intersects(topBand) { return bottom }
-            }
-        case .none: break
-        }
-        return top
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Theme.panel.opacity(0.96)))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.accent.opacity(0.75), lineWidth: 1.5))
+        .shadow(color: .black.opacity(0.45), radius: 8)
     }
 }

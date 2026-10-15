@@ -213,7 +213,7 @@ public final class Tutorial {
                      .hud(["minimap"]))
         case .goals:
             return h("Great start! Next, follow the goals in the top-left corner: more drills on iron, copper and coal. Tap «?» at any time for the full guide.",
-                     .hud(["objectives"]), next: true, last: true)
+                     .none, next: true, last: true)
         }
     }
 
