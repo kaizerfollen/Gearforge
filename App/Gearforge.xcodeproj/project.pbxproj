@@ -22,6 +22,7 @@
 		8B0D33EEDD20AE0750D4E790 /* FactoryCore in Frameworks */ = {isa = PBXBuildFile; productRef = E747426F531CAABC3CD62DC7 /* FactoryCore */; };
 		8BF8C7365434F5FF8062F9D0 /* SaveCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBFD0F262D319C53E9C49828 /* SaveCompression.swift */; };
 		8E1CD7E08464C243DB951E91 /* EntityPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24697E0782FE1E9E1E1C82ED /* EntityPanel.swift */; };
+		9B3A07BE5F1765A2F48DF136 /* TutorialOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 694AE43843284C33294573A1 /* TutorialOverlay.swift */; };
 		9C28D68782DB4A945528ABE5 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C656D52BB0CBFCA4F652AF45 /* Theme.swift */; };
 		A365CCFB3EC3AC5679BE8FFF /* GuidePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64CC7806D60BA71BB32B8550 /* GuidePanel.swift */; };
 		A5E4CC0013CF3B1455C0D324 /* GameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B7EB56E528E1A51D10A3C7 /* GameController.swift */; };
@@ -48,6 +49,7 @@
 		64CC7806D60BA71BB32B8550 /* GuidePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuidePanel.swift; sourceTree = "<group>"; };
 		662CC3E2A879DEB90A9680AB /* MenuViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuViews.swift; sourceTree = "<group>"; };
 		67B011019FF0374ED0CAA576 /* sprite_manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sprite_manifest.json; sourceTree = "<group>"; };
+		694AE43843284C33294573A1 /* TutorialOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TutorialOverlay.swift; sourceTree = "<group>"; };
 		7551B2D381E4C1228326DB74 /* Sprites.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; path = Sprites.atlas; sourceTree = "<group>"; };
 		7A48154A452651EB67C8B10B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		821FBC5C05A97B9D89394732 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
@@ -115,6 +117,7 @@
 				662CC3E2A879DEB90A9680AB /* MenuViews.swift */,
 				9DFA53DD0EC14A5227833C59 /* OtherPanels.swift */,
 				C656D52BB0CBFCA4F652AF45 /* Theme.swift */,
+				694AE43843284C33294573A1 /* TutorialOverlay.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -282,6 +285,7 @@
 				8BF8C7365434F5FF8062F9D0 /* SaveCompression.swift in Sources */,
 				D3C0943AEA9A60A55F3BEFBE /* SpriteCatalog.swift in Sources */,
 				9C28D68782DB4A945528ABE5 /* Theme.swift in Sources */,
+				9B3A07BE5F1765A2F48DF136 /* TutorialOverlay.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

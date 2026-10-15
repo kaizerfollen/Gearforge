@@ -27,15 +27,16 @@ struct HUDView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         statusChip(hud)
                         if !hud.objectives.isEmpty { objectives(hud) }
-                        if let hint = hud.hint { hintBubble(hint, hud.hintObjective) }
+                        if let hint = hud.hint, controller.tutorialHint == nil { hintBubble(hint, hud.hintObjective) }
                         if !hud.selectedName.isEmpty { selectionCard(hud, db) }
                     }
                     .frame(width: compact ? 210 : 250, alignment: .leading)
+                    .tutorialAnchor("objectives")
                     Spacer(minLength: 8)
-                    researchBar(hud).layoutPriority(-1)
+                    researchBar(hud).layoutPriority(-1).tutorialAnchor("research")
                     Spacer(minLength: 8)
                     HStack(alignment: .top, spacing: 8) {
-                        MinimapView(controller: controller)
+                        MinimapView(controller: controller).tutorialAnchor("minimap")
                         Button { controller.panel = .guide } label: {
                             Text(verbatim: "?").font(.system(size: 22 * Theme.uiScale, weight: .bold, design: .rounded))
                                 .foregroundStyle(.white)
@@ -64,6 +65,7 @@ struct HUDView: View {
                         HUDButton(glyph: "ui_build", active: controller.mode == .build, size: 48) {
                             if controller.mode == .build { controller.cancelMode() } else { controller.panel = .inventory }
                         }
+                        .tutorialAnchor("build")
                         HUDButton(glyph: "ui_remove", active: controller.mode == .remove, size: 48) {
                             controller.mode = controller.mode == .remove ? .explore : .remove
                         }
@@ -87,7 +89,7 @@ struct HUDView: View {
                         }
                         HUDButton(glyph: "ui_redo", size: 44) { controller.redo() }.opacity(hud.canRedo ? 1 : 0.4)
                     }
-                    HUDButton(glyph: "ui_inventory", size: 56) { controller.panel = .inventory }
+                    HUDButton(glyph: "ui_inventory", size: 56) { controller.panel = .inventory }.tutorialAnchor("inventory")
                 }
                 .padding(leftHanded ? .leading : .trailing, 16).padding(.bottom, 16)
                 if leftHanded { Spacer() }
@@ -136,6 +138,7 @@ struct HUDView: View {
                         if v.dx != 0 || v.dy != 0 { controller.cameraFollowsPlayer = true }
                     }
                     .frame(width: joystickSide, height: joystickSide)
+                    .tutorialAnchor("joystick")
                     .padding(leftHanded ? .trailing : .leading, compact ? 8 : 20).padding(.bottom, compact ? 6 : 16)
                     if !leftHanded { Spacer() }
                 }
@@ -279,6 +282,7 @@ struct HUDView: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .tutorialAnchor("quickbar.\(i)")
             }
             Button { controller.quickbarPage = 1 - controller.quickbarPage } label: {
                 Text("\(controller.quickbarPage + 1)").font(.caption.bold()).foregroundStyle(Theme.textDim)

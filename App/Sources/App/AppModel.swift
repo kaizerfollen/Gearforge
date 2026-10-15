@@ -64,6 +64,13 @@ final class AppModel {
         start(label: "Generating world…") { GameSession.newFreeplay(settings: ws) }
     }
 
+    /// Main menu → "Tutorial": level 1 with the guided tutorial, even if it was finished before.
+    @ObservationIgnored private var forceTutorial = false
+    func startTutorial() {
+        forceTutorial = true
+        startCampaign(Campaign.levels[0])
+    }
+
     func startCampaign(_ level: LevelDefinition) {
         start(label: LF("Landing on %@…", Names.levelTitle(level))) { GameSession.newCampaign(level: level) }
     }
@@ -98,6 +105,15 @@ final class AppModel {
             self.progress.record(level: id, stars: stars, seconds: seconds)
             try? self.progress.save(to: self.progressURL)
         }
+        c.onTutorialFinished = { [weak self] in
+            guard let self, !self.settings.tutorialDone else { return }
+            self.settings.tutorialDone = true
+        }
+        // Guided tutorial: on level 1 until finished or skipped once, or when started from the menu.
+        if forceTutorial || (session.level?.id == Campaign.levels[0].id && !settings.tutorialDone) {
+            c.startTutorial()
+        }
+        forceTutorial = false
         controller = c
         let s = GameScene(size: CGSize(width: 1024, height: 768))
         s.controller = c

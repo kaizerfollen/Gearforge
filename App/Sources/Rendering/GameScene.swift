@@ -34,6 +34,10 @@ final class GameScene: SKScene {
     private let validityLabel = SKLabelNode(text: "")
     /// Tile grid (Settings → show grid: off / build / always).
     private let gridNode = SKShapeNode()
+    /// Guided tutorial: pulsing frame on the tiles the player should tap / mine / build on.
+    private let tutorialNode = SKShapeNode()
+    private var tutorialRect: TileRect? = nil
+    private var tutorialPhase: Double = 0
     /// Diagnostics (Settings → Show FPS): terrain state of the chunk under the camera centre.
     private let debugLabel = SKLabelNode(text: "")
     private var debugTimer: Double = 0
@@ -159,6 +163,13 @@ final class GameScene: SKScene {
         nightNode.zPosition = 100
         nightNode.alpha = 0
         cam.addChild(nightNode)
+        tutorialNode.strokeColor = UIColor(red: 1, green: 0.72, blue: 0.25, alpha: 1)
+        tutorialNode.fillColor = UIColor(red: 1, green: 0.72, blue: 0.25, alpha: 0.22)
+        tutorialNode.lineWidth = 3
+        tutorialNode.glowWidth = 2
+        tutorialNode.zPosition = 46
+        tutorialNode.isHidden = true
+        overlayLayer.addChild(tutorialNode)
         debugLabel.fontName = "Menlo"
         debugLabel.fontSize = 11
         debugLabel.fontColor = .yellow
@@ -260,6 +271,7 @@ final class GameScene: SKScene {
         updateOverlay(w, c)
         updateCopyPaste(w, c)
         updateGrid(c)
+        updateTutorialMarker(c, dt: dt)
         debugTimer += dt
         if c.settings.showFPS, debugTimer > 0.5 { debugTimer = 0; updateDebug(w) }
         else if !c.settings.showFPS { debugLabel.isHidden = true }
@@ -298,6 +310,26 @@ final class GameScene: SKScene {
     private func refreshBeltsNear(_ r: TileRect, _ w: World) {
         let rr = r.expanded(by: 1)
         for id in w.entities(in: rr) { if let v = views[id] { configure(v, id, w, force: true) } }
+    }
+
+    private func updateTutorialMarker(_ c: GameController, dt: Double) {
+        guard case .tiles(let r)? = c.tutorialHint?.target else { tutorialNode.isHidden = true; tutorialRect = nil; return }
+        if r != tutorialRect {
+            tutorialRect = r
+            let rect = CGRect(x: CGFloat(r.x) * S, y: -CGFloat(r.maxY) * S, width: CGFloat(r.w) * S, height: CGFloat(r.h) * S)
+            tutorialNode.path = CGPath(roundedRect: rect.insetBy(dx: -2, dy: -2), cornerWidth: 6, cornerHeight: 6, transform: nil)
+        }
+        tutorialNode.isHidden = false
+        tutorialPhase += dt
+        tutorialNode.alpha = CGFloat(0.6 + 0.4 * sin(tutorialPhase * 5))
+    }
+
+    /// Screen rect (SKView points) of a tile rect — for the tutorial's off-screen arrow and card placement.
+    func viewRect(forTiles r: TileRect) -> CGRect? {
+        guard view != nil else { return nil }
+        let a = convertPoint(toView: scenePoint(Double(r.x), Double(r.y)))
+        let b = convertPoint(toView: scenePoint(Double(r.maxX), Double(r.maxY)))
+        return CGRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(b.x - a.x), height: abs(b.y - a.y))
     }
 
     private func updateDebug(_ w: World) {

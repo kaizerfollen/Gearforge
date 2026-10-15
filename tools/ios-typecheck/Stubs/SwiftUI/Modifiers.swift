@@ -215,3 +215,21 @@ public struct ScrollBounceBehavior: Sendable {
     public static let always = ScrollBounceBehavior()
     public static let basedOnSize = ScrollBounceBehavior()
 }
+
+// MARK: - Preferences & anchors (tutorial highlights)
+
+public protocol PreferenceKey {
+    associatedtype Value
+    static var defaultValue: Value { get }
+    static func reduce(value: inout Value, nextValue: () -> Value)
+}
+extension View {
+    public func anchorPreference<A, K: PreferenceKey>(key: K.Type = K.self, value: Anchor<A>.Source,
+                                                     transform: @escaping (Anchor<A>) -> K.Value) -> some View { _modified() }
+    public func overlayPreferenceValue<K: PreferenceKey, V: View>(_ key: K.Type, alignment: Alignment = .center,
+                                                                  @ViewBuilder _ transform: @escaping (K.Value) -> V) -> some View { _modified() }
+    public func preference<K: PreferenceKey>(key: K.Type = K.self, value: K.Value) -> some View { _modified() }
+}
+extension GeometryProxy {
+    public subscript<T>(anchor: Anchor<T>) -> T { _stub() }
+}

@@ -90,6 +90,13 @@ final class GameController {
     @ObservationIgnored private var inventoryHash = 0
     @ObservationIgnored var onLevelCompleted: ((Int, Double) -> Void)?
 
+    // MARK: Guided tutorial (Core/Progression/Tutorial.swift, docs/TUTORIAL.md)
+    @ObservationIgnored private(set) var tutorial: Tutorial?
+    /// Current tutorial step (text + what to highlight); nil when no tutorial runs.
+    var tutorialHint: TutorialHint? = nil
+    /// Called once when the tutorial ends (finished or skipped) — the app stores GameSettings.tutorialDone.
+    @ObservationIgnored var onTutorialFinished: (() -> Void)?
+
     var mode: InteractionMode = .explore
     /// Copy/paste area (GDD §4.6): last copied area, its rotation (quarter turns) and the copy-rect being dragged.
     var clipboard: Blueprint? = nil { didSet { clipboardVersion &+= 1; rotatedClipboard = nil } }
@@ -269,7 +276,45 @@ final class GameController {
 
     // MARK: HUD
 
+    func startTutorial() {
+        tutorial = Tutorial(world: world)
+        updateTutorial()
+    }
+
+    func tutorialNext() { tutorial?.next(); updateTutorial(); haptic(.light) }
+
+    func skipTutorial() { tutorial?.skipAll(); updateTutorial() }
+
+    private func updateTutorial() {
+        guard let t = tutorial else { return }
+        let h = t.update(ui: tutorialUI)
+        if h?.id != tutorialHint?.id, h != nil, tutorialHint != nil { AudioManager.shared.play(.uiSuccess, volume: 0.6) }
+        if h != tutorialHint { tutorialHint = h }
+        if h == nil {
+            tutorial = nil
+            onTutorialFinished?()
+        }
+    }
+
+    private var tutorialUI: TutorialUIState {
+        var ui = TutorialUIState()
+        ui.buildItem = mode == .build ? buildItem : -1
+        switch panel {
+        case nil: ui.panel = ""
+        case .inventory: ui.panel = "inventory"
+        case .entity(let h): ui.panel = "entity"; ui.openEntity = world.entities.resolve(h) ?? -1
+        case .research: ui.panel = "research"
+        case .stats: ui.panel = "stats"
+        case .pause: ui.panel = "pause"
+        case .map: ui.panel = "map"
+        case .codex: ui.panel = "codex"
+        case .guide: ui.panel = "guide"
+        }
+        return ui
+    }
+
     func refreshHUD() {
+        updateTutorial()
         var h = HUDState()
         let w = world
         let pl = w.player!

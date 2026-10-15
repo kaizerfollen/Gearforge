@@ -137,7 +137,7 @@ struct EntityPanel: View {
                     controller.execute(.transferFromEntity(entity: e, item: Int(s.item), count: Int(s.count)))
                 }
                 Text("→").font(.title).foregroundStyle(Theme.textDim)
-                itemsRow("Output", w.crafting.outputSlots(of: e)) { s in
+                itemsRow("Output", w.crafting.outputSlots(of: e), anchor: "output") { s in
                     controller.execute(.transferFromEntity(entity: e, item: Int(s.item), count: Int(s.count)))
                 }
             }
@@ -308,13 +308,14 @@ struct EntityPanel: View {
 
     // MARK: Rows
 
-    private func itemsRow(_ title: String, _ stacks: [ItemStack], tap: @escaping (ItemStack) -> Void) -> some View {
+    private func itemsRow(_ title: String, _ stacks: [ItemStack], anchor: String? = nil, tap: @escaping (ItemStack) -> Void) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(LocalizedStringKey(title)).font(.caption).foregroundStyle(Theme.textDim)
             HStack(spacing: 4) {
-                ForEach(Array(stacks.enumerated()), id: \.offset) { _, s in
+                ForEach(Array(stacks.enumerated()), id: \.offset) { i, s in
                     SlotView(size: 48) { if s.count > 0 { ItemIcon(item: Int(s.item), db: db, count: Int(s.count), size: 36) } }
                         .onTapGesture { if s.count > 0 { tap(s) } }
+                        .tutorialAnchor(anchor.map { "\($0).\(i)" } ?? "")
                 }
                 if stacks.isEmpty { SlotView(size: 48) { EmptyView() } }
             }
@@ -356,6 +357,7 @@ struct EntityPanel: View {
                     ForEach(items, id: \.item) { it in
                         SlotView(size: 48) { ItemIcon(item: it.item, db: db, count: it.count, size: 36) }
                             .onTapGesture { insert(it.item, it.count, e, rec) }
+                            .tutorialAnchor("insert.\(it.item)")
                     }
                 }
             }
@@ -372,6 +374,7 @@ struct EntityPanel: View {
                     ForEach(items, id: \.item) { it in
                         SlotView(size: 48) { ItemIcon(item: it.item, db: db, count: it.count, size: 36) }
                             .onTapGesture { insert(it.item, it.count, e, rec) }
+                            .tutorialAnchor("insert.\(it.item)")
                     }
                 }
             }

@@ -29,6 +29,7 @@ struct MainMenuView: View {
                            enabled: model.canContinue) { model.continueLatest() }
                 MenuButton(title: "New Game") { model.screen = .newGame }
                 MenuButton(title: "Load Game", enabled: model.canContinue) { model.refreshSaves(); model.screen = .load }
+                MenuButton(title: "Tutorial", subtitle: "Learn the basics step by step") { model.startTutorial() }
                 MenuButton(title: "How to play") { model.screen = .guide }
                 MenuButton(title: "Settings") { model.screen = .settings }
             }

@@ -125,6 +125,7 @@ struct PanelChrome<Content: View>: View {
                 Text(LocalizedStringKey(title)).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(Theme.text)
                 Spacer()
                 Button(action: onClose) { SpriteImage(name: "ui_close", size: 26) }.buttonStyle(.plain)
+                    .tutorialAnchor("panel.close")
             }
             .padding(.horizontal, 16).padding(.vertical, 10)
             .background(Theme.panelLight)

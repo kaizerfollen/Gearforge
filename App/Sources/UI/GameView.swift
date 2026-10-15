@@ -42,10 +42,13 @@ struct GameView: View {
                 panelOverlay
                 if controller.showVictory { VictoryView(model: model, controller: controller) }
             }
+            .overlayPreferenceValue(TutorialAnchors.self) { anchors in
+                TutorialOverlay(controller: controller, scene: model.scene, anchors: anchors)
+            }
         }
         .onAppear {
-            // first game ever: open "How to play" once
-            if !model.settings.guideSeen {
+            // first game ever: open "How to play" once (the guided tutorial points to it instead)
+            if !model.settings.guideSeen && controller.tutorialHint == nil {
                 model.settings.guideSeen = true
                 controller.panel = .guide
             }

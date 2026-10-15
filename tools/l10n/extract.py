@@ -344,6 +344,12 @@ def extract_ui() -> tuple[set, list]:
         for m in re.finditer(r'(?<![A-Za-z0-9_])L\("((?:[^"\\]|\\.)*)"\)', open(path, encoding="utf-8").read()):
             if "\\(" not in m.group(1):
                 keys.add(_unescape(m.group(1)))
+    # Guided tutorial texts (Core): h("English text", …) in Progression/Tutorial.swift.
+    tut = os.path.join(CORE_SOURCES, "FactoryCore", "Progression", "Tutorial.swift")
+    if os.path.exists(tut):
+        for m in re.finditer(r'(?<![A-Za-z0-9_])h\(\s*"((?:[^"\\]|\\.)*)"', open(tut, encoding="utf-8").read()):
+            if "\\(" not in m.group(1):
+                keys.add(_unescape(m.group(1)))
     # FitPicker("Title", selection: …, options: [("Label", value), …]) — title and every tuple label are keys.
     for path in _swift_files(APP_SOURCES):
         src = open(path, encoding="utf-8").read()

@@ -32,6 +32,7 @@ struct InventoryPanel: View {
                             Text("Inventory").tag(0)
                         }
                         .pickerStyle(.segmented)
+                        .tutorialAnchor("tab.crafting")
                         .padding(.horizontal, 14).padding(.top, 8)
                         Group { if compactTab == 0 { inventoryGrid } else { crafting } }
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -117,6 +118,7 @@ struct InventoryPanel: View {
                             .foregroundStyle(group == i ? Color.black : Theme.text)
                             .background(Capsule().fill(group == i ? Theme.accent : Theme.panelLight))
                     }.buttonStyle(.plain)
+                    .tutorialAnchor("group.\(i)")
                 }
             }
             ScrollView {
@@ -151,6 +153,7 @@ struct InventoryPanel: View {
             selectedRecipe = r
             if n > 0 { controller.execute(.craft(recipe: r, count: 1)) }
         }
+        .tutorialAnchor("recipe.\(r)")
         .onLongPressGesture(minimumDuration: 0.4) {
             selectedRecipe = r
             if n > 0 { controller.execute(.craft(recipe: r, count: min(5, n))) }
