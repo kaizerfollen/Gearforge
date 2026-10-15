@@ -165,3 +165,9 @@ Built in Xcode and checked on the iPhone 17 Pro simulator.
   Ore tiles hold hundreds of units, so a tile does not vanish after one hold — that is now visible in the numbers.
 - **Crash fixed**: `updateGroundItems` Int32 overflow (sentinel `Int32.max` − negative camera x in the showcase).
 - l10n: save names (Last exit, Quicksave) extracted + translated; 100 % Russian.
+
+## S12b — Factorio 2.0.77 comparison (2026-10-15)
+`docs/research/06_factorio_2_0_diff.md` (+ `data/diff_1.1.110_vs_2.0.77.txt`, `data/factorio_2.0.77_base_raw.json`,
+tools `load_data.py` (1.1 + 2.0), `diff_versions.py`). Backlog, in order: stage 1 data (recipes, inserter speeds,
+pump 1200/s, stack sizes, poles), stage 2 mechanics (water→steam 1:10, beacon diminishing returns, filters on all
+inserters), stage 3 needs a decision (trigger technologies / new early tree, cargo landing pad).

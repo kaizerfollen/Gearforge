@@ -1,0 +1,186 @@
+
+## Recipes
+removed: ['artillery-targeting-remote', 'discharge-defense-remote', 'effectivity-module', 'effectivity-module-2', 'effectivity-module-3', 'electric-energy-interface', 'empty-barrel', 'empty-crude-oil-barrel', 'empty-heavy-oil-barrel', 'empty-light-oil-barrel', 'empty-lubricant-barrel', 'empty-petroleum-gas-barrel', 'empty-sulfuric-acid-barrel', 'empty-water-barrel', 'fill-crude-oil-barrel', 'fill-heavy-oil-barrel', 'fill-light-oil-barrel', 'fill-lubricant-barrel', 'fill-petroleum-gas-barrel', 'fill-sulfuric-acid-barrel', 'fill-water-barrel', 'filter-inserter', 'fusion-reactor-equipment', 'green-wire', 'logistic-chest-active-provider', 'logistic-chest-buffer', 'logistic-chest-passive-provider', 'logistic-chest-requester', 'logistic-chest-storage', 'red-wire', 'rocket-control-unit', 'spidertron-remote', 'stack-filter-inserter', 'stack-inserter']
+added: ['active-provider-chest', 'barrel', 'buffer-chest', 'bulk-inserter', 'cargo-landing-pad', 'display-panel', 'efficiency-module', 'efficiency-module-2', 'efficiency-module-3', 'fission-reactor-equipment', 'passive-provider-chest', 'recipe-unknown', 'requester-chest', 'selector-combinator', 'storage-chest']
+  atomic-bomb: ing: {'rocket-control-unit': 10, 'explosives': 10, 'uranium-235': 30} -> {'processing-unit': 10, 'explosives': 10, 'uranium-235': 30}
+  big-electric-pole: ing: {'iron-stick': 8, 'steel-plate': 5, 'copper-plate': 5} -> {'iron-stick': 8, 'steel-plate': 5, 'copper-cable': 4}
+  cliff-explosives: ing: {'explosives': 10, 'grenade': 1, 'empty-barrel': 1} -> {'explosives': 10, 'grenade': 1, 'barrel': 1}
+  landfill: ing: {'stone': 20} -> {'stone': 50}
+  low-density-structure: time: 20 -> 15
+  medium-electric-pole: ing: {'iron-stick': 4, 'steel-plate': 2, 'copper-plate': 2} -> {'iron-stick': 4, 'steel-plate': 2, 'copper-cable': 2}
+  nuclear-fuel-reprocessing: ing: {'used-up-uranium-fuel-cell': 5} -> {'depleted-uranium-fuel-cell': 5}
+  offshore-pump: ing: {'electronic-circuit': 2, 'pipe': 1, 'iron-gear-wheel': 1} -> {'pipe': 3, 'iron-gear-wheel': 2}
+  piercing-rounds-magazine: time: 3 -> 6 ; ing: {'firearm-magazine': 1, 'steel-plate': 1, 'copper-plate': 5} -> {'firearm-magazine': 2, 'steel-plate': 1, 'copper-plate': 2} ; res: {'piercing-rounds-magazine': 1} -> {'piercing-rounds-magazine': 2}
+  power-armor-mk2: ing: {'effectivity-module-2': 25, 'speed-module-2': 25, 'processing-unit': 60, 'electric-engine-unit': 40, 'low-density-structure': 30} -> {'efficiency-module-2': 25, 'speed-module-2': 25, 'processing-unit': 60, 'electric-engine-unit': 40, 'low-density-structure': 30}
+  productivity-module-3: ing: {'productivity-module-2': 5, 'advanced-circuit': 5, 'processing-unit': 5} -> {'productivity-module-2': 4, 'advanced-circuit': 5, 'processing-unit': 5}
+  rocket: time: 8 -> 4 ; ing: {'electronic-circuit': 1, 'explosives': 1, 'iron-plate': 2} -> {'explosives': 1, 'iron-plate': 2}
+  rocket-fuel: time: 30 -> 15
+  rocket-part: ing: {'rocket-control-unit': 10, 'low-density-structure': 10, 'rocket-fuel': 10} -> {'processing-unit': 10, 'low-density-structure': 10, 'rocket-fuel': 10}
+  solid-fuel-from-heavy-oil: time: 2 -> 1
+  solid-fuel-from-light-oil: time: 2 -> 1
+  solid-fuel-from-petroleum-gas: time: 2 -> 1
+  speed-module-3: ing: {'speed-module-2': 5, 'advanced-circuit': 5, 'processing-unit': 5} -> {'speed-module-2': 4, 'advanced-circuit': 5, 'processing-unit': 5}
+  spidertron: ing: {'exoskeleton-equipment': 4, 'fusion-reactor-equipment': 2, 'rocket-launcher': 4, 'rocket-control-unit': 16, 'low-density-structure': 150, 'radar': 2, 'effectivity-module-3': 2, 'raw-fish': 1} -> {'exoskeleton-equipment': 4, 'fission-reactor-equipment': 2, 'rocket-launcher': 4, 'processing-unit': 16, 'low-density-structure': 150, 'radar': 2, 'efficiency-module-3': 2, 'raw-fish': 1}
+  substation: ing: {'steel-plate': 10, 'advanced-circuit': 5, 'copper-plate': 5} -> {'steel-plate': 10, 'advanced-circuit': 5, 'copper-cable': 6}
+
+## Recipes available at game start
+old 28, new 12
+start only in old: ['automation-science-pack', 'boiler', 'copper-cable', 'electric-mining-drill', 'electronic-circuit', 'inserter', 'iron-stick', 'lab', 'offshore-pump', 'pipe', 'pipe-to-ground', 'pistol', 'radar', 'repair-pack', 'small-electric-pole', 'steam-engine']
+start only in new: []
+
+## Technologies
+removed: ['advanced-electronics', 'advanced-electronics-2', 'effectivity-module', 'effectivity-module-2', 'effectivity-module-3', 'energy-weapons-damage-1', 'energy-weapons-damage-2', 'energy-weapons-damage-3', 'energy-weapons-damage-4', 'energy-weapons-damage-5', 'energy-weapons-damage-6', 'energy-weapons-damage-7', 'follower-robot-count-6', 'follower-robot-count-7', 'fusion-reactor-equipment', 'optics', 'rail-signals', 'rocket-control-unit', 'stack-inserter']
+added: ['advanced-circuit', 'advanced-combinators', 'automation-science-pack', 'bulk-inserter', 'efficiency-module', 'efficiency-module-2', 'efficiency-module-3', 'electric-mining-drill', 'fission-reactor-equipment', 'lamp', 'laser-weapons-damage-1', 'laser-weapons-damage-2', 'laser-weapons-damage-3', 'laser-weapons-damage-4', 'laser-weapons-damage-5', 'laser-weapons-damage-6', 'laser-weapons-damage-7', 'oil-gathering', 'processing-unit', 'radar', 'repair-pack', 'steam-power', 'uranium-mining']
+trigger technologies (new):
+  automation-science-pack: {'type': 'craft-item', 'item': 'lab'} -> unlocks ['automation-science-pack']
+  electronics: {'count': 10, 'type': 'craft-item', 'item': 'copper-plate'} -> unlocks ['copper-cable', 'electronic-circuit', 'lab', 'inserter', 'small-electric-pole']
+  oil-processing: {'type': 'mine-entity', 'entity': 'crude-oil'} -> unlocks ['oil-refinery', 'chemical-plant', 'basic-oil-processing', 'solid-fuel-from-petroleum-gas']
+  space-science-pack: {'type': 'send-item-to-orbit', 'item': 'satellite'} -> unlocks []
+  steam-power: {'count': 50, 'type': 'craft-item', 'item': 'iron-plate'} -> unlocks ['pipe', 'pipe-to-ground', 'offshore-pump', 'boiler', 'steam-engine']
+  steel-axe: {'count': 50, 'type': 'craft-item', 'item': 'steel-plate'} -> unlocks ['character-mining-speed+1']
+  uranium-processing: {'type': 'mine-entity', 'entity': 'uranium-ore'} -> unlocks ['centrifuge', 'uranium-processing']
+  new advanced-circuit: 200x15s ['automation-science-pack', 'logistic-science-pack'] prereq ['plastics'] unlocks ['advanced-circuit']
+  new advanced-combinators: 50x30s ['automation-science-pack', 'logistic-science-pack', 'chemical-science-pack'] prereq ['chemical-science-pack', 'circuit-network'] unlocks ['selector-combinator']
+  new bulk-inserter: 150x30s ['automation-science-pack', 'logistic-science-pack'] prereq ['advanced-circuit', 'fast-inserter', 'logistics-2'] unlocks ['bulk-inserter', 'bulk-inserter-capacity-bonus+1']
+  new efficiency-module: 50x30s ['automation-science-pack', 'logistic-science-pack'] prereq ['modules'] unlocks ['efficiency-module']
+  new efficiency-module-2: 75x30s ['automation-science-pack', 'logistic-science-pack', 'chemical-science-pack'] prereq ['efficiency-module', 'processing-unit'] unlocks ['efficiency-module-2']
+  new efficiency-module-3: 300x60s ['automation-science-pack', 'logistic-science-pack', 'chemical-science-pack', 'production-science-pack'] prereq ['efficiency-module-2', 'production-science-pack'] unlocks ['efficiency-module-3']
+  new electric-mining-drill: 25x10s ['automation-science-pack'] prereq ['automation-science-pack'] unlocks ['electric-mining-drill']
+  new fission-reactor-equipment: 200x30s ['automation-science-pack', 'logistic-science-pack', 'chemical-science-pack', 'military-science-pack', 'utility-science-pack'] prereq ['military-science-pack', 'nuclear-power', 'power-armor', 'utility-science-pack'] unlocks ['fission-reactor-equipment']
+  new lamp: 10x15s ['automation-science-pack'] prereq ['automation-science-pack'] unlocks ['small-lamp']
+  new laser-weapons-damage-1: 100x30s ['automation-science-pack', 'logistic-science-pack', 'military-science-pack', 'chemical-science-pack'] prereq ['laser', 'military-science-pack'] unlocks ['ammo-damage+0.2']
+  new laser-weapons-damage-2: 200x30s ['automation-science-pack', 'logistic-science-pack', 'military-science-pack', 'chemical-science-pack'] prereq ['laser-weapons-damage-1'] unlocks ['ammo-damage+0.2']
+  new laser-weapons-damage-3: 300x60s ['automation-science-pack', 'logistic-science-pack', 'military-science-pack', 'chemical-science-pack'] prereq ['laser-weapons-damage-2'] unlocks ['ammo-damage+0.3']
+  new laser-weapons-damage-4: 400x60s ['automation-science-pack', 'logistic-science-pack', 'military-science-pack', 'chemical-science-pack'] prereq ['laser-weapons-damage-3'] unlocks ['ammo-damage+0.4']
+  new laser-weapons-damage-5: 500x60s ['automation-science-pack', 'logistic-science-pack', 'chemical-science-pack', 'military-science-pack', 'utility-science-pack'] prereq ['laser-weapons-damage-4', 'utility-science-pack'] unlocks ['ammo-damage+0.5', 'ammo-damage+0.4']
+  new laser-weapons-damage-6: 600x60s ['automation-science-pack', 'logistic-science-pack', 'chemical-science-pack', 'military-science-pack', 'utility-science-pack'] prereq ['laser-weapons-damage-5'] unlocks ['ammo-damage+0.7', 'ammo-damage+0.7', 'ammo-damage+0.6']
+  new laser-weapons-damage-7: Nonex60s ['automation-science-pack', 'logistic-science-pack', 'chemical-science-pack', 'military-science-pack', 'utility-science-pack', 'space-science-pack'] prereq ['laser-weapons-damage-6', 'space-science-pack'] unlocks ['ammo-damage+0.7', 'ammo-damage+0.7', 'ammo-damage+0.3']
+  new oil-gathering: 100x30s ['automation-science-pack', 'logistic-science-pack'] prereq ['fluid-handling'] unlocks ['pumpjack']
+  new processing-unit: 300x30s ['automation-science-pack', 'logistic-science-pack', 'chemical-science-pack'] prereq ['chemical-science-pack'] unlocks ['processing-unit']
+  new radar: 20x10s ['automation-science-pack'] prereq ['automation-science-pack'] unlocks ['radar']
+  new repair-pack: 25x10s ['automation-science-pack'] prereq ['automation-science-pack'] unlocks ['repair-pack']
+  new uranium-mining: 100x30s ['automation-science-pack', 'logistic-science-pack', 'chemical-science-pack'] prereq ['chemical-science-pack', 'concrete'] unlocks ['mining-with-fluid+True']
+  artillery: prereq: ['military-4', 'tank'] -> ['concrete', 'military-4', 'radar', 'tank'] ; effects: ['artillery-wagon', 'artillery-turret', 'artillery-shell', 'artillery-targeting-remote'] -> ['artillery-wagon', 'artillery-turret', 'artillery-shell']
+  atomic-bomb: prereq: ['kovarex-enrichment-process', 'military-4', 'rocket-control-unit', 'rocketry'] -> ['kovarex-enrichment-process', 'military-4', 'rocketry']
+  automated-rail-transportation: count: 75 -> 200 ; effects: ['train-stop'] -> ['train-stop', 'rail-signal', 'rail-chain-signal']
+  automation: prereq: [] -> ['automation-science-pack']
+  automation-2: prereq: ['electronics', 'logistic-science-pack', 'steel-processing'] -> ['automation', 'logistic-science-pack', 'steel-processing']
+  automation-3: prereq: ['production-science-pack', 'speed-module'] -> ['electric-engine', 'production-science-pack', 'speed-module']
+  braking-force-3: prereq: ['braking-force-2'] -> ['braking-force-2', 'production-science-pack']
+  braking-force-6: prereq: ['braking-force-5'] -> ['braking-force-5', 'utility-science-pack']
+  chemical-science-pack: prereq: ['advanced-electronics', 'sulfur-processing'] -> ['advanced-circuit', 'sulfur-processing']
+  circuit-network: prereq: ['electronics', 'logistic-science-pack'] -> ['logistic-science-pack'] ; effects: ['red-wire', 'green-wire', 'arithmetic-combinator', 'decider-combinator', 'constant-combinator', 'power-switch', 'programmable-speaker'] -> ['unlock-circuit-network+True', 'arithmetic-combinator', 'decider-combinator', 'constant-combinator', 'power-switch', 'programmable-speaker', 'display-panel', 'iron-stick']
+  cliff-explosives: effects: ['cliff-explosives'] -> ['cliff-explosives', 'cliff-deconstruction-enabled+True']
+  concrete: effects: ['concrete', 'hazard-concrete', 'refined-concrete', 'refined-hazard-concrete'] -> ['concrete', 'hazard-concrete', 'refined-concrete', 'refined-hazard-concrete', 'iron-stick']
+  construction-robotics: effects: ['roboport', 'logistic-chest-passive-provider', 'logistic-chest-storage', 'construction-robot', 'ghost-time-to-live+36288000'] -> ['roboport', 'passive-provider-chest', 'storage-chest', 'construction-robot', 'create-ghost-on-entity-death+True']
+  discharge-defense-equipment: effects: ['discharge-defense-equipment', 'discharge-defense-remote'] -> ['discharge-defense-equipment']
+  effect-transmission: prereq: ['advanced-electronics-2', 'production-science-pack'] -> ['processing-unit', 'production-science-pack']
+  electric-energy-distribution-1: prereq: ['electronics', 'logistic-science-pack', 'steel-processing'] -> ['logistic-science-pack', 'steel-processing'] ; effects: ['medium-electric-pole', 'big-electric-pole'] -> ['medium-electric-pole', 'big-electric-pole', 'iron-stick']
+  electronics: count: 30 -> None ; time: 15 -> None ; packs: {'automation-science-pack': 1} -> {} ; prereq: ['automation'] -> [] ; effects: [] -> ['copper-cable', 'electronic-circuit', 'lab', 'inserter', 'small-electric-pole']
+  exoskeleton-equipment: prereq: ['advanced-electronics-2', 'electric-engine', 'solar-panel-equipment'] -> ['electric-engine', 'processing-unit', 'solar-panel-equipment']
+  fast-inserter: prereq: ['electronics'] -> ['automation-science-pack'] ; effects: ['fast-inserter', 'filter-inserter'] -> ['fast-inserter']
+  fluid-handling: effects: ['storage-tank', 'pump', 'empty-barrel', 'fill-water-barrel', 'empty-water-barrel', 'fill-crude-oil-barrel', 'empty-crude-oil-barrel', 'fill-light-oil-barrel', 'empty-light-oil-barrel', 'fill-lubricant-barrel', 'empty-lubricant-barrel', 'fill-petroleum-gas-barrel', 'empty-petroleum-gas-barrel', 'fill-sulfuric-acid-barrel', 'empty-sulfuric-acid-barrel', 'fill-heavy-oil-barrel', 'empty-heavy-oil-barrel'] -> ['storage-tank', 'pump', 'barrel']
+  follower-robot-count-1: count: 200 -> 100
+  follower-robot-count-2: count: 300 -> 200 ; effects: ['maximum-following-robots-count+5'] -> ['maximum-following-robots-count+10']
+  follower-robot-count-3: count: 400 -> 300 ; prereq: ['follower-robot-count-2'] -> ['chemical-science-pack', 'follower-robot-count-2'] ; effects: ['maximum-following-robots-count+5'] -> ['maximum-following-robots-count+10']
+  follower-robot-count-4: count: 600 -> 400 ; packs: {'automation-science-pack': 1, 'logistic-science-pack': 1, 'chemical-science-pack': 1, 'military-science-pack': 1} -> {'automation-science-pack': 1, 'logistic-science-pack': 1, 'chemical-science-pack': 1, 'military-science-pack': 1, 'utility-science-pack': 1} ; prereq: ['follower-robot-count-3'] -> ['destroyer', 'follower-robot-count-3'] ; effects: ['maximum-following-robots-count+10'] -> ['maximum-following-robots-count+20']
+  follower-robot-count-5: count: 800 -> None ; formula: None -> 1000*(L-4) ; packs: {'automation-science-pack': 1, 'logistic-science-pack': 1, 'chemical-science-pack': 1, 'military-science-pack': 1, 'utility-science-pack': 1} -> {'automation-science-pack': 1, 'logistic-science-pack': 1, 'chemical-science-pack': 1, 'military-science-pack': 1, 'production-science-pack': 1, 'utility-science-pack': 1, 'space-science-pack': 1} ; prereq: ['destroyer', 'follower-robot-count-4'] -> ['follower-robot-count-4', 'space-science-pack'] ; effects: ['maximum-following-robots-count+10'] -> ['maximum-following-robots-count+25'] ; max_level: None -> infinite
+  gun-turret: prereq: [] -> ['automation-science-pack']
+  inserter-capacity-bonus-1: prereq: ['stack-inserter'] -> ['bulk-inserter'] ; effects: ['stack-inserter-capacity-bonus+1'] -> ['bulk-inserter-capacity-bonus+1']
+  inserter-capacity-bonus-2: effects: ['inserter-stack-size-bonus+1', 'stack-inserter-capacity-bonus+1'] -> ['inserter-stack-size-bonus+1', 'bulk-inserter-capacity-bonus+1']
+  inserter-capacity-bonus-3: prereq: ['inserter-capacity-bonus-2'] -> ['chemical-science-pack', 'inserter-capacity-bonus-2'] ; effects: ['stack-inserter-capacity-bonus+1'] -> ['bulk-inserter-capacity-bonus+1']
+  inserter-capacity-bonus-4: prereq: ['inserter-capacity-bonus-3'] -> ['inserter-capacity-bonus-3', 'production-science-pack'] ; effects: ['stack-inserter-capacity-bonus+1'] -> ['bulk-inserter-capacity-bonus+1']
+  inserter-capacity-bonus-5: effects: ['stack-inserter-capacity-bonus+2'] -> ['bulk-inserter-capacity-bonus+2']
+  inserter-capacity-bonus-6: effects: ['stack-inserter-capacity-bonus+2'] -> ['bulk-inserter-capacity-bonus+2']
+  inserter-capacity-bonus-7: prereq: ['inserter-capacity-bonus-6'] -> ['inserter-capacity-bonus-6', 'utility-science-pack'] ; effects: ['inserter-stack-size-bonus+1', 'stack-inserter-capacity-bonus+2'] -> ['inserter-stack-size-bonus+1', 'bulk-inserter-capacity-bonus+2']
+  laser: prereq: ['battery', 'chemical-science-pack', 'optics'] -> ['battery', 'chemical-science-pack']
+  laser-shooting-speed-5: prereq: ['laser-shooting-speed-4'] -> ['laser-shooting-speed-4', 'utility-science-pack']
+  logistic-robotics: effects: ['roboport', 'logistic-chest-passive-provider', 'logistic-chest-storage', 'logistic-robot', 'character-logistic-requests+True', 'character-logistic-trash-slots+30'] -> ['roboport', 'passive-provider-chest', 'storage-chest', 'logistic-robot', 'character-logistic-requests+True', 'character-logistic-trash-slots+30']
+  logistic-science-pack: prereq: [] -> ['automation-science-pack']
+  logistic-system: effects: ['logistic-chest-active-provider', 'logistic-chest-requester', 'logistic-chest-buffer'] -> ['active-provider-chest', 'requester-chest', 'buffer-chest', 'vehicle-logistics+True']
+  logistics: prereq: [] -> ['automation-science-pack']
+  military: prereq: [] -> ['automation-science-pack']
+  mining-productivity-1: prereq: ['advanced-electronics'] -> ['advanced-circuit']
+  mining-productivity-2: prereq: ['mining-productivity-1'] -> ['chemical-science-pack', 'mining-productivity-1']
+  mining-productivity-3: prereq: ['mining-productivity-2'] -> ['mining-productivity-2', 'production-science-pack', 'utility-science-pack']
+  modular-armor: prereq: ['advanced-electronics', 'heavy-armor'] -> ['advanced-circuit', 'heavy-armor']
+  modules: prereq: ['advanced-electronics'] -> ['advanced-circuit']
+  nuclear-power: effects: ['nuclear-reactor', 'heat-exchanger', 'heat-pipe', 'steam-turbine'] -> ['nuclear-reactor', 'heat-exchanger', 'heat-pipe', 'steam-turbine', 'uranium-fuel-cell']
+  oil-processing: count: 100 -> None ; time: 30 -> None ; packs: {'automation-science-pack': 1, 'logistic-science-pack': 1} -> {} ; prereq: ['fluid-handling'] -> ['oil-gathering'] ; effects: ['pumpjack', 'oil-refinery', 'chemical-plant', 'basic-oil-processing', 'solid-fuel-from-petroleum-gas'] -> ['oil-refinery', 'chemical-plant', 'basic-oil-processing', 'solid-fuel-from-petroleum-gas']
+  physical-projectile-damage-2: prereq: ['physical-projectile-damage-1'] -> ['logistic-science-pack', 'physical-projectile-damage-1']
+  physical-projectile-damage-3: prereq: ['physical-projectile-damage-2'] -> ['military-science-pack', 'physical-projectile-damage-2']
+  physical-projectile-damage-5: prereq: ['physical-projectile-damage-4'] -> ['chemical-science-pack', 'physical-projectile-damage-4']
+  physical-projectile-damage-6: prereq: ['physical-projectile-damage-5'] -> ['physical-projectile-damage-5', 'utility-science-pack']
+  power-armor: prereq: ['advanced-electronics-2', 'electric-engine', 'modular-armor'] -> ['electric-engine', 'modular-armor', 'processing-unit']
+  power-armor-mk2: prereq: ['effectivity-module-2', 'military-4', 'power-armor', 'speed-module-2'] -> ['efficiency-module-2', 'military-4', 'power-armor', 'speed-module-2']
+  productivity-module-2: prereq: ['advanced-electronics-2', 'productivity-module'] -> ['processing-unit', 'productivity-module']
+  railway: effects: ['rail', 'locomotive', 'cargo-wagon'] -> ['rail', 'locomotive', 'cargo-wagon', 'iron-stick']
+  refined-flammables-3: prereq: ['refined-flammables-2'] -> ['chemical-science-pack', 'refined-flammables-2']
+  refined-flammables-4: prereq: ['refined-flammables-3'] -> ['refined-flammables-3', 'utility-science-pack']
+  research-speed-3: prereq: ['research-speed-2'] -> ['chemical-science-pack', 'research-speed-2']
+  research-speed-5: prereq: ['research-speed-4'] -> ['production-science-pack', 'research-speed-4']
+  research-speed-6: prereq: ['research-speed-5'] -> ['research-speed-5', 'utility-science-pack']
+  rocket-silo: prereq: ['concrete', 'productivity-module-3', 'rocket-control-unit', 'rocket-fuel', 'speed-module-3'] -> ['concrete', 'electric-energy-accumulators', 'productivity-module-3', 'radar', 'rocket-fuel', 'solar-energy', 'speed-module-3', 'utility-science-pack'] ; effects: ['rocket-silo', 'rocket-part'] -> ['rocket-silo', 'rocket-part', 'cargo-landing-pad', 'satellite']
+  solar-energy: prereq: ['electronics', 'logistic-science-pack', 'optics', 'steel-processing'] -> ['logistic-science-pack', 'steel-processing']
+  space-science-pack: count: 2000 -> None ; time: 30 -> None ; packs: {'automation-science-pack': 1, 'logistic-science-pack': 1, 'chemical-science-pack': 1, 'production-science-pack': 1, 'utility-science-pack': 1} -> {} ; prereq: ['electric-energy-accumulators', 'rocket-silo', 'solar-energy'] -> ['rocket-silo'] ; effects: ['satellite'] -> []
+  speed-module-2: prereq: ['advanced-electronics-2', 'speed-module'] -> ['processing-unit', 'speed-module']
+  spidertron: prereq: ['effectivity-module-3', 'exoskeleton-equipment', 'fusion-reactor-equipment', 'military-4', 'rocket-control-unit', 'rocketry'] -> ['efficiency-module-3', 'exoskeleton-equipment', 'fission-reactor-equipment', 'military-4', 'radar', 'rocketry'] ; effects: ['spidertron', 'spidertron-remote'] -> ['spidertron']
+  steel-axe: count: 50 -> None ; time: 30 -> None ; packs: {'automation-science-pack': 1} -> {}
+  steel-processing: prereq: [] -> ['automation-science-pack']
+  stone-wall: prereq: [] -> ['automation-science-pack']
+  stronger-explosives-2: prereq: ['stronger-explosives-1'] -> ['military-science-pack', 'stronger-explosives-1']
+  stronger-explosives-3: prereq: ['stronger-explosives-2'] -> ['chemical-science-pack', 'stronger-explosives-2']
+  stronger-explosives-4: prereq: ['stronger-explosives-3'] -> ['stronger-explosives-3', 'utility-science-pack']
+  uranium-processing: count: 200 -> None ; time: 30 -> None ; packs: {'automation-science-pack': 1, 'logistic-science-pack': 1, 'chemical-science-pack': 1} -> {} ; prereq: ['chemical-science-pack', 'concrete'] -> ['uranium-mining'] ; effects: ['centrifuge', 'uranium-processing', 'uranium-fuel-cell'] -> ['centrifuge', 'uranium-processing']
+  utility-science-pack: prereq: ['advanced-electronics-2', 'low-density-structure', 'robotics'] -> ['low-density-structure', 'processing-unit', 'robotics']
+  weapon-shooting-speed-2: prereq: ['weapon-shooting-speed-1'] -> ['logistic-science-pack', 'weapon-shooting-speed-1']
+  weapon-shooting-speed-3: prereq: ['weapon-shooting-speed-2'] -> ['military-science-pack', 'weapon-shooting-speed-2']
+  weapon-shooting-speed-5: prereq: ['weapon-shooting-speed-4'] -> ['chemical-science-pack', 'weapon-shooting-speed-4']
+  weapon-shooting-speed-6: prereq: ['weapon-shooting-speed-5'] -> ['utility-science-pack', 'weapon-shooting-speed-5']
+  worker-robots-speed-3: prereq: ['worker-robots-speed-2'] -> ['utility-science-pack', 'worker-robots-speed-2']
+  worker-robots-speed-5: prereq: ['worker-robots-speed-4'] -> ['production-science-pack', 'worker-robots-speed-4']
+  worker-robots-storage-2: prereq: ['worker-robots-storage-1'] -> ['production-science-pack', 'worker-robots-storage-1']
+  worker-robots-storage-3: prereq: ['worker-robots-storage-2'] -> ['utility-science-pack', 'worker-robots-storage-2']
+
+## Items
+removed: ['crude-oil-barrel', 'empty-barrel', 'filter-inserter', 'fusion-reactor-equipment', 'heavy-oil-barrel', 'light-oil-barrel', 'logistic-chest-active-provider', 'logistic-chest-buffer', 'logistic-chest-passive-provider', 'logistic-chest-requester', 'logistic-chest-storage', 'lubricant-barrel', 'petroleum-gas-barrel', 'player-port', 'rocket-control-unit', 'stack-filter-inserter', 'stack-inserter', 'sulfuric-acid-barrel', 'used-up-uranium-fuel-cell', 'water-barrel']
+added: ['active-provider-chest', 'barrel', 'bottomless-chest', 'buffer-chest', 'bulk-inserter', 'cargo-landing-pad', 'copper-wire', 'depleted-uranium-fuel-cell', 'display-panel', 'empty-module-slot', 'fission-reactor-equipment', 'infinity-cargo-wagon', 'lane-splitter', 'no-item', 'one-way-valve', 'overflow-valve', 'passive-provider-chest', 'proxy-container', 'requester-chest', 'science', 'selector-combinator', 'storage-chest', 'top-up-valve']
+  stack beacon: 10 -> 20
+  stack green-wire: 200 -> 1
+  stack low-density-structure: 10 -> 50
+  stack power-switch: 50 -> 10
+  stack programmable-speaker: 50 -> 10
+  stack red-wire: 200 -> 1
+  stack rocket-fuel: 10 -> 20
+
+## Entity stats (selected fields)
+  [ammo] cannon-shell: stack_size: 200 -> 100
+  [ammo] explosive-cannon-shell: stack_size: 200 -> 100
+  [ammo] explosive-rocket: stack_size: 200 -> 100
+  [ammo] explosive-uranium-cannon-shell: stack_size: 200 -> 100
+  [ammo] firearm-magazine: stack_size: 200 -> 100
+  [ammo] piercing-rounds-magazine: stack_size: 200 -> 100
+  [ammo] piercing-shotgun-shell: stack_size: 200 -> 100
+  [ammo] rocket: stack_size: 200 -> 100
+  [ammo] shotgun-shell: stack_size: 200 -> 100
+  [ammo] uranium-cannon-shell: stack_size: 200 -> 100
+  [ammo] uranium-rounds-magazine: stack_size: 200 -> 100
+  [beacon] beacon: distribution_effectivity: 0.5 -> 1.5
+  [construction-robot] construction-robot: max_energy: 1.5MJ -> 3MJ
+  [electric-pole] big-electric-pole: maximum_wire_distance: 30 -> 32
+  [fluid] crude-oil: heat_capacity: 0.1KJ -> None
+  [fluid] heavy-oil: heat_capacity: 0.1KJ -> None
+  [fluid] light-oil: heat_capacity: 0.1KJ -> None
+  [fluid] lubricant: heat_capacity: 0.1KJ -> None
+  [fluid] petroleum-gas: heat_capacity: 0.1KJ -> None
+  [fluid] sulfuric-acid: heat_capacity: 0.1KJ -> None
+  [fluid] water: heat_capacity: 0.2KJ -> 2kJ
+  [inserter] burner-inserter: rotation_speed: 0.01 -> 0.013 ; extension_speed: 0.0214 -> 0.035 ; filter_count: None -> 5
+  [inserter] fast-inserter: extension_speed: 0.07 -> 0.1 ; filter_count: None -> 5
+  [inserter] inserter: extension_speed: 0.03 -> 0.035 ; filter_count: None -> 5
+  [inserter] long-handed-inserter: extension_speed: 0.0457 -> 0.05 ; filter_count: None -> 5
+  [offshore-pump] offshore-pump: energy_usage: None -> 60kW
+  [pump] pump: pumping_speed: 200 -> 20
+  [roboport] roboport: charging_energy: 1000kW -> 500kW
+  [straight-rail] straight-rail: minable: ('rail', None) -> ('rail', 1)
+  [tile] landfill: minable: (None, None) -> ('landfill', None)

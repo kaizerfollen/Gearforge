@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Load Factorio 1.1 base prototype data (Lua) via lupa and dump data.raw to JSON (graphics/sound stripped)."""
+"""Load Factorio base prototype data (Lua) via lupa and dump data.raw to JSON (graphics/sound stripped).
+Works for 1.1.x and 2.0.x checkouts of https://github.com/wube/factorio-data (version read from base/info.json).
+Usage: load_data.py <factorio-data checkout> <out.json>"""
 import sys, json
 import lupa.lua52 as L  # Factorio uses Lua 5.2
 
 ROOT = sys.argv[1]  # path to factorio-data checkout
 OUT = sys.argv[2]
+VERSION = json.load(open(ROOT + '/base/info.json'))['version']
+MAJOR = int(VERSION.split('.')[0])
 
 lua = L.LuaRuntime(unpack_returned_tuples=True)
 lua.execute(r'''
@@ -12,6 +16,8 @@ ROOT = ...
 ''') if False else None
 g = lua.globals()
 g.FROOT = ROOT
+g.FVERSION = VERSION
+g.FMAJOR = MAJOR
 
 lua.execute(r'''
 local ROOT = FROOT
@@ -21,7 +27,7 @@ local function try(path)
   if f then f:close(); return path end
 end
 local function resolve(name)
-  local modname, rest = name:match("^__(%w+)__/(.*)$")
+  local modname, rest = name:match("^__([%w%-]+)__[/%.](.*)$")
   local mod = modname or mod_stack[#mod_stack]
   rest = rest or name
   rest = rest:gsub("%.lua$", "")
@@ -38,7 +44,9 @@ end
 local loaded = {}
 function require(name)
   local path, mod = resolve(name)
-  if not path then if name:find("menu%-simulations") then return {} end error("cannot resolve " .. name) end
+  if not path then if name:find("menu%-simulations") then return {} end
+  -- 2.0 sprite-sheet descriptors (graphics/*.lua) are not in factorio-data: stub the fields util.sprite_load reads
+  if name:find("graphics") then return setmetatable({shift={0,0}, line_length=1, frames=1, width=1, height=1, scale=1}, {__index=function() return {} end}) end error("cannot resolve " .. name) end
   if loaded[path] ~= nil then return loaded[path] end
   local chunk = assert(loadfile(path))
   table.insert(mod_stack, mod)
@@ -52,11 +60,18 @@ function set_mod(m) mod_stack = {m} end
 
 local function auto() return setmetatable({}, {__index = function(t,k) local v = auto(); rawset(t,k,v); return v end}) end
 defines = auto()
-defines.direction = {north=0, northeast=1, east=2, southeast=3, south=4, southwest=5, west=6, northwest=7}
+if FMAJOR >= 2 then  -- 2.0: 16 directions
+  defines.direction = {north=0, northnortheast=1, northeast=2, eastnortheast=3, east=4, eastsoutheast=5, southeast=6, southsoutheast=7,
+                       south=8, southsouthwest=9, southwest=10, westsouthwest=11, west=12, westnorthwest=13, northwest=14, northnorthwest=15}
+else
+  defines.direction = {north=0, northeast=1, east=2, southeast=3, south=4, southwest=5, west=6, northwest=7}
+end
+local _inv = 0
+defines.inventory = setmetatable({}, {__index = function(t, k) _inv = _inv + 1; rawset(t, k, _inv); return _inv end})
 log = function() end
 localised_print = function() end
 table_size = function(t) local n=0 for _ in pairs(t) do n=n+1 end return n end
-mods = {base = "1.1.110", core = "1.1.110"}
+mods = {base = FVERSION, core = FVERSION}
 settings = {startup = {}}
 feature_flags = {}
 serpent = {block = function() return "" end, line = function() return "" end}

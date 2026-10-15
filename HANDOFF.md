@@ -38,7 +38,8 @@ stage it from the Mac `checkpoints/` → `git clone <bundle> /home/claude/Gearfo
 ## How to resume in a new session
 1. If `/home/claude/Gearforge` is missing: stage `checkpoints/Gearforge.bundle` from the Mac
    (`device_stage_files`) and `git clone <staged bundle> /home/claude/Gearforge`.
-2. Read this file, then `docs/ARCHITECTURE.md` (how) and `docs/GDD.md` (what). Numbers: `docs/research/*`.
+2. Read this file, then `docs/ARCHITECTURE.md` (how) and `docs/GDD.md` (what). Numbers: `docs/research/*` (Factorio 1.1.110);
+   what changed in Factorio 2.0.77 and the staged port plan: `docs/research/06_factorio_2_0_diff.md`.
 3. `cd Core && swift build && swift test` must be green before starting new work.
 4. Checkpoint after every merged milestone: `tools/checkpoint.sh`, then `device_commit_files` the two files in
    `/mnt/user-data/outputs/gearforge/` to `/Users/new_ivan/Claude/Gearforge/checkpoints/`, then on the device:
