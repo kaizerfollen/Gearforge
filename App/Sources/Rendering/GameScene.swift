@@ -1,6 +1,6 @@
 // Gearforge — App
 // SpriteKit world renderer. Reads FactoryCore state after each simulation step; never mutates the world.
-// - Terrain: one SKTileMapNode per generated chunk (ground) + one for ore overlays; textures shared from the atlas.
+// - Terrain: one ground + one ore SKTileMapNode for a chunk-aligned window around the camera (Terrain.atlas).
 // - Entities: pooled nodes only for entities inside the camera rect (+margin), synced at 5 Hz and on world events.
 // - Belt items / inserter arms / character: updated every frame for the visible area only.
 // World tile (x, y) with y pointing south maps to scene point (x·S, −y·S).
@@ -49,11 +49,13 @@ final class GameScene: SKScene {
     private var groundRevision = -1
     private var groundCenter = TilePos(Int32.max, 0)
 
-    private var chunkNodes: [ChunkPos: (ground: SKTileMapNode, ore: SKTileMapNode)] = [:]
-    /// Chunks whose tile maps were (re)built while on screen. SpriteKit never draws an SKTileMapNode that was built
-    /// while entirely off screen (S10: whole chunks stayed black once scrolled into view), so a chunk is re-baked the
-    /// moment it enters the screen after having been off it.
-    private var chunkOnScreen: Set<ChunkPos> = []
+    /// Terrain = ONE ground and ONE ore SKTileMapNode covering the chunks around the camera ("window").
+    /// One tile map per chunk did not work: SpriteKit stopped drawing older chunk tile maps once new ones were added,
+    /// so whole chunks stayed black (S10). The window is rebuilt (fresh nodes) when the view leaves it and patched
+    /// in place when a chunk's tiles change.
+    private var terrainWindow: TileRect? = nil
+    private var terrainGround: SKTileMapNode?
+    private var terrainOre: SKTileMapNode?
     private var tileGroups: [Int: [SKTileGroup]] = [:]          // tile index → variants
     private var oreGroups: [Int: [SKTileGroup]] = [:]           // resource index → 8 stages
     private var tileSet: SKTileSet?
@@ -285,9 +287,7 @@ final class GameScene: SKScene {
             case .entityChanged(let id):
                 if let v = views[id] { configure(v, id, w, force: true) }
             case .tilesChanged(let cp), .chunkGenerated(let cp):
-                if let n = chunkNodes[cp] { n.ground.removeFromParent(); n.ore.removeFromParent(); chunkNodes[cp] = nil }
-                chunkOnScreen.remove(cp)
-                syncTimer = 1          // re-bake in this same frame (sync runs right after the events), no blank frames
+                refreshTerrainChunk(cp, w)
             default: break
             }
         }
@@ -304,19 +304,18 @@ final class GameScene: SKScene {
         let t = cameraCenter.tile, cp = t.chunk
         var lines = ["cam \(t.x),\(t.y) chunk \(cp.x),\(cp.y) zoom \(String(format: "%.2f", zoom)) size \(Int(size.width))x\(Int(size.height))"]
         let vis = visibleRect(margin: 8)
-        lines.append("vis \(vis.x),\(vis.y) \(vis.w)x\(vis.h) nodes \(chunkNodes.count) terrainKids \(terrainLayer.children.count)")
+        let tw = terrainWindow.map { "\($0.x),\($0.y) \($0.w)x\($0.h)" } ?? "none"
+        lines.append("vis \(vis.x),\(vis.y) \(vis.w)x\(vis.h) window \(tw) terrainKids \(terrainLayer.children.count)")
         if let ch = w.surface.existingChunk(cp) {
             let mid = Int(ch.tiles[16 * 32 + 16])
             lines.append("chunk ok charted=\(ch.charted) midTile=\(mid) groups=\(tileGroups[mid]?.count ?? -1)")
         } else { lines.append("chunk MISSING") }
-        if let n = chunkNodes[cp] {
-            let g = n.ground
-            let tg = g.tileGroup(atColumn: 16, row: 15)
-            lines.append("node parent=\(g.parent != nil) pos=\(Int(g.position.x)),\(Int(g.position.y)) hidden=\(g.isHidden) a=\(g.alpha) z=\(g.zPosition)")
-            lines.append("cols=\(g.numberOfColumns) group=\(tg != nil) tex=\(tg?.rules.first?.tileDefinitions.first?.textures.first.map { "\(Int($0.size().width))" } ?? "nil")")
-            let f = g.frame
-            lines.append("frame \(Int(f.minX)),\(Int(f.minY)) \(Int(f.width))x\(Int(f.height)) kids=\(g.children.count) ore kids=\(n.ore.children.count)")
-        } else { lines.append("node NONE for chunk") }
+        if let g = terrainGround, let win = terrainWindow {
+            let col = Int(t.x - win.x), row = Int(win.h - 1 - (t.y - win.y))
+            let inside = col >= 0 && row >= 0 && col < g.numberOfColumns && row < g.numberOfRows
+            let tg = inside ? g.tileGroup(atColumn: col, row: row) : nil
+            lines.append("ground parent=\(g.parent != nil) cols=\(g.numberOfColumns)x\(g.numberOfRows) tileHere=\(tg != nil)")
+        } else { lines.append("ground NONE") }
         if let v = view {
             let p = convertPoint(toView: cam.position)
             lines.append("view \(Int(v.bounds.width))x\(Int(v.bounds.height)) camInView \(Int(p.x)),\(Int(p.y)) camScale \(cam.xScale) scaleMode \(scaleMode.rawValue)")
@@ -330,64 +329,74 @@ final class GameScene: SKScene {
 
     private func syncChunks(_ w: World) {
         guard let ts = tileSet else { return }
-        let vis = visibleRect(margin: 8)
-        let screen = visibleRect(margin: 1)
+        // Rebuild only when the area really needed (screen + 2 tiles) is no longer inside the current window.
+        let need = visibleRect(margin: 2)
+        if let win = terrainWindow, terrainGround != nil,
+           need.x >= win.x, need.y >= win.y, need.maxX <= win.maxX, need.maxY <= win.maxY { return }
+        let vis = visibleRect(margin: 10)
         let c0 = TilePos(vis.x, vis.y).chunk, c1 = TilePos(vis.maxX, vis.maxY).chunk
-        var wanted = Set<ChunkPos>()
+        let o = c0.originTile
+        let win = TileRect(x: o.x, y: o.y, w: (c1.x - c0.x + 1) * Int32(chunkSize), h: (c1.y - c0.y + 1) * Int32(chunkSize))
+        let tsz = CGSize(width: S, height: S)
+        let ground = SKTileMapNode(tileSet: ts, columns: Int(win.w), rows: Int(win.h), tileSize: tsz)
+        let ore = SKTileMapNode(tileSet: ts, columns: Int(win.w), rows: Int(win.h), tileSize: tsz)
+        ground.enableAutomapping = false; ore.enableAutomapping = false
         var cy = c0.y
         while cy <= c1.y {
             var cx = c0.x
             while cx <= c1.x {
-                let cp = ChunkPos(cx, cy)
-                if let ch = w.surface.chunk(cp) {          // generates on demand (exploration)
-                    wanted.insert(cp)
-                    let o = cp.originTile
-                    let onScreen = TileRect(x: o.x, y: o.y, w: Int32(chunkSize), h: Int32(chunkSize)).intersects(screen)
-                    if chunkNodes[cp] == nil || (onScreen && !chunkOnScreen.contains(cp)) {
-                        if let old = chunkNodes[cp] { old.ground.removeFromParent(); old.ore.removeFromParent() }
-                        chunkNodes[cp] = bakeChunk(ch, ts, w)
-                    }
-                    if onScreen { chunkOnScreen.insert(cp) } else { chunkOnScreen.remove(cp) }
+                if let ch = w.surface.chunk(ChunkPos(cx, cy)) {          // generates on demand (exploration)
+                    fillChunk(ch, ground, ore, win, w, clear: false)
                 }
                 cx += 1
             }
             cy += 1
         }
-        for (cp, n) in chunkNodes where !wanted.contains(cp) {
-            n.ground.removeFromParent(); n.ore.removeFromParent(); chunkNodes[cp] = nil
-            chunkOnScreen.remove(cp)
-        }
+        // SKTileMapNode is centred on its position
+        ground.position = scenePoint(Double(win.x) + Double(win.w) / 2, Double(win.y) + Double(win.h) / 2)
+        ore.position = ground.position
+        ground.zPosition = 0; ore.zPosition = 1
+        terrainGround?.removeFromParent(); terrainOre?.removeFromParent()
+        terrainLayer.addChild(ground); terrainLayer.addChild(ore)
+        terrainGround = ground; terrainOre = ore; terrainWindow = win
     }
 
-    private func bakeChunk(_ ch: Chunk, _ ts: SKTileSet, _ w: World) -> (SKTileMapNode, SKTileMapNode) {
+    /// A chunk's tiles or ore changed (mining, landfill, generation): patch the live window in place.
+    private func refreshTerrainChunk(_ cp: ChunkPos, _ w: World) {
+        guard let win = terrainWindow, let g = terrainGround, let o = terrainOre,
+              let ch = w.surface.existingChunk(cp) else { return }
+        let org = cp.originTile
+        guard TileRect(x: org.x, y: org.y, w: Int32(chunkSize), h: Int32(chunkSize)).intersects(win) else { return }
+        fillChunk(ch, g, o, win, w, clear: true)
+    }
+
+    private func fillChunk(_ ch: Chunk, _ ground: SKTileMapNode, _ ore: SKTileMapNode, _ win: TileRect, _ w: World, clear: Bool) {
         let n = chunkSize
-        let ground = SKTileMapNode(tileSet: ts, columns: n, rows: n, tileSize: CGSize(width: S, height: S))
-        let ore = SKTileMapNode(tileSet: ts, columns: n, rows: n, tileSize: CGSize(width: S, height: S))
-        ground.enableAutomapping = false; ore.enableAutomapping = false
         let origin = ch.pos.originTile
+        let col0 = Int(origin.x - win.x), row0 = Int(origin.y - win.y)
+        let rows = Int(win.h)
         for ly in 0..<n {
+            let row = rows - 1 - (row0 + ly)
+            guard row >= 0 && row < rows else { continue }
             for lx in 0..<n {
+                let col = col0 + lx
+                guard col >= 0 && col < Int(win.w) else { continue }
                 let i = ly * n + lx
-                let row = n - 1 - ly
                 let t = Int(ch.tiles[i])
                 if let vs = tileGroups[t], !vs.isEmpty {
                     let hx = (Int(origin.x) + lx) &* 73856093 ^ (Int(origin.y) + ly) &* 19349663
-                    ground.setTileGroup(vs[abs(hx) % vs.count], forColumn: lx, row: row)
+                    ground.setTileGroup(vs[abs(hx) % vs.count], forColumn: col, row: row)
                 }
                 let r = Int(ch.resource[i]) - 1
                 if r >= 0, let os = oreGroups[r] {
                     let amt = Double(ch.resourceAmount[i])
                     let stage = w.db.resources[r].resultIsFluid ? 0 : min(7, Int(log2(max(1, amt / 25))))
-                    ore.setTileGroup(os[stage], forColumn: lx, row: row)
+                    ore.setTileGroup(os[stage], forColumn: col, row: row)
+                } else if clear {
+                    ore.setTileGroup(nil, forColumn: col, row: row)
                 }
             }
         }
-        // SKTileMapNode is centred on its position
-        let cx = Double(origin.x) + Double(n) / 2, cy = Double(origin.y) + Double(n) / 2
-        ground.position = scenePoint(cx, cy); ore.position = ground.position
-        ground.zPosition = 0; ore.zPosition = 1
-        terrainLayer.addChild(ground); terrainLayer.addChild(ore)
-        return (ground, ore)
     }
 
     // MARK: Entities
