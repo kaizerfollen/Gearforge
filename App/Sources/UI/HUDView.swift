@@ -42,7 +42,7 @@ struct HUDView: View {
                     .frame(width: compact ? (controller.tutorialHint != nil ? 250 : 210) : 280, alignment: .leading)
                     .tutorialAnchor("objectives")
                     Spacer(minLength: 8)
-                    researchBar(hud).layoutPriority(-1).tutorialAnchor("research")
+                    researchBar(hud).layoutPriority(1).tutorialAnchor("research")   // before the spacers, so its text is not cut
                     Spacer(minLength: 8)
                     HStack(alignment: .top, spacing: 8) {
                         MinimapView(controller: controller).tutorialAnchor("minimap")
@@ -301,7 +301,7 @@ struct HUDView: View {
                             Text(verbatim: "\(Int(hud.researchProgress * 100))%").font(.caption2.bold()).monospacedDigit()
                                 .foregroundStyle(Theme.accent)
                         }
-                        BarView(fraction: hud.researchProgress, height: 4).frame(width: 130)
+                        BarView(fraction: hud.researchProgress, height: 4).frame(minWidth: 60, idealWidth: 130, maxWidth: 150)
                     }
                     // overall progress through the tech tree
                     Text(LF("Researched %@ of %@", "\(hud.researchedCount)", "\(hud.techCount)"))
@@ -310,7 +310,6 @@ struct HUDView: View {
             }
             .padding(.horizontal, 12).padding(.vertical, 5)
             .background(Capsule().fill(Color.black.opacity(0.55)))
-            .fixedSize()          // natural width (names capped above) — never truncated by the top bar
         }
         .buttonStyle(.plain)
         .opacity(hud.researchEnabled ? 1 : 0)
